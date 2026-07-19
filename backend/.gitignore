@@ -1,0 +1,17 @@
+node_modules/
+.env
+*.log
+dist/
+uploads/*
+
+uploads/resumes/*
+uploads/results/*
+uploads/photos/*
+uploads/permissionLetters/*
+
+!uploads/resumes/.gitkeep
+!uploads/results/.gitkeep
+!uploads/photos/.gitkeep
+!uploads/permissionLetters/.gitkeep
+
+backend/data/students.json

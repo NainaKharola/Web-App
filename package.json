@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "compression": "^1.8.1",
+    "express-rate-limit": "^8.5.2",
+    "fuse.js": "^7.5.0",
+    "helmet": "^8.3.0",
+    "node-cache": "^5.1.2",
+    "nodemailer": "^9.0.3",
+    "puppeteer": "^23.11.1"
+  },
+  "devDependencies": {
+    "vite-bundle-visualizer": "^1.2.1"
+  }
+}

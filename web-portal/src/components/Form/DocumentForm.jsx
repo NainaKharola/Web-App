@@ -1,0 +1,101 @@
+import { internshipDurations } from "../../data/internshipDurations";
+import FileInput from "../Inputs/FileInput";
+import SelectInput from "../Inputs/SelectInput";
+import TextInput from "../Inputs/TextInput";
+
+function DocumentForm({ form, errors, onChange }) {
+  const today = new Date().toISOString().split("T")[0];
+
+  return (
+    <>
+      <section className="form-section">
+        <h2>Internship Details</h2>
+        <div className="form-grid">
+          <SelectInput
+            label="Internship Duration"
+            name="internshipDuration"
+            value={form.internshipDuration}
+            onChange={onChange}
+            options={internshipDurations}
+            error={errors.internshipDuration}
+            required
+          />
+          <TextInput
+            label="Joining Month"
+            name="internshipJoiningMonth"
+            type="month"
+            value={form.internshipJoiningMonth}
+            onChange={onChange}
+            error={errors.internshipJoiningMonth}
+            required
+          />
+          <TextInput
+            label="College Permission Letter Number"
+            name="permissionLetterNumber"
+            value={form.permissionLetterNumber}
+            onChange={onChange}
+            error={errors.permissionLetterNumber}
+          />
+          <TextInput
+            label="College Permission Letter Date"
+            name="permissionLetterDate"
+            type="date"
+            value={form.permissionLetterDate}
+            onChange={onChange}
+            error={errors.permissionLetterDate}
+            max={today}
+            required
+          />
+          <FileInput
+            label="Permission Letter (Maximum File Size: 10 MB)"
+            name="permissionLetter"
+            onChange={onChange}
+            error={errors.permissionLetter}
+            accept="application/pdf,image/jpeg,image/jpg,image/png"
+            required
+          />
+        </div>
+      </section>
+
+      <section className="form-section">
+        <h2>Upload Documents</h2>
+        <div className="form-grid">
+          <FileInput
+            label="Resume (Maximum File Size: 10 MB)"
+            name="resume"
+            onChange={onChange}
+            error={errors.resume}
+            accept="application/pdf"
+            required
+          />
+          <FileInput
+            label="Result (Last Semester Result showing CGPA) (Maximum File Size: 10 MB)"
+            name="result"
+            onChange={onChange}
+            error={errors.result}
+            accept="application/pdf,image/jpeg,image/jpg"
+            required
+          />
+          <FileInput
+            label="Photo (Maximum File Size: 1 MB)"
+            name="photo"
+            onChange={onChange}
+            error={errors.photo}
+            accept="image/png,image/jpeg,image/jpg"
+            required
+          />
+          <TextInput
+            label="College Identity Card Number"
+            name="collegeId"
+            value={form.collegeId}
+            onChange={onChange}
+            error={errors.collegeId}
+            required
+          />
+        </div>
+      </section>
+    </>
+  );
+}
+
+export default DocumentForm;

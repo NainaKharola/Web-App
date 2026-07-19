@@ -1,0 +1,641 @@
+.admin-shell,
+.admin-login-shell {
+  min-height: 100vh;
+  padding: 32px 18px;
+  background:
+    linear-gradient(135deg, rgba(8, 72, 137, 0.12), rgba(255, 255, 255, 0.82) 44%, rgba(19, 128, 220, 0.13)),
+    #f4f8fc;
+}
+
+.admin-shell {
+  color: var(--text);
+}
+
+.admin-login-shell {
+  display: grid;
+  place-items: center;
+}
+
+.admin-login-card,
+.admin-panel,
+.details-section,
+.admin-review-form,
+.offer-letter-box {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 45px rgba(24, 56, 92, 0.12);
+}
+
+.admin-login-card {
+  display: grid;
+  gap: 20px;
+  max-width: 460px;
+  padding: 34px;
+}
+
+.admin-login-card img {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+}
+
+.admin-login-card h1,
+.admin-topbar h1 {
+  margin: 0;
+  color: var(--heading);
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(1180px, 100%);
+  margin: 0 auto 24px;
+  gap: 18px;
+}
+
+.student-status-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  width: min(1180px, 100%);
+  margin: 0 auto 18px;
+}
+
+.admin-summary-card {
+  min-height: 112px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.admin-summary-card span,
+.detail-item span,
+.admin-field span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.admin-summary-card strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--heading);
+  font-size: 2rem;
+}
+
+.admin-panel,
+.details-section,
+.admin-review-form,
+.offer-letter-box {
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.admin-panel__header,
+.admin-control-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-actions-row,
+.details-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-muted {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-field--wide {
+  grid-column: span 3;
+}
+
+.admin-field--sort {
+  grid-column: span 2;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  outline: none;
+  background: #ffffff;
+  color: var(--heading);
+}
+
+.certificate-date-filter { min-width: 220px; }
+.gyapan-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.gyapan-card { padding: 18px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.gyapan-card p { margin: 7px 0 0; color: var(--muted); }
+.gyapan-card label { display: flex; align-items: center; gap: 10px; color: var(--heading); font-weight: 800; }
+.gyapan-editor-table input { min-width: 110px; }
+
+.admin-field textarea {
+  resize: vertical;
+}
+
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
+  border-color: rgba(10, 78, 163, 0.72);
+  box-shadow: 0 0 0 4px rgba(10, 78, 163, 0.1);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(74, 112, 159, 0.16);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-table th {
+  color: var(--heading);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.admin-table td {
+  color: var(--text);
+}
+
+.text-button {
+  border: 0;
+  padding: 0;
+  color: var(--primary);
+  background: transparent;
+  font-weight: 800;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.status-badge--pending {
+  color: #8a5a00;
+  background: #fff4d8;
+}
+
+.status-badge--approved {
+  color: #14683b;
+  background: #dcf7e8;
+}
+
+.status-badge--rejected {
+  color: #a1281f;
+  background: #ffe5e2;
+}
+
+.status-badge--muted {
+  color: #546179;
+  background: #edf2f7;
+}
+
+.details-section h2,
+.admin-review-form h2,
+.offer-letter-box h2 {
+  margin: 0 0 16px;
+  color: var(--heading);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.detail-item {
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid rgba(74, 112, 159, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.detail-item strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+
+.offer-letter-box {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 340px) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.offer-letter-box--actions {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+
+.offer-letter-box p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.offer-letter-actions,
+.offer-letter-upload-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.offer-letter-upload-inline .admin-field {
+  min-width: min(100%, 360px);
+}
+
+.training-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.training-form .primary-button,
+.training-form .admin-muted {
+  align-self: end;
+}
+
+.training-form__project-title {
+  grid-column: 1 / -1;
+}
+
+.offer-letter-viewer {
+  width: 100%;
+  height: min(78vh, 920px);
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.offer-letter-viewer iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+}
+
+.admin-error,
+.admin-success,
+.admin-loading,
+.admin-empty-state {
+  font-weight: 750;
+}
+
+.admin-error {
+  color: var(--danger);
+}
+
+.admin-success {
+  color: #14683b;
+}
+
+.admin-loading,
+.admin-empty-state {
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .admin-summary-grid,
+  .admin-panel__header,
+  .admin-control-grid,
+  .details-grid,
+  .training-form,
+  .offer-letter-box {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gyapan-cards { grid-template-columns: 1fr; }
+
+  .admin-field--wide,
+  .admin-field--sort {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-shell,
+  .admin-login-shell {
+    padding: 20px 12px;
+  }
+
+  .admin-topbar,
+  .student-status-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-summary-grid,
+  .admin-panel__header,
+  .admin-control-grid,
+  .details-grid,
+  .training-form,
+  .offer-letter-box {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-field--wide,
+  .admin-field--sort {
+    grid-column: span 1;
+  }
+}
+
+/* Admin-only design system. The .admin-console scope keeps student-facing screens unchanged. */
+.admin-console {
+  --admin-navy: #0f4c92;
+  --admin-navy-dark: #093b75;
+  --admin-blue-soft: #dbeafe;
+  --admin-border: #d7e3f2;
+  --admin-ink: #173b67;
+  --admin-muted: #60748d;
+  --admin-surface: #ffffff;
+  --admin-shadow: 0 12px 28px rgba(22, 65, 112, 0.1);
+  padding: 34px 22px 48px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(30, 108, 192, 0.14), transparent 28rem),
+    linear-gradient(135deg, #eef5fc 0%, #f8fbff 48%, #eaf3fc 100%);
+}
+
+.admin-console .admin-topbar,
+.admin-console .admin-summary-grid,
+.admin-console .admin-panel,
+.admin-console .details-section,
+.admin-console .admin-review-form,
+.admin-console .offer-letter-box {
+  width: min(1240px, 100%);
+}
+
+.admin-console .admin-topbar {
+  margin-bottom: 26px;
+  padding: 4px 2px;
+}
+
+.admin-console .admin-topbar h1,
+.admin-console h2 {
+  color: var(--admin-ink);
+  letter-spacing: -0.025em;
+}
+
+.admin-console .portal-eyebrow {
+  color: var(--admin-navy);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.admin-console .admin-panel,
+.admin-console .details-section,
+.admin-console .admin-review-form,
+.admin-console .offer-letter-box,
+.admin-console .admin-summary-card,
+.admin-console .gyapan-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-console .admin-panel,
+.admin-console .details-section,
+.admin-console .admin-review-form,
+.admin-console .offer-letter-box {
+  padding: clamp(20px, 3vw, 30px);
+  margin-bottom: 22px;
+}
+
+.admin-console .admin-summary-grid { gap: 18px; margin-bottom: 22px; }
+
+.admin-console .admin-summary-card {
+  position: relative;
+  min-height: 126px;
+  padding: 21px;
+  overflow: hidden;
+}
+
+.admin-console .admin-summary-card::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  content: "";
+  background: var(--admin-navy);
+}
+
+.admin-console .admin-summary-card strong { color: var(--admin-navy); }
+.admin-console .admin-summary-card span,
+.admin-console .admin-field span,
+.admin-console .detail-item span { color: var(--admin-muted); }
+
+.admin-console .admin-actions-row { gap: 12px; margin-bottom: 20px; }
+.admin-console .admin-actions-row--spaced { margin-top: 16px; }
+
+.admin-primary-btn,
+.admin-secondary-btn,
+.admin-danger-btn,
+.admin-success-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 17px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  box-shadow: 0 5px 12px rgba(15, 76, 146, 0.12);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.admin-primary-btn { color: #fff; background: var(--admin-navy); }
+.admin-primary-btn:hover:not(:disabled) { background: var(--admin-navy-dark); }
+.admin-secondary-btn { color: var(--admin-navy); border-color: #c7dbf4; background: var(--admin-blue-soft); }
+.admin-secondary-btn:hover:not(:disabled) { background: #c7ddfb; border-color: #a8c8ee; }
+.admin-danger-btn { color: #fff; background: #b42318; box-shadow: 0 5px 12px rgba(180, 35, 24, 0.13); }
+.admin-danger-btn:hover:not(:disabled) { background: #901f16; }
+.admin-success-btn { color: #fff; background: #177245; }
+.admin-success-btn:hover:not(:disabled) { background: #105c36; }
+
+.admin-primary-btn:hover:not(:disabled),
+.admin-secondary-btn:hover:not(:disabled),
+.admin-danger-btn:hover:not(:disabled),
+.admin-success-btn:hover:not(:disabled) {
+  box-shadow: 0 9px 18px rgba(15, 76, 146, 0.2);
+  transform: translateY(-2px);
+}
+
+.admin-primary-btn:focus-visible,
+.admin-secondary-btn:focus-visible,
+.admin-danger-btn:focus-visible,
+.admin-success-btn:focus-visible {
+  outline: 3px solid rgba(15, 76, 146, 0.24);
+  outline-offset: 2px;
+}
+
+.admin-primary-btn:disabled,
+.admin-secondary-btn:disabled,
+.admin-danger-btn:disabled,
+.admin-success-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
+}
+
+.admin-console .admin-field { gap: 7px; }
+.admin-console .admin-field input,
+.admin-console .admin-field select,
+.admin-console .admin-field textarea,
+.admin-console .gyapan-editor-table input {
+  min-height: 46px;
+  border: 1px solid #cbdced;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fbfdff;
+  color: var(--admin-ink);
+  box-shadow: inset 0 1px 2px rgba(18, 71, 131, 0.03);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.admin-console .admin-field textarea { min-height: 112px; }
+.admin-console .admin-field input:focus,
+.admin-console .admin-field select:focus,
+.admin-console .admin-field textarea:focus,
+.admin-console .gyapan-editor-table input:focus {
+  border-color: var(--admin-navy);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(15, 76, 146, 0.12);
+}
+
+.admin-console input[type="file"] {
+  padding: 7px;
+  cursor: pointer;
+}
+
+.admin-console input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--admin-navy);
+  background: var(--admin-blue-soft);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.admin-console input[type="checkbox"] { accent-color: var(--admin-navy); cursor: pointer; }
+
+.admin-console .admin-table-wrap {
+  border-color: var(--admin-border);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.admin-console .admin-table { background: var(--admin-surface); }
+.admin-console .admin-table th {
+  padding: 15px 13px;
+  color: #234a78;
+  background: #eef5fc;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+.admin-console .admin-table td { padding: 14px 13px; border-color: #e1ebf5; }
+.admin-console .admin-table tbody tr { transition: background-color 150ms ease; }
+.admin-console .admin-table tbody tr:hover { background: #f5f9fe; }
+.admin-console .admin-table-action { min-height: 36px; padding: 7px 11px; border-radius: 9px; font-size: 0.84rem; }
+
+.admin-console .detail-item {
+  border-color: #dce8f4;
+  border-radius: 11px;
+  background: #f9fbfe;
+}
+.admin-console .detail-item strong { color: var(--admin-ink); }
+.admin-console .gyapan-cards { gap: 18px; }
+.admin-console .gyapan-card { padding: 20px; }
+.admin-console .gyapan-card label { color: var(--admin-ink); }
+.admin-console .offer-letter-viewer { border-color: var(--admin-border); border-radius: 12px; }
+
+@media (max-width: 640px) {
+  .admin-console { padding: 22px 12px 32px; }
+  .admin-console .admin-topbar { gap: 14px; }
+  .admin-console .admin-topbar > .admin-secondary-btn { width: 100%; }
+  .admin-console .admin-actions-row > .admin-primary-btn,
+  .admin-console .admin-actions-row > .admin-secondary-btn,
+  .admin-console .admin-actions-row > .admin-danger-btn { flex: 1 1 100%; }
+  .admin-console .offer-letter-actions > *,
+  .admin-console .document-actions > * { flex: 1 1 100%; }
+  .admin-console .admin-summary-card { min-height: 108px; }
+}

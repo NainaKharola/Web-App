@@ -1,0 +1,85 @@
+function uniqueOptions(students, key) {
+  return [...new Set(students.map((student) => student[key]).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b)));
+}
+
+function FilterBar({ filters, onChange, students }) {
+  const updateFilter = (key, value) => {
+    onChange({ ...filters, [key]: value });
+  };
+
+  return (
+    <section className="admin-control-grid">
+      <label className="admin-field">
+        <span>College / University</span>
+        <select
+          value={filters.collegeName}
+          onChange={(event) => updateFilter("collegeName", event.target.value)}
+        >
+          <option value="">All Colleges</option>
+          {uniqueOptions(students, "collegeName").map((college) => (
+            <option key={college} value={college}>
+              {college}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="admin-field">
+        <span>Branch</span>
+        <select
+          value={filters.branch}
+          onChange={(event) => updateFilter("branch", event.target.value)}
+        >
+          <option value="">All Branches</option>
+          {uniqueOptions(students, "branch").map((branch) => (
+            <option key={branch} value={branch}>
+              {branch}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="admin-field">
+        <span>Year</span>
+        <select
+          value={filters.year}
+          onChange={(event) => updateFilter("year", event.target.value)}
+        >
+          <option value="">All Years</option>
+          {uniqueOptions(students, "year").map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="admin-field">
+        <span>Status</span>
+        <select
+          value={filters.status}
+          onChange={(event) => updateFilter("status", event.target.value)}
+        >
+          <option value="">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </label>
+
+      <label className="admin-field">
+        <span>Registration Date</span>
+        <input
+          type="date"
+          value={filters.registrationDate}
+          onChange={(event) =>
+            updateFilter("registrationDate", event.target.value)
+          }
+        />
+      </label>
+    </section>
+  );
+}
+
+export default FilterBar;

@@ -1,0 +1,37 @@
+# ==========================
+# Node modules
+# ==========================
+**/node_modules/
+
+# Build folders
+**/dist/
+**/build/
+
+# Environment variables
+**/.env
+
+# Local application records and generated documents
+backend/data/admins.json
+backend/data/students.json
+backend/data/gyapan.json
+backend/generated_offer_letter.html
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Uploaded files
+backend/uploads/photos/*
+backend/uploads/resumes/*
+backend/uploads/results/*
+
+# Keep upload folders
+!backend/uploads/photos/.gitkeep
+!backend/uploads/resumes/.gitkeep
+!backend/uploads/results/.gitkeep

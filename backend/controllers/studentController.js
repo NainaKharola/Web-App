@@ -1,0 +1,503 @@
+const Student = require("../models/Student");
+const fs = require("fs/promises");
+const path = require("path");
+const { generatePdfFromHtml } = require("../services/pdfService");
+const { removeLocalFile } = require("../services/localStorageService");
+const { sendRegistrationConfirmationEmail } = require("../services/emailService");
+const {
+  indianStatesAndUnionTerritories,
+} = require("../data/indianStates");
+
+
+const requiredFields = [
+  "name",
+  "course",
+  "branch",
+  "currentYear",
+  "phone",
+  "email",
+  "dob",
+  "aadhaarNumber",
+  "collegeName",
+  "collegeState",
+  "collegeLocation",
+  "currentAddress",
+  "permanentAddress",
+  "fatherName",
+  "fatherPhone",
+  "fatherOccupation",
+  "cgpa",
+  "collegeId",
+  "internshipDuration",
+  "internshipJoiningMonth",
+  "permissionLetterNumber",
+  "permissionLetterDate",
+];
+
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidDateValue(value) {
+  if (!datePattern.test(value)) return false;
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function validateRequest(body, files) {
+  const missingFields = requiredFields.filter(
+    (field) => !String(body[field] || "").trim()
+  );
+
+  const missingFiles = [
+    "resume",
+    "result",
+    "photo",
+    "permissionLetter",
+  ].filter((field) => !files?.[field]?.[0]);
+
+  if (missingFields.length || missingFiles.length) {
+    return `Missing required fields: ${[
+      ...missingFields,
+      ...missingFiles,
+    ].join(", ")}`;
+  }
+
+  if (!/^\d{10}$/.test(body.phone)) {
+    return "Phone number must be exactly 10 digits.";
+  }
+
+  if (!/^\d{10}$/.test(body.fatherPhone)) {
+    return "Father contact number must be exactly 10 digits.";
+  }
+
+  if (!/^\d{12}$/.test(body.aadhaarNumber)) {
+    return "Aadhaar Number must contain exactly 12 digits.";
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+    return "Enter a valid email address.";
+  }
+
+  if (new Date(body.dob) > new Date()) {
+    return "Date of birth cannot be in the future.";
+  }
+
+  if (!/^\d{4}-\d{2}$/.test(body.internshipJoiningMonth || "")) {
+    return "Select a valid internship joining month.";
+  }
+
+  if (!isValidDateValue(body.permissionLetterDate)) {
+    return "Select a valid permission letter date.";
+  }
+
+  const cgpa = Number(body.cgpa);
+
+  if (Number.isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
+    return "CGPA must be between 0 and 10.";
+  }
+
+  if (!indianStatesAndUnionTerritories.includes(body.collegeState)) {
+    return "Select a valid college state or union territory.";
+  }
+
+  return "";
+}
+
+function generateReferenceId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  return Array.from({ length: 7 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+async function createUniqueReferenceId() {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const referenceId = generateReferenceId();
+    const exists = await Student.exists({ referenceId });
+    if (!exists) return referenceId;
+  }
+
+  throw new Error("Unable to generate a unique Reference ID.");
+}
+
+async function getNextSerialNumber() {
+  const lastStudent = await Student.findOne({ serialNumber: { $exists: true } })
+    .sort({ serialNumber: -1 })
+    .select("serialNumber");
+
+  return (lastStudent?.serialNumber || 0) + 1;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("en-IN");
+}
+
+function buildStudentTemplateData(student) {
+  return {
+    studentName: student.name,
+    fatherName: student.fatherName,
+    parentOccupation: student.fatherOccupation,
+    temporaryAddress: student.currentAddress,
+    permanentAddress: student.permanentAddress,
+    collegeName: student.collegeName,
+    course: student.course,
+    year: student.year,
+    branch: student.branch,
+    mobileNumber: student.phone,
+    residencePhone: student.fatherPhone,
+    email: student.email,
+    dateOfBirth: student.dob,
+    nationality: "Indian",
+    collegeIdNumber: student.collegeId,
+    issueDate: formatDate(new Date()),
+    place: student.location,
+    sponsoringAuthorityName: "",
+    sponsoringAuthorityDesignation: "",
+    policePlace: "",
+    policeDate: "",
+    policeAuthorityName: "",
+    policeAuthorityDesignation: "",
+  };
+}
+
+async function renderTemplate(templateName, data) {
+  const templatePath = path.join(__dirname, "..", "templates", templateName);
+  const template = await fs.readFile(templatePath, "utf8");
+
+  return template.replace(/{{(\w+)}}/g, (match, key) => escapeHtml(data[key] ?? ""));
+}
+
+function publicStudent(student) {
+  const value = student.toObject ? student.toObject() : student;
+  delete value.aadhaarNumber;
+  delete value.offerLetter?.pdfBuffer;
+  return value;
+}
+
+async function findStudentForPortal(email, referenceId) {
+  return Student.findOne({
+    email: String(email || "").trim().toLowerCase(),
+    referenceId: String(referenceId || "").trim().toUpperCase(),
+  });
+}
+
+async function createStudent(req, res) {
+  try {
+    const validationError = validateRequest(req.body, req.files);
+
+    if (validationError) {
+      return res.status(400).json({
+        success: false,
+        message: validationError,
+      });
+    }
+
+    const referenceId = await createUniqueReferenceId();
+    const serialNumber = await getNextSerialNumber();
+
+    const student = new Student({
+      referenceId,
+      serialNumber,
+      name: req.body.name,
+      course: req.body.course,
+      branch: req.body.branch,
+      year: req.body.currentYear,
+
+      phone: req.body.phone,
+      email: req.body.email.trim().toLowerCase(),
+      dob: req.body.dob,
+
+      aadhaarNumber: req.body.aadhaarNumber,
+
+      collegeName: req.body.collegeName,
+      collegeState: req.body.collegeState,
+      location: req.body.collegeLocation,
+
+      currentAddress: req.body.currentAddress,
+      permanentAddress: req.body.permanentAddress,
+
+      fatherName: req.body.fatherName,
+      fatherPhone: req.body.fatherPhone,
+      fatherOccupation: req.body.fatherOccupation,
+
+      cgpa: Number(req.body.cgpa),
+
+      collegeId: req.body.collegeId,
+
+      internshipDuration: req.body.internshipDuration,
+      internshipJoiningDate: req.body.internshipJoiningDate || "",
+      internshipJoiningMonth: req.body.internshipJoiningMonth,
+
+      permissionLetterNumber: req.body.permissionLetterNumber,
+      permissionLetterDate: req.body.permissionLetterDate,
+
+      resume: {
+        url: req.uploadedFiles.resume.url,
+        publicId: req.uploadedFiles.resume.public_id,
+      },
+
+      result: {
+        url: req.uploadedFiles.result.url,
+        publicId: req.uploadedFiles.result.public_id,
+      },
+
+      photo: {
+        url: req.uploadedFiles.photo.url,
+        publicId: req.uploadedFiles.photo.public_id,
+      },
+
+      permissionLetter: {
+        url: req.uploadedFiles.permissionLetter.url,
+        publicId: req.uploadedFiles.permissionLetter.public_id,
+      },
+
+      submittedAt: new Date(),
+    });
+
+    // Saving the registration is the transaction boundary for this endpoint.
+    // A confirmation email is useful, but it must never turn a completed
+    // registration into a failed request.
+    const savedStudent = await student.save();
+    let emailResult;
+    let emailWarning;
+
+    try {
+      emailResult = await sendRegistrationConfirmationEmail(savedStudent);
+    } catch (emailError) {
+      console.error(
+        `Registration email failed for ${savedStudent.referenceId}:`,
+        emailError
+      );
+      emailWarning = "Registration successful, but the confirmation email could not be sent.";
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Student registered successfully.",
+      referenceId: savedStudent.referenceId,
+      serialNumber: savedStudent.serialNumber,
+      ...(emailResult ? { email: emailResult } : {}),
+      ...(emailWarning ? { warning: emailWarning } : {}),
+      student: publicStudent(savedStudent),
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to register student. Please try again.",
+      error: error.message,
+    });
+  }
+}
+
+async function deleteStudent(req, res) {
+  try {
+    // Find student
+    const student = await Student.findById(req.params.id);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    await Promise.allSettled([student.resume, student.result, student.photo, student.permissionLetter, student.completedDocuments, student.offerLetter].map(removeLocalFile));
+    await Student.deleteMany({ _id: req.params.id });
+
+    return res.status(200).json({
+      success: true,
+      message: "Student and all uploaded files deleted successfully.",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to delete student.",
+      error: error.message,
+    });
+  }
+}
+
+async function loginStudent(req, res) {
+  try {
+    const { email, referenceId } = req.body;
+
+    if (!email || !referenceId) {
+      return res.status(400).json({
+        success: false,
+        message: "Registered email address and Reference ID are required.",
+      });
+    }
+
+    const student = await findStudentForPortal(email, referenceId);
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: "Email address and Reference ID do not match any registration.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student login successful.",
+      student: publicStudent(student),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to login student.",
+      error: error.message,
+    });
+  }
+}
+
+async function getStudentDashboard(req, res) {
+  try {
+    const student = await findStudentForPortal(req.query.email, req.query.referenceId);
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: "Email address and Reference ID do not match any registration.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      student: publicStudent(student),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch student dashboard.",
+      error: error.message,
+    });
+  }
+}
+
+async function downloadStudentDocument(req, res) {
+  try {
+    const student = await findStudentForPortal(req.query.email, req.query.referenceId);
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: "Email address and Reference ID do not match any registration.",
+      });
+    }
+
+    if (student.status !== "Approved") {
+      return res.status(403).json({
+        success: false,
+        message: "Approval documents are available only after application approval.",
+      });
+    }
+
+    const typeMap = {
+      declaration: "declaration_form.html",
+      character: "character_certificate.html",
+    };
+    const templateName = typeMap[req.params.type];
+
+    if (!templateName) {
+      return res.status(404).json({
+        success: false,
+        message: "Document template not found.",
+      });
+    }
+
+    const html = await renderTemplate(templateName, buildStudentTemplateData(student));
+
+    await fs.writeFile("test-document.html", html);
+
+    console.log("HTML WRITTEN");
+    console.log(html.substring(0, 500));
+    const pdf = await generatePdfFromHtml(html);
+    const filename =
+      req.params.type === "declaration"
+        ? "DRDO-Declaration-Form.pdf"
+        : "DRDO-Character-Certificate.pdf";
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    return res.send(pdf);
+  } 
+  catch (error) {
+    console.error("DOCUMENT ERROR:");
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      stack: error.stack,
+    });
+  }
+}
+
+async function uploadCompletedStudentDocuments(req, res) {
+  try {
+    const student = await findStudentForPortal(req.body.email, req.body.referenceId);
+
+    if (!student) {
+      return res.status(401).json({
+        success: false,
+        message: "Email address and Reference ID do not match any registration.",
+      });
+    }
+
+    if (student.status !== "Approved") {
+      return res.status(403).json({
+        success: false,
+        message: "Completed documents can be uploaded only after approval.",
+      });
+    }
+
+    student.completedDocuments = {
+      url: req.uploadedCompletedDocuments.url,
+      publicId: req.uploadedCompletedDocuments.publicId,
+      uploadedAt: new Date(),
+    };
+
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Completed documents uploaded successfully.",
+      student: publicStudent(student),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to upload completed documents.",
+      error: error.message,
+    });
+  }
+}
+
+module.exports = {
+  createStudent,
+  deleteStudent,
+  downloadStudentDocument,
+  getStudentDashboard,
+  loginStudent,
+  uploadCompletedStudentDocuments,
+};
