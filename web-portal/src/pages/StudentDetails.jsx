@@ -10,6 +10,7 @@ import {
   uploadOfferLetterPdf,
 } from "../services/offerLetterService";
 import { getUploadUrl } from "../utils/uploadUrl";
+import { branches as registeredBranchOptions } from "../data/branches";
 import "../styles/admin.css";
 
 const courseOptions = [
@@ -24,18 +25,6 @@ const yearOptions = [
   "2nd Year",
   "3rd Year",
   "4th Year",
-];
-
-const branchOptions = [
-  "Computer Science Engineering",
-  "Information Technology",
-  "Electronics and Communication Engineering",
-  "Electrical Engineering",
-  "Mechanical Engineering",
-  "Civil Engineering",
-  "Chemical Engineering",
-  "Biotechnology",
-  "Artificial Intelligence and Data Science",
 ];
 
 const trainingDurationOptions = [
@@ -106,6 +95,11 @@ function addDurationToDate(fromDate, duration) {
 
 function TrainingManagementForm({ student, onUpdated }) {
   const existing = student.trainingManagement || {};
+  const branchOptions = [...new Set([
+    ...registeredBranchOptions,
+    existing.branch,
+    student.branch,
+  ].filter(Boolean))];
   const [form, setForm] = useState({
     studentName: existing.studentName || student.name || "",
     courseName: normalizeCourse(existing.courseName || student.course),
