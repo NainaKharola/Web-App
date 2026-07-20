@@ -446,7 +446,6 @@ function StudentDetails({ id }) {
         rows={[
           ["Name", student.name],
           ["Date of Birth", student.dob],
-          ["Gender", student.gender],
           ["Phone Number", student.phone],
           ["Email", student.email],
         ]}
