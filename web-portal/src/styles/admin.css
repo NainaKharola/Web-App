@@ -269,10 +269,11 @@
   overflow-wrap: anywhere;
 }
 
-.document-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.document-actions{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:20px;
 }
 
 .admin-link-button {
@@ -638,4 +639,83 @@
   .admin-console .offer-letter-actions > *,
   .admin-console .document-actions > * { flex: 1 1 100%; }
   .admin-console .admin-summary-card { min-height: 108px; }
+}
+
+.student-document-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:240px;
+    min-height:56px;
+    padding:14px 24px;
+
+    background:#e6f0ff;
+    border:1px solid #bfd7ff;
+    border-radius:14px;
+
+    color:#0a4ea3;
+    font-size:18px;
+    font-weight:700;
+
+    text-decoration:none;
+
+    transition:.2s;
+}
+
+.student-document-link:hover{
+    background:#d7e7ff;
+}
+
+/* ---------- Student Dashboard Buttons ---------- */
+
+.primary-button,
+.secondary-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    min-height:52px;
+    padding:12px 26px;
+
+    border:none;
+    border-radius:14px;
+
+    background:#1f7ae0;
+    color:#fff;
+
+    font-size:17px;
+    font-weight:700;
+
+    cursor:pointer;
+    text-decoration:none;
+
+    transition:.2s;
+}
+
+.primary-button:hover,
+.secondary-button:hover{
+    background:#1669c5;
+}
+
+/* ---------- Student Dashboard Label ---------- */
+
+.portal-eyebrow{
+    color:#0a4ea3;
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-family:"Poppins", sans-serif;
+}
+
+.offer-letter-upload-inline{
+    display:flex;
+    align-items:flex-end;
+    gap:16px;
+    flex-wrap:wrap;
+}
+
+.offer-letter-upload-inline .admin-field{
+    flex:1;
+    min-width:320px;
 }

@@ -35,7 +35,12 @@ function DetailGrid({ title, rows }) {
 function FileLink({ label, href }) {
   if (!href) return null;
   return (
-    <a className="secondary-button admin-link-button" href={getUploadUrl(href)} target="_blank" rel="noreferrer">
+    <a
+      className="student-document-link"
+      href={getUploadUrl(href)}
+      target="_blank"
+      rel="noreferrer"
+    >
       {label}
     </a>
   );
@@ -92,7 +97,10 @@ function StudentDashboard() {
     }
 
     try {
-      const response = await uploadCompletedDocuments(credentials, completedFile);
+      const response = await uploadCompletedDocuments(
+        credentials,
+        completedFile,
+      );
       setStudent(response.student);
       setUploadMessage(response.message);
     } catch (err) {
@@ -119,8 +127,8 @@ function StudentDashboard() {
     );
   }
   console.log("Student =", student);
-console.log("Offer Letter =", student.offerLetter);
-console.log("Offer Letter URL =", student.offerLetterUrl);
+  console.log("Offer Letter =", student.offerLetter);
+  console.log("Offer Letter URL =", student.offerLetterUrl);
   const approved = student.status === "Approved";
 
   return (
@@ -129,9 +137,16 @@ console.log("Offer Letter URL =", student.offerLetterUrl);
         <div>
           <p className="portal-eyebrow">Student Dashboard</p>
           <h1>{student.name}</h1>
-          <div className="student-status-line">
-            <span>{student.email}</span>
-            <span>Reference ID: {student.referenceId}</span>
+          <div className="student-info-box">
+            <div className="student-info-item">
+              <span className="student-info-label">Email: </span>
+              <strong>{student.email}</strong>
+            </div>
+
+            <div className="student-info-item">
+              <span className="student-info-label">Reference ID: </span>
+              <strong>{student.referenceId}</strong>
+            </div>
           </div>
         </div>
         <button className="secondary-button" type="button" onClick={logout}>
@@ -187,7 +202,10 @@ console.log("Offer Letter URL =", student.offerLetterUrl);
           <FileLink label="View Photo" href={student.photo?.url} />
           <FileLink label="View Resume" href={student.resume?.url} />
           <FileLink label="View Result" href={student.result?.url} />
-          <FileLink label="View Permission Letter" href={student.permissionLetter?.url} />
+          <FileLink
+            label="View Permission Letter"
+            href={student.permissionLetter?.url}
+          />
         </div>
       </section>
 
@@ -195,27 +213,45 @@ console.log("Offer Letter URL =", student.offerLetterUrl);
         <h2>Approval Documents</h2>
         {approved ? (
           <div className="document-actions">
-            <FileLink label="View Offer Letter" href={student.offerLetter?.url || student.offerLetterUrl} />
-            <FileLink label="Download Declaration Form" href={studentDocumentUrl("declaration", credentials)} />
-            <FileLink label="Download Character Certificate" href={studentDocumentUrl("character", credentials)} />
-            
+            <FileLink
+              label="View Offer Letter"
+              href={student.offerLetter?.url || student.offerLetterUrl}
+            />
+            <FileLink
+              label="Download Declaration Form"
+              href={studentDocumentUrl("declaration", credentials)}
+            />
+            <FileLink
+              label="Download Character Certificate"
+              href={studentDocumentUrl("character", credentials)}
+            />
           </div>
         ) : (
-          <p className="admin-muted">Approval documents become available after your application is approved.</p>
+          <p className="admin-muted">
+            Approval documents become available after your application is
+            approved.
+          </p>
         )}
       </section>
 
       {approved && (
         <section className="details-section">
           <h2>Upload Documents</h2>
-          <p className="admin-muted">Combine all completed documents into one PDF and upload here.</p>
-          <form className="offer-letter-upload-inline" onSubmit={handleCompletedUpload}>
+          <p className="admin-muted">
+            Combine all completed documents into one PDF and upload here.
+          </p>
+          <form
+            className="offer-letter-upload-inline"
+            onSubmit={handleCompletedUpload}
+          >
             <label className="admin-field">
               <span>Completed Documents PDF</span>
               <input
                 accept="application/pdf"
                 type="file"
-                onChange={(event) => setCompletedFile(event.target.files?.[0] || null)}
+                onChange={(event) =>
+                  setCompletedFile(event.target.files?.[0] || null)
+                }
               />
             </label>
             <button className="primary-button" type="submit">
@@ -223,7 +259,10 @@ console.log("Offer Letter URL =", student.offerLetterUrl);
             </button>
           </form>
           {student.completedDocuments?.url && (
-            <FileLink label="View Uploaded Combined PDF" href={student.completedDocuments.url} />
+            <FileLink
+              label="View Uploaded Combined PDF"
+              href={student.completedDocuments.url}
+            />
           )}
           {uploadMessage && <p className="admin-muted">{uploadMessage}</p>}
         </section>
