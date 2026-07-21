@@ -996,5 +996,5 @@ This project was developed as part of an internship project for the
 complete internship registration and management process.
 
 
-
-https://drive.google.com/file/d/1zOgYvAGo41MK9Xr_AVipsoLEpalS4HUC/view?usp=drive_link
+https://drive.google.com/file/d/1v8nqYlF-1g5YyGNEqXQwihVWF0bljSTa/view?usp=drive_link
+https://drive.google.com/file/d/1lk1M3ND1YTUiSAWLK2stV_7wjNwPgzxx/view?usp=drive_link
