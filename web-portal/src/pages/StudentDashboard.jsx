@@ -92,7 +92,11 @@ function StudentDashboard() {
     setUploadMessage("");
 
     if (!completedFile) {
-      setUploadMessage("Select the combined completed documents PDF.");
+      setUploadMessage("Select Upload Form 1 and Form 2 (Single PDF).");
+      return;
+    }
+    if (completedFile.size > 10 * 1024 * 1024) {
+      setUploadMessage("Maximum file size allowed is 10 MB.");
       return;
     }
 
@@ -197,20 +201,21 @@ function StudentDashboard() {
       />
 
       <section className="details-section">
-        <h2>Uploaded Documents</h2>
+        <h2>Student Documents</h2>
         <div className="document-actions">
           <FileLink label="View Photo" href={student.photo?.url} />
           <FileLink label="View Resume" href={student.resume?.url} />
           <FileLink label="View Result" href={student.result?.url} />
           <FileLink
-            label="View Permission Letter"
+            label="View College Recommendation Letter"
             href={student.permissionLetter?.url}
           />
+          <FileLink label="View Aadhaar Card" href={student.aadhaarCard?.url} />
         </div>
       </section>
 
       <section className="details-section">
-        <h2>Approval Documents</h2>
+        <h2>Documents to be Filled by Students</h2>
         {approved ? (
           <div className="document-actions">
             <FileLink
@@ -218,17 +223,17 @@ function StudentDashboard() {
               href={student.offerLetter?.url || student.offerLetterUrl}
             />
             <FileLink
-              label="Download Declaration Form"
+              label="Download Declaration Form (Form 1)"
               href={studentDocumentUrl("declaration", credentials)}
             />
             <FileLink
-              label="Download Character Certificate"
+              label="Download Character Certificate (Form 2)"
               href={studentDocumentUrl("character", credentials)}
             />
           </div>
         ) : (
           <p className="admin-muted">
-            Approval documents become available after your application is
+            Documents to be filled become available after your application is
             approved.
           </p>
         )}
@@ -238,14 +243,15 @@ function StudentDashboard() {
         <section className="details-section">
           <h2>Upload Documents</h2>
           <p className="admin-muted">
-            Combine all completed documents into one PDF and upload here.
+            Upload the filled Declaration Form and Character Certificate as a single PDF file (Upload Form 1 and Form 2 together).<br />
+            Maximum allowed file size: 10 MB.
           </p>
           <form
             className="offer-letter-upload-inline"
             onSubmit={handleCompletedUpload}
           >
             <label className="admin-field">
-              <span>Completed Documents PDF</span>
+              <span>Upload Form 1 and Form 2 (Single PDF)</span>
               <input
                 accept="application/pdf"
                 type="file"

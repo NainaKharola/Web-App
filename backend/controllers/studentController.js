@@ -59,7 +59,12 @@ function validateRequest(body, files) {
     "result",
     "photo",
     "permissionLetter",
+    "aadhaarCard",
   ].filter((field) => !files?.[field]?.[0]);
+
+  if (missingFiles.includes("aadhaarCard")) {
+    return "Please upload your Aadhaar Card.";
+  }
 
   if (missingFields.length || missingFiles.length) {
     return `Missing required fields: ${[
@@ -93,7 +98,7 @@ function validateRequest(body, files) {
   }
 
   if (!isValidDateValue(body.permissionLetterDate)) {
-    return "Select a valid permission letter date.";
+    return "Select a valid college recommendation letter date.";
   }
 
   const cgpa = Number(body.cgpa);
@@ -264,6 +269,10 @@ async function createStudent(req, res) {
         url: req.uploadedFiles.permissionLetter.url,
         publicId: req.uploadedFiles.permissionLetter.public_id,
       },
+      aadhaarCard: {
+        url: req.uploadedFiles.aadhaarCard.url,
+        publicId: req.uploadedFiles.aadhaarCard.public_id,
+      },
 
       submittedAt: new Date(),
     });
@@ -317,7 +326,7 @@ async function deleteStudent(req, res) {
       });
     }
 
-    await Promise.allSettled([student.resume, student.result, student.photo, student.permissionLetter, student.completedDocuments, student.offerLetter].map(removeLocalFile));
+    await Promise.allSettled([student.resume, student.result, student.photo, student.permissionLetter, student.aadhaarCard, student.completedDocuments, student.offerLetter].map(removeLocalFile));
     await Student.deleteMany({ _id: req.params.id });
 
     return res.status(200).json({
@@ -408,7 +417,7 @@ async function downloadStudentDocument(req, res) {
     if (student.status !== "Approved") {
       return res.status(403).json({
         success: false,
-        message: "Approval documents are available only after application approval.",
+        message: "Documents to be filled by students are available only after application approval.",
       });
     }
 
@@ -481,13 +490,13 @@ async function uploadCompletedStudentDocuments(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: "Completed documents uploaded successfully.",
+      message: "Form 1 and Form 2 uploaded successfully.",
       student: publicStudent(student),
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Unable to upload completed documents.",
+      message: "Unable to upload Form 1 and Form 2.",
       error: error.message,
     });
   }

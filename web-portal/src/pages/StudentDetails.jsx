@@ -487,24 +487,25 @@ function StudentDetails({ id }) {
         rows={[
           ["Internship Duration", student.internshipDuration],
           ["Joining Month", student.internshipJoiningMonth || student.internshipJoiningDate],
-          ["Permission Letter Number", student.permissionLetterNumber],
-          ["Permission Letter Date", student.permissionLetterDate],
+          ["College Recommendation Letter Number", student.permissionLetterNumber],
+          ["College Recommendation Letter Date", student.permissionLetterDate],
         ]}
       />
 
       <section className="details-section">
-        <h2>Uploaded Documents</h2>
+        <h2>Student Documents</h2>
         <div className="document-actions">
         <DocumentButton label="Student Photo" file={student.photo} />
         <DocumentButton label="Resume" file={student.resume} />
         <DocumentButton label="Result" file={student.result} />
+        <DocumentButton label="Aadhaar Card" file={student.aadhaarCard} />
         <DocumentButton
-          label="Permission Letter"
+          label="College Recommendation Letter"
           file={student.permissionLetter}
   />
 
   <DocumentButton
-    label="Completed Documents PDF"
+    label="Upload Form 1 and Form 2 (Single PDF)"
     file={student.completedDocuments}
   />
 </div>

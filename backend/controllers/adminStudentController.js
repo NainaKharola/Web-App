@@ -142,6 +142,7 @@ async function removeStudentAssets(student) {
     removeLocalFile(student.result),
     removeLocalFile(student.photo),
     removeLocalFile(student.permissionLetter),
+    removeLocalFile(student.aadhaarCard),
     removeLocalFile(student.completedDocuments),
     removeLocalFile(student.offerLetter),
     removeLocalFile(student.offerLetterUrl),
@@ -197,6 +198,7 @@ async function getStudents(req, res) {
 
 async function getCertificateStudents(req, res) {
   try {
+    const deleteAfterDownload = req.bufferMode !== true;
     const completionStatus = [
       { completedStatus: "Yes" },
       { "trainingManagement.completed": "Yes" },
@@ -204,7 +206,7 @@ async function getCertificateStudents(req, res) {
     const filter = {
       $and: [
         { $or: completionStatus },
-        { certificateGenerated: { $ne: true } },
+        ...(deleteAfterDownload ? [{ certificateGenerated: { $ne: true } }] : []),
       ],
     };
     if (req.query.search?.trim()) {
@@ -247,6 +249,7 @@ async function getCertificateStudents(req, res) {
 
 async function downloadCertificates(req, res) {
   try {
+    const deleteAfterDownload = req.bufferMode !== true;
     const ids = [
       ...new Set(
         Array.isArray(req.body.ids)
@@ -260,7 +263,7 @@ async function downloadCertificates(req, res) {
         .status(400)
         .json({ success: false, message: "Select a student." });
     }
-    if (ids.length > 1) {
+    if (deleteAfterDownload && ids.length > 1) {
       return res.status(400).json({
         success: false,
         message:
@@ -270,7 +273,7 @@ async function downloadCertificates(req, res) {
 
     const students = await Student.find({
       _id: { $in: ids },
-      certificateGenerated: { $ne: true },
+      ...(deleteAfterDownload ? { certificateGenerated: { $ne: true } } : {}),
       $or: [
         { completedStatus: "Yes" },
         { "trainingManagement.completed": "Yes" },
@@ -289,9 +292,11 @@ async function downloadCertificates(req, res) {
     const [pdf] = await generatePdfsFromHtml([
       generateCertificateHtml(student),
     ]);
-    await Student.findByIdAndUpdate(student._id, {
-      certificateGenerated: true,
-    });
+    if (deleteAfterDownload) {
+      await Student.findByIdAndUpdate(student._id, {
+        certificateGenerated: true,
+      });
+    }
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

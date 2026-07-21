@@ -5,4 +5,5 @@ module.exports = createLocalModel("students.json", {
   offerLetterStatus: "",
   certificateGenerated: false,
   gyapanGenerated: false,
+  aadhaarCard: null,
 });

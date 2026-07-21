@@ -30,14 +30,14 @@ function DocumentForm({ form, errors, onChange }) {
             required
           />
           <TextInput
-            label="College Permission Letter Number"
+            label="College Recommendation Letter Number"
             name="permissionLetterNumber"
             value={form.permissionLetterNumber}
             onChange={onChange}
             error={errors.permissionLetterNumber}
           />
           <TextInput
-            label="College Permission Letter Date"
+            label="College Recommendation Letter Date"
             name="permissionLetterDate"
             type="date"
             value={form.permissionLetterDate}
@@ -47,10 +47,18 @@ function DocumentForm({ form, errors, onChange }) {
             required
           />
           <FileInput
-            label="Permission Letter (Maximum File Size: 10 MB)"
+            label="College Recommendation Letter (Maximum File Size: 10 MB)"
             name="permissionLetter"
             onChange={onChange}
             error={errors.permissionLetter}
+            accept="application/pdf,image/jpeg,image/jpg,image/png"
+            required
+          />
+          <FileInput
+            label="Aadhaar Card (Maximum File Size: 10 MB)"
+            name="aadhaarCard"
+            onChange={onChange}
+            error={errors.aadhaarCard}
             accept="application/pdf,image/jpeg,image/jpg,image/png"
             required
           />

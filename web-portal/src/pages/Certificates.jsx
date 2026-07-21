@@ -5,7 +5,8 @@ import {
 } from "../services/adminService";
 import "../styles/admin.css";
 
-function Certificates() {
+function Certificates({ bufferMode = false }) {
+  const endpoint = bufferMode ? "certificate1" : "certificates";
   const [students, setStudents] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,11 +14,12 @@ function Certificates() {
   const [error, setError] = useState("");
   const [date, setDate] = useState("");
   const [search, setSearch] = useState("");
+  const [batch, setBatch] = useState(null);
 
   useEffect(() => {
     let active = true;
 
-    fetchCertificateStudents(date)
+    fetchCertificateStudents(date, endpoint)
       .then((response) => active && setStudents(response.students))
       .catch((err) => active && setError(err.message))
       .finally(() => active && setLoading(false));
@@ -25,7 +27,7 @@ function Certificates() {
     return () => {
       active = false;
     };
-  }, [date]);
+  }, [date, endpoint]);
 
   const selectedCount = selectedIds.length;
   const allSelected = useMemo(
@@ -34,11 +36,13 @@ function Certificates() {
   );
 
   const toggleStudent = (id, checked) => {
-    setSelectedIds(checked ? [id] : []);
+    setSelectedIds((current) => {
+      return checked ? [...current, id] : current.filter((value) => value !== id);
+    });
   };
 
   const toggleAll = () => {
-    // Multiple selection disabled
+    setSelectedIds(allSelected ? [] : students.map((student) => student._id));
   };
 
   const goBack = () => {
@@ -46,38 +50,49 @@ function Certificates() {
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!selectedCount) {
       setError("Select one or more completed trainees.");
       return;
     }
-
-    setDownloading(true);
     setError("");
+    setBatch({ ids: [...selectedIds], index: 0, successfulIds: [] });
+  };
 
+  const downloadCurrentCertificate = async () => {
+    const id = batch.ids[batch.index];
+    const student = students.find((item) => item._id === id);
+    if (!student) return setBatch((current) => ({ ...current, index: current.index + 1 }));
+    setDownloading(true);
+    let succeeded = false;
     try {
-      for (const id of selectedIds) {
-        const { blob, filename } = await downloadCertificates([id]);
-
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        URL.revokeObjectURL(url);
-
-        // Small delay so browsers don't block multiple downloads
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
+      const { blob, filename } = await downloadCertificates([id], endpoint);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      succeeded = true;
     } catch (err) {
-      setError(err.message);
+      setError(`Unable to generate certificate for ${student.name}.`);
     } finally {
       setDownloading(false);
+      const nextIndex = batch.index + 1;
+      if (nextIndex >= batch.ids.length) {
+        setBatch(null);
+        if (!bufferMode) {
+          const completedIds = succeeded
+            ? [...batch.successfulIds, id]
+            : batch.successfulIds;
+          setStudents((current) => current.filter((item) => !completedIds.includes(item._id)));
+        }
+        setSelectedIds([]);
+      } else {
+        setBatch((current) => ({ ...current, index: nextIndex, successfulIds: succeeded ? [...current.successfulIds, id] : current.successfulIds }));
+      }
     }
   };
 
@@ -86,7 +101,7 @@ function Certificates() {
       <header className="admin-topbar">
         <div>
           <p className="portal-eyebrow">Admin Panel</p>
-          <h1>Certificates</h1>
+          <h1>{bufferMode ? "Certificate1" : "Certificates"}</h1>
         </div>
         <button className="admin-secondary-btn" type="button" onClick={goBack}>
           Back to Dashboard
@@ -141,8 +156,9 @@ function Certificates() {
                   <th>
                     <input
                       type="checkbox"
-                      disabled
-                      title="Only one certificate can be generated at a time."
+                      checked={allSelected}
+                      title="Select all listed students."
+                      onChange={toggleAll}
                     />
                   </th>
                   <th>Serial No.</th>
@@ -209,6 +225,19 @@ function Certificates() {
           </div>
         )}
       </section>
+      {batch && batch.index < batch.ids.length && (() => {
+        const student = students.find((item) => item._id === batch.ids[batch.index]);
+        return student ? <div className="certificate-modal-backdrop" role="dialog" aria-modal="true" aria-label="Certificate Ready">
+          <section className="certificate-modal">
+            <h2>Certificate Ready</h2>
+            <p>Student: <strong>{student.name}</strong></p>
+            <div className="admin-actions-row">
+              <button className="admin-primary-btn" type="button" disabled={downloading} onClick={downloadCurrentCertificate}>{downloading ? "Generating..." : "Download"}</button>
+              <button className="admin-secondary-btn" type="button" disabled={downloading} onClick={() => { setBatch(null); setSelectedIds([]); }}>Cancel</button>
+            </div>
+          </section>
+        </div> : null;
+      })()}
     </main>
   );
 }

@@ -13,7 +13,7 @@ const collegeRoutes = require("./routes/collegeRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-["photos", "resumes", "results", "permissionLetters", "offerLetters", "gyapan", "completedDocuments"].forEach((folder) => {
+["photos", "resumes", "results", "permissionLetters", "aadhaarCards", "offerLetters", "gyapan", "completedDocuments"].forEach((folder) => {
   fs.mkdirSync(path.join(__dirname, "uploads", folder), { recursive: true });
 });
 

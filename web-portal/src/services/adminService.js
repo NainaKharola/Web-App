@@ -119,17 +119,17 @@ export async function saveTrainingManagement(id, payload) {
   return parseResponse(response);
 }
 
-export async function fetchCertificateStudents(date = "") {
+export async function fetchCertificateStudents(date = "", endpoint = "certificates") {
   const params = date ? `?date=${encodeURIComponent(date)}` : "";
-  const response = await fetch(`${API_URL}/certificates/students${params}`, {
+  const response = await fetch(`${API_URL}/${endpoint}/students${params}`, {
     headers: authHeaders(),
   });
 
   return parseResponse(response);
 }
 
-export async function downloadCertificates(ids) {
-  const response = await fetch(`${API_URL}/certificates/download`, {
+export async function downloadCertificates(ids, endpoint = "certificates") {
+  const response = await fetch(`${API_URL}/${endpoint}/download`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

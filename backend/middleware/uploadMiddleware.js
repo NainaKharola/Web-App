@@ -9,6 +9,7 @@ const uploadFolders = {
   result: "results",
   photo: "photos",
   permissionLetter: "permissionLetters",
+  aadhaarCard: "aadhaarCards",
 };
 
 const allowedTypes = {
@@ -21,6 +22,7 @@ const allowedTypes = {
     "image/jpg",
     "image/png",
   ],
+  aadhaarCard: ["application/pdf", "image/jpeg", "image/jpg", "image/png"],
 };
 
 // Keep validation behaviour intact, then persist accepted files locally.
@@ -34,6 +36,9 @@ function fileFilter(req, file, cb) {
   }
 
   if (!allowed.includes(file.mimetype)) {
+    if (file.fieldname === "aadhaarCard") {
+      return cb(new Error("Only PDF, JPG, JPEG and PNG files are allowed."));
+    }
     return cb(new Error(`${file.fieldname} has an invalid file type.`));
   }
 
@@ -46,7 +51,9 @@ function validatePerFieldSize(req, file, cb) {
   if (file.size > maxSize) {
     return cb(
       new Error(
-        file.fieldname === "photo"
+        file.fieldname === "aadhaarCard"
+          ? "Maximum allowed file size is 10 MB."
+          : file.fieldname === "photo"
           ? "Photo size should not exceed 1 MB."
           : `${file.fieldname} size should not exceed 10 MB.`
       )
@@ -72,6 +79,7 @@ const upload = multer({
   { name: "result", maxCount: 1 },
   { name: "photo", maxCount: 1 },
   { name: "permissionLetter", maxCount: 1 },
+  { name: "aadhaarCard", maxCount: 1 },
 ]);
 
 function uploadStudentDocuments(req, res, next) {
@@ -80,7 +88,7 @@ function uploadStudentDocuments(req, res, next) {
       if (error instanceof multer.MulterError) {
         const message =
           error.code === "LIMIT_FILE_SIZE"
-            ? "File size must not exceed 10MB."
+            ? "Maximum allowed file size is 10 MB."
             : error.message;
 
         return res.status(400).json({
@@ -163,7 +171,7 @@ function uploadCompletedDocuments(req, res, next) {
     if (error) {
       const message =
         error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE"
-          ? "Completed documents size should not exceed 10 MB."
+          ? "Maximum file size allowed is 10 MB."
           : error.message;
 
       return res.status(400).json({
@@ -175,7 +183,7 @@ function uploadCompletedDocuments(req, res, next) {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Upload the combined completed documents PDF.",
+        message: "Upload Form 1 and Form 2 as a single PDF file.",
       });
     }
 

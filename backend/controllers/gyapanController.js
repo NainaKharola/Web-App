@@ -11,17 +11,16 @@ const { indiaDayRange } = require("../utils/dateRange");
 
 async function getGyapanStudents(req, res) {
   try {
+    const deleteAfterDownload = req.bufferMode !== true;
+    const eligibleStatus = deleteAfterDownload
+      ? [{ completedStatus: "Yes" }, { "trainingManagement.completed": "Yes" }]
+      : [{ joinedStatus: "Yes" }, { "trainingManagement.joined": "Yes" }];
     const filter = {
       $and: [
         {
-          $or: [
-            { completedStatus: "Yes" },
-            { "trainingManagement.completed": "Yes" },
-          ],
+          $or: eligibleStatus,
         },
-        {
-          gyapanGenerated: { $ne: true },
-        },
+        ...(deleteAfterDownload ? [{ gyapanGenerated: { $ne: true } }] : []),
       ],
     };
 
@@ -31,22 +30,18 @@ async function getGyapanStudents(req, res) {
       if (!range) {
         return res.status(400).json({
           success: false,
-          message: "Select a valid completion date.",
+          message: `Select a valid ${deleteAfterDownload ? "completion" : "joining"} date.`,
         });
       }
 
       filter.$and.push({
-        $or: [
-          {
-            completedStatus: "Yes",
-            completedDate: range,
-          },
-          {
-            "trainingManagement.completed": "Yes",
-            "trainingManagement.completionDate": range,
-          },
-        ],
+        $or: deleteAfterDownload
+          ? [{ completedStatus: "Yes", completedDate: range }, { "trainingManagement.completed": "Yes", "trainingManagement.completionDate": range }]
+          : [{ joinedStatus: "Yes", joinedDate: range }, { "trainingManagement.joined": "Yes", "trainingManagement.joinedDate": range }],
       });
+    }
+    if (req.bufferMode && req.query.search?.trim()) {
+      filter.$and.push({ name: { $regex: req.query.search.trim(), $options: "i" } });
     }
 
     const students = await Student.find(filter)
@@ -67,7 +62,7 @@ async function getGyapanStudents(req, res) {
   }
 }
 
-async function selectedRows(ids) {
+async function selectedRows(ids, deleteAfterDownload = true) {
   const uniqueIds = [...new Set(Array.isArray(ids) ? ids : [])];
   if (!uniqueIds.length) {
     const error = new Error("Select at least one student.");
@@ -76,15 +71,16 @@ async function selectedRows(ids) {
   }
   const students = await Student.find({
     _id: { $in: uniqueIds },
-    gyapanGenerated: { $ne: true },
-    $or: [
-      { completedStatus: "Yes" },
-      { "trainingManagement.completed": "Yes" },
-    ],
+    ...(deleteAfterDownload ? { gyapanGenerated: { $ne: true } } : {}),
+    $or: deleteAfterDownload
+      ? [{ completedStatus: "Yes" }, { "trainingManagement.completed": "Yes" }]
+      : [{ joinedStatus: "Yes" }, { "trainingManagement.joined": "Yes" }],
   }).lean();
   if (students.length !== uniqueIds.length) {
     const error = new Error(
-      "Only students marked Completed: Yes and without a generated Gyapan can be added.",
+      deleteAfterDownload
+        ? "Only students marked Completed: Yes and without a generated Gyapan can be added."
+        : "Only students marked Joined: Yes can be added.",
     );
     error.statusCode = 400;
     throw error;
@@ -94,7 +90,8 @@ async function selectedRows(ids) {
 
 async function createPreview(req, res) {
   try {
-    const rows = await selectedRows(req.body.ids);
+    const deleteAfterDownload = req.bufferMode !== true;
+    const rows = await selectedRows(req.body.ids, deleteAfterDownload);
     const issueDate = req.body.issueDate
       ? new Date(req.body.issueDate)
       : new Date();
@@ -114,6 +111,7 @@ async function createPreview(req, res) {
       studentRows: rows,
       html,
       generatedBy: req.admin.email,
+      bufferMode: !deleteAfterDownload,
     });
     return res
       .status(201)
@@ -247,13 +245,11 @@ async function generateFinalPdf(req, res) {
     gyapan.gyapanUrl = upload.url;
     gyapan.publicId = upload.filename;
     await gyapan.save();
-    for (const studentId of gyapan.selectedStudents) {
-  await Student.findByIdAndUpdate(studentId, {
-    $set: {
-      gyapanGenerated: true,
-    },
-  });
-}
+    if (!gyapan.bufferMode) {
+      for (const studentId of gyapan.selectedStudents) {
+        await Student.findByIdAndUpdate(studentId, { $set: { gyapanGenerated: true } });
+      }
+    }
     return res.json({
       success: true,
       gyapan,

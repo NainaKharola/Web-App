@@ -36,14 +36,14 @@ function OfferLetterEditorRoute() {
   return <OfferLetterEditor studentId={id} />;
 }
 
-function GyapanPreviewRoute() {
+function GyapanPreviewRoute({ bufferMode = false }) {
   const { gyapanId } = useParams();
-  return <GyapanPreview gyapanId={gyapanId} />;
+  return <GyapanPreview gyapanId={gyapanId} bufferMode={bufferMode} />;
 }
 
-function GyapanEditorRoute() {
+function GyapanEditorRoute({ bufferMode = false }) {
   const { gyapanId } = useParams();
-  return <GyapanEditor gyapanId={gyapanId} />;
+  return <GyapanEditor gyapanId={gyapanId} bufferMode={bufferMode} />;
 }
 
 function RegistrationSuccessRoute() {
@@ -71,9 +71,13 @@ function App() {
             <Route path="/admin/students/:id/offer-letter" element={protectedPage(<OfferLetterPreviewRoute />)} />
             <Route path="/admin/students/:id/offer-letter/edit" element={protectedPage(<OfferLetterEditorRoute />)} />
             <Route path="/admin/certificates" element={protectedPage(<Certificates />)} />
+            <Route path="/admin/certificate1" element={protectedPage(<Certificates bufferMode />)} />
             <Route path="/admin/gyapan" element={protectedPage(<GyapanPage />)} />
             <Route path="/admin/gyapan/:gyapanId" element={protectedPage(<GyapanPreviewRoute />)} />
             <Route path="/admin/gyapan/:gyapanId/edit" element={protectedPage(<GyapanEditorRoute />)} />
+            <Route path="/admin/gyapan1" element={protectedPage(<GyapanPage bufferMode />)} />
+            <Route path="/admin/gyapan1/:gyapanId" element={protectedPage(<GyapanPreviewRoute bufferMode />)} />
+            <Route path="/admin/gyapan1/:gyapanId/edit" element={protectedPage(<GyapanEditorRoute bufferMode />)} />
             <Route path="/admin/*" element={protectedPage(<NotFound />)} />
             <Route path="*" element={<NotFound />} />
           </Routes>

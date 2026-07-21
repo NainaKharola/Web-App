@@ -1,10 +1,11 @@
 import { clearAdminToken, getAdminToken } from "./adminService";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/admin/gyapan`;
+const API_BASE = `${import.meta.env.VITE_API_URL}/admin`;
 const headers = () => ({ Authorization: `Bearer ${getAdminToken()}`, "Content-Type": "application/json" });
 async function parse(response) { const body = await response.json().catch(() => ({})); if (response.status === 401) clearAdminToken(); if (!response.ok) throw new Error(body.message || "Gyapan request failed."); return body; }
-export async function fetchGyapanStudents(date = "") { const params = date ? `?date=${encodeURIComponent(date)}` : ""; return parse(await fetch(`${API_URL}/students${params}`, { headers: headers() })); }
-export async function createGyapanPreview(payload) { return parse(await fetch(`${API_URL}/preview`, { method: "POST", headers: headers(), body: JSON.stringify(payload) })); }
-export async function getGyapan(id) { return parse(await fetch(`${API_URL}/${id}`, { headers: headers() })); }
-export async function updateGyapan(id, payload) { return parse(await fetch(`${API_URL}/${id}/edit`, { method: "PUT", headers: headers(), body: JSON.stringify(payload) })); }
-export async function generateGyapanPdf(id) { return parse(await fetch(`${API_URL}/${id}/generate`, { method: "POST", headers: headers() })); }
+const apiUrl = (module = "gyapan") => `${API_BASE}/${module}`;
+export async function fetchGyapanStudents(date = "", module = "gyapan", search = "") { const params = new URLSearchParams(); if (date) params.set("date", date); if (search) params.set("search", search); const query = params.toString(); return parse(await fetch(`${apiUrl(module)}/students${query ? `?${query}` : ""}`, { headers: headers() })); }
+export async function createGyapanPreview(payload, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/preview`, { method: "POST", headers: headers(), body: JSON.stringify(payload) })); }
+export async function getGyapan(id, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/${id}`, { headers: headers() })); }
+export async function updateGyapan(id, payload, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/${id}/edit`, { method: "PUT", headers: headers(), body: JSON.stringify(payload) })); }
+export async function generateGyapanPdf(id, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/${id}/generate`, { method: "POST", headers: headers() })); }

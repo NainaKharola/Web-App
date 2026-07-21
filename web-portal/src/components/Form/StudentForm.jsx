@@ -37,6 +37,7 @@ const initialForm = {
   permissionLetterNumber: "",
   permissionLetterDate: "",
   permissionLetter: null,
+  aadhaarCard: null,
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,6 +47,7 @@ const fileLimits = {
   resume: 10 * 1024 * 1024,
   result: 10 * 1024 * 1024,
   permissionLetter: 10 * 1024 * 1024,
+  aadhaarCard: 10 * 1024 * 1024,
 };
 
 function isValidDateValue(value) {
@@ -117,11 +119,12 @@ function validateStepTwo(form) {
     [
       "permissionLetter",
       ["application/pdf", "image/jpeg", "image/jpg", "image/png"],
-      "College Permission Letter must be PDF, JPG, JPEG, or PNG.",
+      "College Recommendation Letter must be PDF, JPG, JPEG, or PNG.",
     ],
     ["resume", ["application/pdf"], "Resume must be a PDF."],
     ["result", ["application/pdf", "image/jpeg", "image/jpg"], "Result must be PDF, JPG, or JPEG."],
     ["photo", ["image/png", "image/jpeg", "image/jpg"], "Photo must be PNG, JPG, or JPEG."],
+    ["aadhaarCard", ["application/pdf", "image/jpeg", "image/jpg", "image/png"], "Only PDF, JPG, JPEG and PNG files are allowed."],
   ];
 
   const requiredFields = [
@@ -137,14 +140,14 @@ function validateStepTwo(form) {
 
   checks.forEach(([field, allowedTypes, message]) => {
     if (!form[field]) {
-      errors[field] = "This field is required.";
+      errors[field] = field === "aadhaarCard" ? "Please upload your Aadhaar Card." : "This field is required.";
     } else if (!allowedTypes.includes(form[field].type)) {
       errors[field] = message;
     } else if (form[field].size > fileLimits[field]) {
       errors[field] =
         field === "photo"
           ? "Photo size should not exceed 1 MB."
-          : `${field === "permissionLetter" ? "Permission Letter" : field[0].toUpperCase() + field.slice(1)} size should not exceed 10 MB.`;
+          : field === "aadhaarCard" ? "Maximum allowed file size is 10 MB." : `${field === "permissionLetter" ? "College Recommendation Letter" : field[0].toUpperCase() + field.slice(1)} size should not exceed 10 MB.`;
     }
   });
 
@@ -153,7 +156,7 @@ function validateStepTwo(form) {
     errors.internshipJoiningMonth = "Select a valid internship joining month.";
   }
   if (form.permissionLetterDate && !isValidDateValue(form.permissionLetterDate)) {
-    errors.permissionLetterDate = "Select a valid permission letter date.";
+    errors.permissionLetterDate = "Select a valid college recommendation letter date.";
   }
 
   return errors;

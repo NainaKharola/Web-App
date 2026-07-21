@@ -117,6 +117,14 @@ function AdminDashboard() {
     window.history.pushState({}, "", "/admin/gyapan");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
+  const openCertificate1 = useCallback(() => {
+    window.history.pushState({}, "", "/admin/certificate1");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+  const openGyapan1 = useCallback(() => {
+    window.history.pushState({}, "", "/admin/gyapan1");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   const toggleSelected = useCallback((id, checked) => {
     setSelectedIds((current) =>
@@ -204,6 +212,13 @@ function AdminDashboard() {
             students={students}
           />
         )}
+      </section>
+      <section className="admin-panel">
+        <div className="admin-panel__header"><h2>Temporary Buffer</h2></div>
+        <div className="admin-actions-row">
+          <button className="admin-secondary-btn" type="button" onClick={openCertificate1}>Certificate1</button>
+          <button className="admin-secondary-btn" type="button" onClick={openGyapan1}>Gyapan1</button>
+        </div>
       </section>
     </main>
   );

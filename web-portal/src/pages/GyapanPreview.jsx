@@ -3,28 +3,29 @@ import GyapanViewer from "../components/GyapanViewer";
 import { generateGyapanPdf, getGyapan } from "../services/gyapanService";
 import { getUploadUrl } from "../utils/uploadUrl";
 import "../styles/admin.css";
-function GyapanPreview({ gyapanId }) {
+function GyapanPreview({ gyapanId, bufferMode = false }) {
+  const module = bufferMode ? "gyapan1" : "gyapan";
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
-    getGyapan(gyapanId)
+    getGyapan(gyapanId, module)
       .then(setData)
       .catch((err) => setError(err.message));
-  }, [gyapanId]);
+  }, [gyapanId, module]);
   const back = () => {
-    window.history.pushState({}, "", "/admin/gyapan");
+    window.history.pushState({}, "", `/admin/${module}`);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
   const edit = () => {
-    window.history.pushState({}, "", `/admin/gyapan/${gyapanId}/edit`);
+    window.history.pushState({}, "", `/admin/${module}/${gyapanId}/edit`);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
   const generate = async () => {
     setBusy(true);
     setError("");
     try {
-      const next = await generateGyapanPdf(gyapanId);
+      const next = await generateGyapanPdf(gyapanId, module);
       setData((current) => ({
         ...current,
         gyapan: next.gyapan,
