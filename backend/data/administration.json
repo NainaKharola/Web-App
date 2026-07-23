@@ -86,9 +86,15 @@
       "branchSeats": {}
     },
     "OD (Optical Design)": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology"
+      ],
+      "totalVacancy": 15,
+      "branchSeats": {
+        "Computer Science and Engineering": 5,
+        "Information Technology": 10
+      }
     },
     "CS & S": {
       "allowedBranches": [],
