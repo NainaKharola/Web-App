@@ -994,7 +994,3 @@ Graphic Era University
 This project was developed as part of an internship project for the
 **Defence Research and Development Organisation (DRDO)** to automate the
 complete internship registration and management process.
-
-
-https://drive.google.com/file/d/1v8nqYlF-1g5YyGNEqXQwihVWF0bljSTa/view?usp=drive_link
-https://drive.google.com/file/d/1lk1M3ND1YTUiSAWLK2stV_7wjNwPgzxx/view?usp=drive_link
