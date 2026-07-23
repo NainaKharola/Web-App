@@ -23,6 +23,9 @@ async function getAdministration() {
       value.divisionConfigurations[division] = {
         allowedBranches: Array.isArray(entry?.allowedBranches) ? entry.allowedBranches : [],
         totalVacancy: Number.isSafeInteger(entry?.totalVacancy) && entry.totalVacancy >= 0 ? entry.totalVacancy : 0,
+        branchSeats: entry?.branchSeats && typeof entry.branchSeats === "object" && !Array.isArray(entry.branchSeats)
+          ? Object.fromEntries(Object.entries(entry.branchSeats).filter(([, seats]) => Number.isSafeInteger(seats) && seats >= 0))
+          : {},
       };
     });
     Object.keys(value.divisionConfigurations).forEach((division) => {

@@ -1,5 +1,5 @@
 {
-  "totalAllocatedSeats": 10,
+  "totalAllocatedSeats": 100,
   "divisions": [
     "Servo System",
     "ABS",
@@ -40,148 +40,216 @@
   ],
   "divisionConfigurations": {
     "Servo System": {
-      "allowedBranches": [],
-      "totalVacancy": 0
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology"
+      ],
+      "totalVacancy": 10,
+      "branchSeats": {
+        "Computer Science and Engineering": 5,
+        "Information Technology": 5
+      }
     },
     "ABS": {
-      "allowedBranches": [],
-      "totalVacancy": 0
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology",
+        "Aerospace Engineering",
+        "Artificial Intelligence and Data Science"
+      ],
+      "totalVacancy": 20,
+      "branchSeats": {
+        "Computer Science and Engineering": 5,
+        "Information Technology": 5,
+        "Aerospace Engineering": 5,
+        "Artificial Intelligence and Data Science": 5
+      }
     },
     "SS & ST": {
-      "allowedBranches": [],
-      "totalVacancy": 0
+      "allowedBranches": [
+        "Electronics and Communication",
+        "Electrical Engineering",
+        "Mechanical Engineering",
+        "Computer Science and Engineering"
+      ],
+      "totalVacancy": 40,
+      "branchSeats": {
+        "Electronics and Communication": 10,
+        "Electrical Engineering": 20,
+        "Mechanical Engineering": 5,
+        "Computer Science and Engineering": 5
+      }
     },
     "NS (Naval System)": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "OD (Optical Design)": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "CS & S": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "ALTDS": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "LI": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "LS": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "LPF": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "Photonics": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "EAD": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "LIDAR": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "FTIR": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "HR": {
-      "allowedBranches": [],
-      "totalVacancy": 0
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology"
+      ],
+      "totalVacancy": 15,
+      "branchSeats": {
+        "Computer Science and Engineering": 5,
+        "Information Technology": 10
+      }
     },
     "MS": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "ISO": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "AI": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "VI": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "IRST": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "OME": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "LIC": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "ENV": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "Reprography": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "MT": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "P & C": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "AV": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "CMD": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "DIR": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "HRD": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "WORKS": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "MI": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "SECURITY": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "EOTS & ITF": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "FACET": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "TFDI": {
       "allowedBranches": [],
-      "totalVacancy": 0
+      "totalVacancy": 0,
+      "branchSeats": {}
     }
   }
 }

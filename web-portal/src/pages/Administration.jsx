@@ -2,12 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import {
   addDivision,
   fetchAdministration,
+  fetchAdminStudents,
   removeDivision,
   renameDivision,
   updateTotalAllocatedSeats,
 } from "../services/adminService";
 import DivisionBranchVacancyConfiguration from "../components/Admin/DivisionBranchVacancyConfiguration";
 import DivisionBranchAnalytics from "../components/Admin/DivisionBranchAnalytics";
+import DivisionRecommendation from "../components/Admin/DivisionRecommendation";
 import "../styles/admin.css";
 
 function Administration() {
@@ -21,6 +23,9 @@ function Administration() {
   const [saving, setSaving] = useState(false);
   const [showDivisions, setShowDivisions] = useState(false);
   const [loadingDivisions, setLoadingDivisions] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
+  const [studentsError, setStudentsError] = useState("");
 
   const applyAdministration = useCallback((next, successMessage = "") => {
     setAdministration(next);
@@ -37,6 +42,24 @@ function Administration() {
       .catch((requestError) => active && setError(requestError.message));
     return () => { active = false; };
   }, [applyAdministration]);
+
+  useEffect(() => {
+    let active = true;
+    const loadStudents = async () => {
+      try {
+        const { students: records } = await fetchAdminStudents({ status: "Approved" });
+        if (active) { setStudents(records); setStudentsError(""); }
+      } catch (requestError) {
+        if (active) setStudentsError(requestError.message);
+      } finally {
+        if (active) setStudentsLoading(false);
+      }
+    };
+    loadStudents();
+    const refresh = window.setInterval(loadStudents, 30000);
+    window.addEventListener("administration-updated", loadStudents);
+    return () => { active = false; window.clearInterval(refresh); window.removeEventListener("administration-updated", loadStudents); };
+  }, []);
 
   useEffect(() => {
     if (!message) return undefined;
@@ -170,8 +193,9 @@ function Administration() {
           </section>
           </div>
 
-          <DivisionBranchVacancyConfiguration administration={administration} onSaved={saveDivisionConfiguration} onError={(requestError) => { setMessage(""); setError(requestError); }} />
-          <DivisionBranchAnalytics administration={administration} />
+          <DivisionBranchVacancyConfiguration key={JSON.stringify(administration.divisionConfigurations)} administration={administration} onSaved={saveDivisionConfiguration} onError={(requestError) => { setMessage(""); setError(requestError); }} />
+          <DivisionBranchAnalytics administration={administration} students={students} loading={studentsLoading} error={studentsError} />
+          <DivisionRecommendation administration={administration} students={students} loading={studentsLoading} error={studentsError} />
         </div>
       )}
 

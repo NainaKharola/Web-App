@@ -3,6 +3,7 @@ const { getAdministration, saveAdministration } = require("../services/administr
 const normalise = (value) => String(value || "").trim().replace(/\s+/g, " ");
 const isDuplicate = (divisions, name, excluded = "") => divisions.some((division) => division.toLocaleLowerCase() === name.toLocaleLowerCase() && division !== excluded);
 const respondError = (res, message) => res.status(400).json({ success: false, message });
+const totalVacancies = (configurations) => Object.values(configurations || {}).reduce((sum, entry) => sum + Number(entry?.totalVacancy || 0), 0);
 
 async function getConfiguration(req, res, next) {
   try { res.json({ success: true, administration: await getAdministration() }); } catch (error) { next(error); }
@@ -15,7 +16,7 @@ async function addDivision(req, res, next) {
     const administration = await getAdministration();
     if (isDuplicate(administration.divisions, name)) return respondError(res, "A division with this name already exists.");
     administration.divisions.push(name);
-    administration.divisionConfigurations[name] = { allowedBranches: [], totalVacancy: 0 };
+    administration.divisionConfigurations[name] = { allowedBranches: [], totalVacancy: 0, branchSeats: {} };
     await saveAdministration(administration);
     res.status(201).json({ success: true, message: "Division added successfully.", administration });
   } catch (error) { next(error); }
@@ -31,7 +32,7 @@ async function updateDivision(req, res, next) {
     if (index < 0) return res.status(404).json({ success: false, message: "Division not found." });
     if (isDuplicate(administration.divisions, name, previousName)) return respondError(res, "A division with this name already exists.");
     administration.divisions[index] = name;
-    administration.divisionConfigurations[name] = administration.divisionConfigurations[previousName] || { allowedBranches: [], totalVacancy: 0 };
+    administration.divisionConfigurations[name] = administration.divisionConfigurations[previousName] || { allowedBranches: [], totalVacancy: 0, branchSeats: {} };
     delete administration.divisionConfigurations[previousName];
     await saveAdministration(administration);
     res.json({ success: true, message: "Division updated successfully.", administration });
@@ -56,6 +57,8 @@ async function updateSeats(req, res, next) {
     const totalAllocatedSeats = Number(req.body.totalAllocatedSeats);
     if (!Number.isSafeInteger(totalAllocatedSeats) || totalAllocatedSeats <= 0) return respondError(res, "Enter a positive whole number for total allocated seats.");
     const administration = await getAdministration();
+    const configuredVacancies = totalVacancies(administration.divisionConfigurations);
+    if (configuredVacancies > totalAllocatedSeats) return respondError(res, `Total division vacancies (${configuredVacancies}) cannot exceed total allocated seats (${totalAllocatedSeats}). Reduce division vacancies first.`);
     administration.totalAllocatedSeats = totalAllocatedSeats;
     await saveAdministration(administration);
     res.json({ success: true, message: "Seat allocation updated successfully.", administration });
@@ -78,10 +81,18 @@ async function saveDivisionConfigurations(req, res, next) {
     for (const division of administration.divisions) {
       const entry = requested[division] || {};
       const allowedBranches = Array.isArray(entry.allowedBranches) ? [...new Set(entry.allowedBranches.map((branch) => String(branch).trim()).filter(Boolean))] : [];
-      const totalVacancy = Number(entry.totalVacancy ?? 0);
-      if (!Number.isSafeInteger(totalVacancy) || totalVacancy < 0) return respondError(res, `Enter a whole number of 0 or more for ${division}.`);
-      configurations[division] = { allowedBranches, totalVacancy };
+      let totalVacancy = 0;
+      const branchSeats = {};
+      for (const branch of allowedBranches) {
+        const seats = Number(entry.branchSeats?.[branch] ?? 0);
+        if (!Number.isSafeInteger(seats) || seats < 0) return respondError(res, `Enter a whole number of 0 or more for ${branch} in ${division}.`);
+        branchSeats[branch] = seats;
+        totalVacancy += seats;
+      }
+      configurations[division] = { allowedBranches, totalVacancy, branchSeats };
     }
+    const configuredVacancies = totalVacancies(configurations);
+    if (configuredVacancies > administration.totalAllocatedSeats) return respondError(res, `Total division vacancies (${configuredVacancies}) cannot exceed the configured total allocated seats (${administration.totalAllocatedSeats}). Reduce division vacancies before saving.`);
     administration.divisionConfigurations = configurations;
     await saveAdministration(administration);
     res.json({ success: true, message: "Division configuration updated successfully.", configurations });

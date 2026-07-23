@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { branches } from "../data/branches";
 import { fetchDivisionConfigurations, saveDivisionConfigurations } from "../services/adminService";
+import { calculateTotalVacancy } from "../utils/administrationAnalytics";
 import "../styles/admin.css";
 
-const blankConfiguration = () => ({ allowedBranches: [], totalVacancy: 0 });
+const blankConfiguration = () => ({ allowedBranches: [], totalVacancy: 0, branchSeats: {} });
 
 function DivisionConfiguration() {
   const [divisions, setDivisions] = useState([]);
@@ -41,12 +42,27 @@ function DivisionConfiguration() {
   }, [message]);
 
   const updateConfiguration = (division, update) => {
-    setConfigurations((current) => ({ ...current, [division]: { ...(current[division] || blankConfiguration()), ...update } }));
+    setConfigurations((current) => {
+      const existing = current[division] || blankConfiguration();
+      const nextConfig = { ...existing, ...update };
+      nextConfig.totalVacancy = calculateTotalVacancy(nextConfig);
+      return { ...current, [division]: nextConfig };
+    });
   };
 
   const toggleBranch = (division, branch) => {
-    const selected = configurations[division]?.allowedBranches || [];
-    updateConfiguration(division, { allowedBranches: selected.includes(branch) ? selected.filter((item) => item !== branch) : [...selected, branch] });
+    const configuration = configurations[division] || blankConfiguration();
+    const selected = configuration.allowedBranches || [];
+    const branchSeats = { ...(configuration.branchSeats || {}) };
+    if (selected.includes(branch)) {
+      delete branchSeats[branch];
+    } else {
+      branchSeats[branch] = branchSeats[branch] ?? 0;
+    }
+    const allowedBranches = selected.includes(branch)
+      ? selected.filter((item) => item !== branch)
+      : [...selected, branch];
+    updateConfiguration(division, { allowedBranches, branchSeats });
   };
 
   const save = async () => {
@@ -71,7 +87,7 @@ function DivisionConfiguration() {
           {divisions.map((division) => {
             const configuration = configurations[division] || blankConfiguration();
             const isOpen = openDivision === division;
-            return <tr key={division}><td><strong>{division}</strong></td><td><div className="branch-select" ref={isOpen ? dropdownRef : null}><button className="branch-select__trigger" type="button" aria-expanded={isOpen} onClick={() => { setOpenDivision(isOpen ? "" : division); setSearch(""); }}><span>{configuration.allowedBranches.length ? `${configuration.allowedBranches.length} branch${configuration.allowedBranches.length === 1 ? "" : "es"} selected` : "Select Branches"}</span><span className="branch-select__chevron" aria-hidden="true">⌄</span></button>{isOpen && <div className="branch-select__menu"><input className="branch-select__search" autoFocus placeholder="Search branches..." value={search} onChange={(event) => setSearch(event.target.value)} /> <div className="branch-select__options">{filteredBranches.map((branch) => <label key={branch} className="branch-select__option"><input type="checkbox" checked={configuration.allowedBranches.includes(branch)} onChange={() => toggleBranch(division, branch)} /><span>{branch}</span></label>)}{!filteredBranches.length && <p className="branch-select__empty">No branches found.</p>}</div></div>}</div></td><td><input className="vacancy-input" type="text" inputMode="numeric" value={configuration.totalVacancy} onChange={(event) => { if (/^\d*$/.test(event.target.value)) updateConfiguration(division, { totalVacancy: event.target.value === "" ? 0 : Number(event.target.value) }); }} aria-label={`Total vacancy for ${division}`} /></td></tr>;
+            return <tr key={division}><td><strong>{division}</strong></td><td><div className="branch-select" ref={isOpen ? dropdownRef : null}><button className="branch-select__trigger" type="button" aria-expanded={isOpen} onClick={() => { setOpenDivision(isOpen ? "" : division); setSearch(""); }}><span>{configuration.allowedBranches.length ? `${configuration.allowedBranches.length} branch${configuration.allowedBranches.length === 1 ? "" : "es"} selected` : "Select Branches"}</span><span className="branch-select__chevron" aria-hidden="true">⌄</span></button>{isOpen && <div className="branch-select__menu"><input className="branch-select__search" autoFocus placeholder="Search branches..." value={search} onChange={(event) => setSearch(event.target.value)} /> <div className="branch-select__options">{filteredBranches.map((branch) => <label key={branch} className="branch-select__option"><input type="checkbox" checked={configuration.allowedBranches.includes(branch)} onChange={() => toggleBranch(division, branch)} /><span>{branch}</span></label>)}{!filteredBranches.length && <p className="branch-select__empty">No branches found.</p>}</div></div>}</div></td><td><input className="vacancy-input" type="text" inputMode="numeric" readOnly value={configuration.totalVacancy} aria-label={`Total vacancy for ${division}`} /></td></tr>;
           })}
         </tbody></table></div>
         <div className="division-configuration-actions"><span>{divisions.length} divisions configured</span><button className="admin-primary-btn" type="button" disabled={saving} onClick={save}>{saving ? "Saving..." : "Save Configuration"}</button></div>

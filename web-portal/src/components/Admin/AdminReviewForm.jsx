@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { updateStudentReview } from "../../services/adminService";
+import StudentDivisionRecommendation from "./StudentDivisionRecommendation";
 
 const recommendedByOptions = [
   "Servo System",
@@ -124,9 +125,12 @@ function AdminReviewForm({ student, onUpdated }) {
       {error && <p className="admin-error">{error}</p>}
       {message && <p className="admin-success">{message}</p>}
 
-      <button className="admin-primary-btn" disabled={saving} type="submit">
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
+      <div className="admin-review-form__actions">
+        <button className="admin-primary-btn" disabled={saving} type="submit">
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+        {student.status === "Approved" && <StudentDivisionRecommendation student={student} />}
+      </div>
     </form>
   );
 }
