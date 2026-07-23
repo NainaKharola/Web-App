@@ -166,3 +166,59 @@ export async function uploadOfferLetter(id, file) {
 
   return parseResponse(response);
 }
+
+export async function fetchAdministration() {
+  const response = await fetch(`${API_URL}/administration`, {
+    headers: authHeaders(),
+  });
+  return parseResponse(response);
+}
+
+export async function addDivision(name) {
+  const response = await fetch(`${API_URL}/administration/divisions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ name }),
+  });
+  return parseResponse(response);
+}
+
+export async function renameDivision(name, newName) {
+  const response = await fetch(`${API_URL}/administration/divisions/${encodeURIComponent(name)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ name: newName }),
+  });
+  return parseResponse(response);
+}
+
+export async function removeDivision(name) {
+  const response = await fetch(`${API_URL}/administration/divisions/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  return parseResponse(response);
+}
+
+export async function updateTotalAllocatedSeats(totalAllocatedSeats) {
+  const response = await fetch(`${API_URL}/administration/seats`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ totalAllocatedSeats }),
+  });
+  return parseResponse(response);
+}
+
+export async function fetchDivisionConfigurations() {
+  const response = await fetch(`${API_URL}/administration/division-configurations`, { headers: authHeaders() });
+  return parseResponse(response);
+}
+
+export async function saveDivisionConfigurations(configurations) {
+  const response = await fetch(`${API_URL}/administration/division-configurations`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ configurations }),
+  });
+  return parseResponse(response);
+}

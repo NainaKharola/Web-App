@@ -19,6 +19,7 @@ const { protectAdmin } = require("../middleware/adminAuth");
 const { ensureApprovedStudent } = require("../middleware/ensureApprovedStudent");
 const { uploadOfferLetter: uploadOfferLetterFile } = require("../middleware/offerLetterUpload");
 const createGyapanRouter = require("./gyapanRoutes");
+const { getConfiguration, addDivision, updateDivision, deleteDivision, updateSeats, getDivisionConfigurations, saveDivisionConfigurations } = require("../controllers/administrationController");
 
 const router = express.Router();
 
@@ -27,6 +28,13 @@ router.post("/auth/login", loginAdmin);
 router.get("/auth/me", protectAdmin, getAdminProfile);
 router.use("/gyapan", protectAdmin, createGyapanRouter());
 router.use("/gyapan1", protectAdmin, createGyapanRouter(true));
+router.get("/administration", protectAdmin, getConfiguration);
+router.post("/administration/divisions", protectAdmin, addDivision);
+router.patch("/administration/divisions/:name", protectAdmin, updateDivision);
+router.delete("/administration/divisions/:name", protectAdmin, deleteDivision);
+router.patch("/administration/seats", protectAdmin, updateSeats);
+router.get("/administration/division-configurations", protectAdmin, getDivisionConfigurations);
+router.put("/administration/division-configurations", protectAdmin, saveDivisionConfigurations);
 
 router.get("/recommended-by-options", protectAdmin, (req, res) => {
   res.status(200).json({

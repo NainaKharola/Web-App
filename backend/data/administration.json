@@ -1,0 +1,190 @@
+{
+  "totalAllocatedSeats": 10,
+  "divisions": [
+    "Servo System",
+    "ABS",
+    "SS & ST",
+    "NS (Naval System)",
+    "OD (Optical Design)",
+    "CS & S",
+    "ALTDS",
+    "LI",
+    "LS",
+    "LPF",
+    "Photonics",
+    "EAD",
+    "LIDAR",
+    "FTIR",
+    "HR",
+    "MS",
+    "ISO",
+    "AI",
+    "VI",
+    "IRST",
+    "OME",
+    "LIC",
+    "ENV",
+    "Reprography",
+    "MT",
+    "P & C",
+    "AV",
+    "CMD",
+    "DIR",
+    "HRD",
+    "WORKS",
+    "MI",
+    "SECURITY",
+    "EOTS & ITF",
+    "FACET",
+    "TFDI"
+  ],
+  "divisionConfigurations": {
+    "Servo System": {
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology"
+      ],
+      "totalVacancy": 10
+    },
+    "ABS": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "SS & ST": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "NS (Naval System)": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "OD (Optical Design)": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "CS & S": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "ALTDS": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "LI": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "LS": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "LPF": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "Photonics": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "EAD": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "LIDAR": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "FTIR": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "HR": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "MS": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "ISO": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "AI": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "VI": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "IRST": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "OME": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "LIC": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "ENV": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "Reprography": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "MT": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "P & C": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "AV": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "CMD": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "DIR": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "HRD": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "WORKS": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "MI": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "SECURITY": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "EOTS & ITF": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "FACET": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    },
+    "TFDI": {
+      "allowedBranches": [],
+      "totalVacancy": 0
+    }
+  }
+}

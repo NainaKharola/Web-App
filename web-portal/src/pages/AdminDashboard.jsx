@@ -125,6 +125,10 @@ function AdminDashboard() {
     window.history.pushState({}, "", "/admin/gyapan1");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
+  const openAdministration = useCallback(() => {
+    window.history.pushState({}, "", "/admin/administration");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   const toggleSelected = useCallback((id, checked) => {
     setSelectedIds((current) =>
@@ -157,9 +161,14 @@ function AdminDashboard() {
           <p className="portal-eyebrow">Admin Panel</p>
           <h1>Student Applications</h1>
         </div>
-        <button className="admin-secondary-btn" type="button" onClick={handleLogout}>
-          Logout
-        </button>
+        <div className="admin-topbar__actions">
+          <button className="admin-primary-btn admin-administration-btn" type="button" onClick={openAdministration}>
+            <span aria-hidden="true">⚙</span> Administration
+          </button>
+          <button className="admin-secondary-btn" type="button" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </header>
 
       <DashboardCards summary={summary} />

@@ -4,6 +4,8 @@ import { AdminAuthProvider } from "./auth/AdminAuth";
 import ProtectedRoute, { PublicAdminRoute } from "./components/ProtectedRoute";
 
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Administration = lazy(() => import("./pages/Administration"));
+const DivisionConfiguration = lazy(() => import("./pages/DivisionConfiguration"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const Certificates = lazy(() => import("./pages/Certificates"));
 const GyapanEditor = lazy(() => import("./pages/GyapanEditor"));
@@ -66,6 +68,8 @@ function App() {
             <Route path="/admin" element={<Navigate replace to="/admin/login" />} />
             <Route path="/admin/login" element={<PublicAdminRoute><AdminLogin /></PublicAdminRoute>} />
             <Route path="/admin/dashboard" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/administration" element={protectedPage(<Administration />)} />
+            <Route path="/admin/administration/division-configurations" element={protectedPage(<DivisionConfiguration />)} />
             <Route path="/admin/students" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin/students/:id" element={protectedPage(<StudentDetailsRoute />)} />
             <Route path="/admin/students/:id/offer-letter" element={protectedPage(<OfferLetterPreviewRoute />)} />
