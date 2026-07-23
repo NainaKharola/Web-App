@@ -154,7 +154,7 @@ async function getStudents(req, res) {
     const filter = buildStudentFilter(req.query);
     const sort = buildSort(req.query.sortBy, req.query.sortOrder);
     const projection =
-      "_id referenceId name collegeName branch year cgpa submittedAt status offerLetterStatus approvedDate";
+      "_id referenceId name collegeName branch year cgpa submittedAt status recommendedBy offerLetterStatus approvedDate";
 
     const [
       students,

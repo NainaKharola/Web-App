@@ -40,11 +40,8 @@
   ],
   "divisionConfigurations": {
     "Servo System": {
-      "allowedBranches": [
-        "Computer Science and Engineering",
-        "Information Technology"
-      ],
-      "totalVacancy": 10
+      "allowedBranches": [],
+      "totalVacancy": 0
     },
     "ABS": {
       "allowedBranches": [],

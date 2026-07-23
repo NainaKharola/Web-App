@@ -7,6 +7,7 @@ import {
   updateTotalAllocatedSeats,
 } from "../services/adminService";
 import DivisionBranchVacancyConfiguration from "../components/Admin/DivisionBranchVacancyConfiguration";
+import DivisionBranchAnalytics from "../components/Admin/DivisionBranchAnalytics";
 import "../styles/admin.css";
 
 function Administration() {
@@ -118,6 +119,7 @@ function Administration() {
         <div className="administration-loading"><span className="administration-spinner" /> Loading administration settings...</div>
       ) : (
         <div className="administration-grid">
+          <div className="administration-top-grid">
           <section className="administration-card administration-card--divisions">
             <div className="administration-card__heading">
               <span className="administration-icon" aria-hidden="true">⌘</span>
@@ -155,13 +157,6 @@ function Administration() {
               </div>
             </div>
           </section>
-
-          <DivisionBranchVacancyConfiguration
-            administration={administration}
-            onSaved={saveDivisionConfiguration}
-            onError={(requestError) => { setMessage(""); setError(requestError); }}
-          />
-
           <section className="administration-card administration-card--seats">
             <div className="administration-card__heading">
               <span className="administration-icon" aria-hidden="true">◫</span>
@@ -173,6 +168,10 @@ function Administration() {
             </form>
             <div className="future-ready-note"><span aria-hidden="true">✦</span><div><strong>Future-ready configuration</strong><p>Individual division seat limits can be added here without changing the saved configuration structure.</p></div></div>
           </section>
+          </div>
+
+          <DivisionBranchVacancyConfiguration administration={administration} onSaved={saveDivisionConfiguration} onError={(requestError) => { setMessage(""); setError(requestError); }} />
+          <DivisionBranchAnalytics administration={administration} />
         </div>
       )}
 
