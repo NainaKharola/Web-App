@@ -35,7 +35,8 @@ function certificateFileName(student) {
 
 function generateCertificateHtml(student) {
   const training = student.trainingManagement || {};
-  const duration = training.trainingDuration || student.internshipDuration || "";
+  const duration =
+    training.trainingDuration || student.internshipDuration || "";
 
   return `<!doctype html>
 <html><head><meta charset="utf-8"><style>

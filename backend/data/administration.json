@@ -40,45 +40,19 @@
   ],
   "divisionConfigurations": {
     "Servo System": {
-      "allowedBranches": [
-        "Computer Science and Engineering",
-        "Information Technology"
-      ],
-      "totalVacancy": 10,
-      "branchSeats": {
-        "Computer Science and Engineering": 5,
-        "Information Technology": 5
-      }
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "ABS": {
-      "allowedBranches": [
-        "Computer Science and Engineering",
-        "Information Technology",
-        "Aerospace Engineering",
-        "Artificial Intelligence and Data Science"
-      ],
-      "totalVacancy": 20,
-      "branchSeats": {
-        "Computer Science and Engineering": 5,
-        "Information Technology": 5,
-        "Aerospace Engineering": 5,
-        "Artificial Intelligence and Data Science": 5
-      }
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "SS & ST": {
-      "allowedBranches": [
-        "Electronics and Communication",
-        "Electrical Engineering",
-        "Mechanical Engineering",
-        "Computer Science and Engineering"
-      ],
-      "totalVacancy": 40,
-      "branchSeats": {
-        "Electronics and Communication": 10,
-        "Electrical Engineering": 20,
-        "Mechanical Engineering": 5,
-        "Computer Science and Engineering": 5
-      }
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "NS (Naval System)": {
       "allowedBranches": [],
@@ -86,15 +60,9 @@
       "branchSeats": {}
     },
     "OD (Optical Design)": {
-      "allowedBranches": [
-        "Computer Science and Engineering",
-        "Information Technology"
-      ],
-      "totalVacancy": 15,
-      "branchSeats": {
-        "Computer Science and Engineering": 5,
-        "Information Technology": 10
-      }
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "CS & S": {
       "allowedBranches": [],
@@ -142,15 +110,9 @@
       "branchSeats": {}
     },
     "HR": {
-      "allowedBranches": [
-        "Computer Science and Engineering",
-        "Information Technology"
-      ],
-      "totalVacancy": 15,
-      "branchSeats": {
-        "Computer Science and Engineering": 5,
-        "Information Technology": 10
-      }
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
     },
     "MS": {
       "allowedBranches": [],
