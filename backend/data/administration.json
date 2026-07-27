@@ -45,9 +45,9 @@
         "Information Technology",
         "Electronics and Communication"
       ],
-      "totalVacancy": 15,
+      "totalVacancy": 10,
       "branchSeats": {
-        "Computer Science and Engineering": 5,
+        "Computer Science and Engineering": 0,
         "Information Technology": 10,
         "Electronics and Communication": 0
       }
