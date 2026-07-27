@@ -1,15 +1,18 @@
-const fs = require("fs");
+const fs = require("fs/promises");
 const path = require("path");
-const { writeJson } = require("../services/localStorageService");
+const { saveColleges } = require("../services/collegeService");
 
 async function importColleges() {
   const csvPath = path.join(__dirname, "..", "data", "UniversityList.csv");
-  const names = (await fs.promises.readFile(csvPath, "utf8"))
+  const destinationPath = path.join(__dirname, "..", "data", "colleges.json");
+  try { await fs.access(destinationPath); throw new Error("colleges.json already exists; migration will not overwrite it."); } catch (error) { if (error.code !== "ENOENT") throw error; }
+  const names = (await fs.readFile(csvPath, "utf8"))
     .split(/\r?\n/)
-    .map((line) => line.replace(/^"|"$/g, "").trim())
+    .slice(1)
+    .map((line) => line.replace(/^"+|"+$/g, "").replace(/""/g, '"').trim())
     .filter(Boolean);
-  const uniqueNames = [...new Set(names)];
-  await writeJson("colleges.json", uniqueNames.map((name, index) => ({ _id: `college-${index + 1}`, name })));
+  const uniqueNames = [...new Map(names.map((name) => [name.toLocaleLowerCase("en-US"), name])).values()];
+  await saveColleges(uniqueNames.map((name, index) => ({ id: index + 1, name })));
   console.log(`Imported ${uniqueNames.length} colleges into backend/data/colleges.json.`);
 }
 

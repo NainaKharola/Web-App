@@ -8,6 +8,9 @@
     "nodemailer": "^9.0.3",
     "puppeteer": "^23.11.1"
   },
+  "scripts": {
+    "migrate:colleges": "node backend/scripts/importColleges.js"
+  },
   "devDependencies": {
     "vite-bundle-visualizer": "^1.2.1"
   }

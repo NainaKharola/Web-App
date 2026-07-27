@@ -10,6 +10,8 @@ const {
   sendRejectionEmail,
 } = require("../services/emailService");
 const { indiaDayRange } = require("../utils/dateRange");
+const { getAdministration } = require("../services/administrationService");
+const { validateDivisionCapacity } = require("../services/divisionCapacityService");
 
 const reviewFields = ["status", "remark", "referenceBy", "recommendedBy"];
 
@@ -356,14 +358,22 @@ async function updateStudentReview(req, res) {
       });
     }
 
-    if (
-      req.body.recommendedBy &&
-      !recommendedByOptions.includes(req.body.recommendedBy)
-    ) {
+    const administration = await getAdministration();
+    if (req.body.recommendedBy && !administration.divisions.includes(req.body.recommendedBy)) {
       return res.status(400).json({
         success: false,
         message: "Select a valid recommendation.",
       });
+    }
+
+    if (req.body.status === "Approved" && req.body.recommendedBy) {
+      const capacityError = await validateDivisionCapacity({
+        Student,
+        studentId: student._id,
+        division: req.body.recommendedBy,
+        branch: student.branch,
+      });
+      if (capacityError) return res.status(400).json({ success: false, message: capacityError });
     }
 
     const wasRejected = student.status === "Rejected";

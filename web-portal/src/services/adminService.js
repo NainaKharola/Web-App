@@ -222,3 +222,27 @@ export async function saveDivisionConfigurations(configurations) {
   });
   return parseResponse(response);
 }
+
+export async function fetchAdminColleges() {
+  const response = await fetch(`${API_URL}/colleges`, { headers: authHeaders() });
+  return parseResponse(response);
+}
+
+export async function addCollege(name) {
+  const response = await fetch(`${API_URL}/colleges`, {
+    method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ name }),
+  });
+  return parseResponse(response);
+}
+
+export async function updateCollege(id, name) {
+  const response = await fetch(`${API_URL}/colleges/${id}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ name }),
+  });
+  return parseResponse(response);
+}
+
+export async function deleteCollege(id) {
+  const response = await fetch(`${API_URL}/colleges/${id}`, { method: "DELETE", headers: authHeaders() });
+  return parseResponse(response);
+}

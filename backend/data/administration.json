@@ -40,19 +40,43 @@
   ],
   "divisionConfigurations": {
     "Servo System": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology",
+        "Electronics and Communication"
+      ],
+      "totalVacancy": 15,
+      "branchSeats": {
+        "Computer Science and Engineering": 5,
+        "Information Technology": 10,
+        "Electronics and Communication": 0
+      }
     },
     "ABS": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Electronics and Communication",
+        "Electrical Engineering",
+        "Civil Engineering",
+        "Aerospace Engineering",
+        "Artificial Intelligence and Data Science"
+      ],
+      "totalVacancy": 43,
+      "branchSeats": {
+        "Electronics and Communication": 3,
+        "Electrical Engineering": 8,
+        "Civil Engineering": 9,
+        "Aerospace Engineering": 20,
+        "Artificial Intelligence and Data Science": 3
+      }
     },
     "SS & ST": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Electronics and Communication"
+      ],
+      "totalVacancy": 5,
+      "branchSeats": {
+        "Electronics and Communication": 5
+      }
     },
     "NS (Naval System)": {
       "allowedBranches": [],

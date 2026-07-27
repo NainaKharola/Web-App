@@ -20,6 +20,7 @@ const { ensureApprovedStudent } = require("../middleware/ensureApprovedStudent")
 const { uploadOfferLetter: uploadOfferLetterFile } = require("../middleware/offerLetterUpload");
 const createGyapanRouter = require("./gyapanRoutes");
 const { getConfiguration, addDivision, updateDivision, deleteDivision, updateSeats, getDivisionConfigurations, saveDivisionConfigurations } = require("../controllers/administrationController");
+const { listColleges, createCollege, editCollege, removeCollege } = require("../controllers/collegeController");
 
 const router = express.Router();
 
@@ -35,6 +36,10 @@ router.delete("/administration/divisions/:name", protectAdmin, deleteDivision);
 router.patch("/administration/seats", protectAdmin, updateSeats);
 router.get("/administration/division-configurations", protectAdmin, getDivisionConfigurations);
 router.put("/administration/division-configurations", protectAdmin, saveDivisionConfigurations);
+router.get("/colleges", protectAdmin, listColleges);
+router.post("/colleges", protectAdmin, createCollege);
+router.patch("/colleges/:id", protectAdmin, editCollege);
+router.delete("/colleges/:id", protectAdmin, removeCollege);
 
 router.get("/recommended-by-options", protectAdmin, (req, res) => {
   res.status(200).json({

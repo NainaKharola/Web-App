@@ -129,6 +129,10 @@ function AdminDashboard() {
     window.history.pushState({}, "", "/admin/administration");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
+  const openCollegeManagement = useCallback(() => {
+    window.history.pushState({}, "", "/admin/colleges");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   const toggleSelected = useCallback((id, checked) => {
     setSelectedIds((current) =>
@@ -164,6 +168,9 @@ function AdminDashboard() {
         <div className="admin-topbar__actions">
           <button className="admin-primary-btn admin-administration-btn" type="button" onClick={openAdministration}>
             <span aria-hidden="true">⚙</span> Administration
+          </button>
+          <button className="admin-primary-btn admin-administration-btn" type="button" onClick={openCollegeManagement}>
+            College Management
           </button>
           <button className="admin-secondary-btn" type="button" onClick={handleLogout}>
             Logout
