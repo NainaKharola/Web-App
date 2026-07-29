@@ -131,8 +131,8 @@ function addDurationToDate(fromDate, duration) {
   const monthMatch = String(duration || "").match(/(\d+)\s*month/i);
   const weekMatch = String(duration || "").match(/(\d+)\s*week/i);
 
-  if (monthMatch) date.setMonth(date.getMonth() + Number(monthMatch[1]));
-  else if (weekMatch) date.setDate(date.getDate() + Number(weekMatch[1]) * 7);
+  if (monthMatch) { date.setMonth(date.getMonth() + Number(monthMatch[1])); date.setDate(date.getDate() - 1); }
+  else if (weekMatch) date.setDate(date.getDate() + Number(weekMatch[1]) * 7 - 1);
   else return "";
 
   return date.toISOString().slice(0, 10);
@@ -201,10 +201,7 @@ async function getStudents(req, res) {
 async function getCertificateStudents(req, res) {
   try {
     const deleteAfterDownload = req.bufferMode !== true;
-    const completionStatus = [
-      { completedStatus: "Yes" },
-      { "trainingManagement.completed": "Yes" },
-    ];
+    const completionStatus = [{ completedStatus: "Yes" }];
     const filter = {
       $and: [
         { $or: completionStatus },
@@ -226,10 +223,6 @@ async function getCertificateStudents(req, res) {
       filter.$and.push({
         $or: [
           { completedStatus: "Yes", completedDate: range },
-          {
-            "trainingManagement.completed": "Yes",
-            "trainingManagement.completionDate": range,
-          },
         ],
       });
     }
@@ -276,10 +269,7 @@ async function downloadCertificates(req, res) {
     const students = await Student.find({
       _id: { $in: ids },
       ...(deleteAfterDownload ? { certificateGenerated: { $ne: true } } : {}),
-      $or: [
-        { completedStatus: "Yes" },
-        { "trainingManagement.completed": "Yes" },
-      ],
+      $or: [{ completedStatus: "Yes" }],
     }).lean();
 
     if (students.length !== ids.length) {
@@ -454,14 +444,6 @@ async function saveTrainingManagement(req, res) {
       });
     }
 
-    if (student.status !== "Approved") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Training Management System is available only for approved students.",
-      });
-    }
-
     const training = {
       studentName: req.body.studentName || student.name,
       courseName: req.body.courseName || student.course,
@@ -499,12 +481,6 @@ async function saveTrainingManagement(req, res) {
       updatedAt: new Date(),
     };
 
-    if (!training.fromDate || !training.toDate) {
-      return res.status(400).json({
-        success: false,
-        message: "From Date and To Date are required.",
-      });
-    }
     // ===== Sync main Student document =====
 
     student.name = training.studentName;

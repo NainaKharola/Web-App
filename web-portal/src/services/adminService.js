@@ -246,3 +246,8 @@ export async function deleteCollege(id) {
   const response = await fetch(`${API_URL}/colleges/${id}`, { method: "DELETE", headers: authHeaders() });
   return parseResponse(response);
 }
+
+export async function fetchManagementItems(type) { const response = await fetch(`${API_URL}/management/${type}`, { headers: authHeaders() }); return parseResponse(response); }
+export async function addManagementItem(type, name) { const response = await fetch(`${API_URL}/management/${type}`, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ name }) }); return parseResponse(response); }
+export async function updateManagementItem(type, id, name) { const response = await fetch(`${API_URL}/management/${type}/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json", ...authHeaders() }, body: JSON.stringify({ name }) }); return parseResponse(response); }
+export async function deleteManagementItem(type, id) { const response = await fetch(`${API_URL}/management/${type}/${id}`, { method: "DELETE", headers: authHeaders() }); return parseResponse(response); }

@@ -1,3 +1,6 @@
+import { sortDurations } from "../utils/durationSort";
+import { internshipDurations } from "../data/internshipDurations";
+
 function OfferLetterForm({ form, saving, onChange, onSubmit }) {
   const updateField = (key, value) => {
     onChange({ ...form, [key]: value });
@@ -10,15 +13,6 @@ function OfferLetterForm({ form, saving, onChange, onSubmit }) {
     "2nd Year",
     "3rd Year",
     "4th Year",
-  ];
-
-  const durations = [
-    "2 Weeks",
-    "4 Weeks",
-    "6 Weeks",
-    "8 Weeks",
-    "10 Weeks",
-    "12 Weeks",
   ];
 
   const branches = [
@@ -122,7 +116,7 @@ function OfferLetterForm({ form, saving, onChange, onSubmit }) {
             }
           >
             <option value="">Select Duration</option>
-            {durations.map((duration) => (
+            {sortDurations(internshipDurations).map((duration) => (
               <option key={duration} value={duration}>
                 {duration}
               </option>

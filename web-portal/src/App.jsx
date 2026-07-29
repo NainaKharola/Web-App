@@ -69,6 +69,7 @@ function App() {
             <Route path="/admin" element={<Navigate replace to="/admin/login" />} />
             <Route path="/admin/login" element={<PublicAdminRoute><AdminLogin /></PublicAdminRoute>} />
             <Route path="/admin/dashboard" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin-dashboard" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin/colleges" element={protectedPage(<CollegeManagement />)} />
             <Route path="/admin/administration" element={protectedPage(<Administration />)} />
             <Route path="/admin/administration/division-configurations" element={protectedPage(<DivisionConfiguration />)} />

@@ -21,17 +21,6 @@ const portalCards = [
     buttonText: "Student Login",
     path: "/student/login",
   },
-  {
-    title: "Admin Login",
-    description: [
-      "View Registered Students",
-      "Review Applications",
-      "Approve or Reject Students",
-      "Upload and Send Offer Letters",
-    ],
-    buttonText: "Admin Login",
-    path: "/admin/login",
-  },
 ];
 
 function navigateTo(path) {

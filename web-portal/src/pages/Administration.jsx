@@ -166,7 +166,7 @@ function Administration() {
             <div className={`division-disclosure ${showDivisions ? "division-disclosure--open" : ""}`}>
               <div className="division-disclosure__inner">
                 <div className="division-list" id="division-list" aria-live="polite">
-                  {administration.divisions.map((division) => (
+                  {[...administration.divisions].sort((a, b) => a.localeCompare(b)).map((division) => (
                     <article className="division-row" key={division}>
                       <span className="division-row__mark" aria-hidden="true">◈</span>
                       <strong>{division}</strong>

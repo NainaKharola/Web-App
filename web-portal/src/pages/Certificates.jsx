@@ -122,7 +122,7 @@ function Certificates({ bufferMode = false }) {
             />
           </label>
           <p className="admin-muted">
-            Only students with Training Management marked Completed: Yes are
+            Only students with Student Joining Details and Completion marked Completed: Yes are
             listed.
           </p>
           <label className="admin-field">

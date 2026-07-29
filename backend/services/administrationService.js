@@ -17,6 +17,7 @@ async function getAdministration() {
   try {
     const value = JSON.parse(await fs.readFile(filePath, "utf8"));
     if (!Array.isArray(value.divisions) || !Number.isInteger(value.totalAllocatedSeats)) throw new Error("Invalid administration configuration");
+    value.divisions.sort((left, right) => left.localeCompare(right));
     value.divisionConfigurations = value.divisionConfigurations && typeof value.divisionConfigurations === "object" ? value.divisionConfigurations : {};
     value.divisions.forEach((division) => {
       const entry = value.divisionConfigurations[division];
@@ -41,6 +42,7 @@ async function getAdministration() {
 }
 
 async function saveAdministration(configuration) {
+  configuration.divisions = [...configuration.divisions].sort((left, right) => left.localeCompare(right));
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   const temporaryPath = `${filePath}.${process.pid}.tmp`;
   await fs.writeFile(temporaryPath, `${JSON.stringify(configuration, null, 2)}\n`, "utf8");

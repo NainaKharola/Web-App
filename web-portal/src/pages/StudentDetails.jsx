@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AdminReviewForm from "../components/Admin/AdminReviewForm";
 import StatusBadge from "../components/Admin/StatusBadge";
 import {
@@ -11,6 +11,8 @@ import {
 } from "../services/offerLetterService";
 import { getUploadUrl } from "../utils/uploadUrl";
 import { branches as registeredBranchOptions } from "../data/branches";
+import { internshipDurations } from "../data/internshipDurations";
+import { sortDurations } from "../utils/durationSort";
 import "../styles/admin.css";
 
 const courseOptions = [
@@ -25,15 +27,6 @@ const yearOptions = [
   "2nd Year",
   "3rd Year",
   "4th Year",
-];
-
-const trainingDurationOptions = [
-  "2 Weeks",
-  "4 Weeks",
-  "6 Weeks",
-  "8 Weeks",
-  "10 Weeks",
-  "12 Weeks",
 ];
 
 function normalizeCourse(course) {
@@ -86,8 +79,8 @@ function addDurationToDate(fromDate, duration) {
   const monthMatch = String(duration || "").match(/(\d+)\s*month/i);
   const weekMatch = String(duration || "").match(/(\d+)\s*week/i);
 
-  if (monthMatch) date.setMonth(date.getMonth() + Number(monthMatch[1]));
-  else if (weekMatch) date.setDate(date.getDate() + Number(weekMatch[1]) * 7);
+  if (monthMatch) { date.setMonth(date.getMonth() + Number(monthMatch[1])); date.setDate(date.getDate() - 1); }
+  else if (weekMatch) date.setDate(date.getDate() + Number(weekMatch[1]) * 7 - 1);
   else return "";
 
   return date.toISOString().slice(0, 10);
@@ -120,6 +113,8 @@ function TrainingManagementForm({ student, onUpdated }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const initialRender = useRef(true);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -135,10 +130,10 @@ function TrainingManagementForm({ student, onUpdated }) {
       return next;
     });
     setMessage("");
+    setDirty(true);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const save = async () => {
     setSaving(true);
     setMessage("");
 
@@ -153,17 +148,24 @@ function TrainingManagementForm({ student, onUpdated }) {
     }
   };
 
+  useEffect(() => {
+    if (initialRender.current) { initialRender.current = false; return undefined; }
+    if (!dirty) return undefined;
+    const timer = window.setTimeout(() => { setDirty(false); save(); }, 750);
+    return () => window.clearTimeout(timer);
+  }, [form, dirty]);
+
   return (
     <section className="details-section">
       <div className="details-section__header">
-        <h2>Training Management System</h2>
+        <h2>Student Joining Details and Completion</h2>
         <button className="admin-primary-btn" type="button" onClick={() => setOpen((value) => !value)}>
-          Training Management System
+          Student Joining Details and Completion
         </button>
       </div>
 
       {open && (
-        <form className="training-form" onSubmit={handleSubmit}>
+        <form className="training-form" onSubmit={(event) => event.preventDefault()}>
           <label className="admin-field">
   <span>Student Name</span>
       <input
@@ -255,7 +257,7 @@ function TrainingManagementForm({ student, onUpdated }) {
         type="date"
         name="toDate"
         value={form.toDate}
-        readOnly
+        onChange={handleChange}
       />
     </label>
 
@@ -299,7 +301,7 @@ function TrainingManagementForm({ student, onUpdated }) {
             <span>Training Duration</span>
             <select name="trainingDuration" value={form.trainingDuration} onChange={handleChange}>
               <option value="">Select duration</option>
-              {trainingDurationOptions.map((duration) => <option key={duration} value={duration}>{duration}</option>)}
+              {sortDurations(internshipDurations).map((duration) => <option key={duration} value={duration}>{duration}</option>)}
             </select>
           </label>
 
@@ -317,10 +319,7 @@ function TrainingManagementForm({ student, onUpdated }) {
             </label>
           ))}
 
-          <button className="admin-primary-btn" type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-          {message && <p className="admin-muted">{message}</p>}
+          <p className="admin-muted" role="status">{saving ? "Saving..." : message || (dirty ? "Changes pending..." : "Saved")}</p>
         </form>
       )}
     </section>
@@ -527,9 +526,7 @@ function StudentDetails({ id }) {
         />
       )}
 
-      {student.status === "Approved" && (
-        <TrainingManagementForm student={student} onUpdated={setStudent} />
-      )}
+      <TrainingManagementForm student={student} onUpdated={setStudent} />
 
       {student.status === "Approved" && (
         <section className="offer-letter-box offer-letter-box--actions">

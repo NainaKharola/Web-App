@@ -140,6 +140,13 @@ function AdminDashboard() {
     );
   }, []);
 
+  const toggleDeleteMode = useCallback(() => {
+    setDeleteMode((current) => {
+      if (current) setSelectedIds([]);
+      return !current;
+    });
+  }, []);
+
   const deleteSelected = useCallback(async () => {
     if (!selectedIds.length) {
       setError("Select one or more registrations to delete.");
@@ -170,7 +177,7 @@ function AdminDashboard() {
             <span aria-hidden="true">⚙</span> Administration
           </button>
           <button className="admin-primary-btn admin-administration-btn" type="button" onClick={openCollegeManagement}>
-            College Management
+            Management
           </button>
           <button className="admin-secondary-btn" type="button" onClick={handleLogout}>
             Logout
@@ -194,12 +201,12 @@ function AdminDashboard() {
             Certificates
           </button>
           <button className="admin-secondary-btn" type="button" onClick={openGyapan}>
-            Gyapan
+            Joining ISM
           </button>
           <button
             className="admin-danger-btn"
             type="button"
-            onClick={() => setDeleteMode((current) => !current)}
+            onClick={toggleDeleteMode}
           >
             {deleteMode ? "Cancel Delete" : "Delete Entry"}
           </button>
@@ -233,7 +240,7 @@ function AdminDashboard() {
         <div className="admin-panel__header"><h2>Temporary Buffer</h2></div>
         <div className="admin-actions-row">
           <button className="admin-secondary-btn" type="button" onClick={openCertificate1}>Certificate1</button>
-          <button className="admin-secondary-btn" type="button" onClick={openGyapan1}>Gyapan1</button>
+          <button className="admin-secondary-btn" type="button" onClick={openGyapan1}>Joining ISM Buffer</button>
         </div>
       </section>
     </main>

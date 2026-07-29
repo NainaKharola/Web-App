@@ -1,4 +1,5 @@
 import { internshipDurations } from "../../data/internshipDurations";
+import { sortDurations } from "../../utils/durationSort";
 import FileInput from "../Inputs/FileInput";
 import SelectInput from "../Inputs/SelectInput";
 import TextInput from "../Inputs/TextInput";
@@ -16,7 +17,7 @@ function DocumentForm({ form, errors, onChange }) {
             name="internshipDuration"
             value={form.internshipDuration}
             onChange={onChange}
-            options={internshipDurations}
+            options={sortDurations(internshipDurations)}
             error={errors.internshipDuration}
             required
           />
@@ -77,7 +78,7 @@ function DocumentForm({ form, errors, onChange }) {
             required
           />
           <FileInput
-            label="Result (Last Semester Result showing CGPA) (Maximum File Size: 10 MB)"
+            label="Result (Last Declared Result showing CGPA) (Maximum File Size: 10 MB)"
             name="result"
             onChange={onChange}
             error={errors.result}
@@ -85,7 +86,7 @@ function DocumentForm({ form, errors, onChange }) {
             required
           />
           <FileInput
-            label="Photo (Maximum File Size: 1 MB)"
+            label="Upload Passport Size Photograph (Maximum File Size: 1 MB)"
             name="photo"
             onChange={onChange}
             error={errors.photo}

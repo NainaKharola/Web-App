@@ -12,9 +12,7 @@ const { indiaDayRange } = require("../utils/dateRange");
 async function getGyapanStudents(req, res) {
   try {
     const deleteAfterDownload = req.bufferMode !== true;
-    const eligibleStatus = deleteAfterDownload
-      ? [{ completedStatus: "Yes" }, { "trainingManagement.completed": "Yes" }]
-      : [{ joinedStatus: "Yes" }, { "trainingManagement.joined": "Yes" }];
+    const eligibleStatus = [{ joinedStatus: "Yes" }];
     const filter = {
       $and: [
         {
@@ -30,17 +28,15 @@ async function getGyapanStudents(req, res) {
       if (!range) {
         return res.status(400).json({
           success: false,
-          message: `Select a valid ${deleteAfterDownload ? "completion" : "joining"} date.`,
+          message: "Select a valid joining date.",
         });
       }
 
       filter.$and.push({
-        $or: deleteAfterDownload
-          ? [{ completedStatus: "Yes", completedDate: range }, { "trainingManagement.completed": "Yes", "trainingManagement.completionDate": range }]
-          : [{ joinedStatus: "Yes", joinedDate: range }, { "trainingManagement.joined": "Yes", "trainingManagement.joinedDate": range }],
+        $or: [{ joinedStatus: "Yes", joinedDate: range }],
       });
     }
-    if (req.bufferMode && req.query.search?.trim()) {
+    if (req.query.search?.trim()) {
       filter.$and.push({ name: { $regex: req.query.search.trim(), $options: "i" } });
     }
 
@@ -72,15 +68,11 @@ async function selectedRows(ids, deleteAfterDownload = true) {
   const students = await Student.find({
     _id: { $in: uniqueIds },
     ...(deleteAfterDownload ? { gyapanGenerated: { $ne: true } } : {}),
-    $or: deleteAfterDownload
-      ? [{ completedStatus: "Yes" }, { "trainingManagement.completed": "Yes" }]
-      : [{ joinedStatus: "Yes" }, { "trainingManagement.joined": "Yes" }],
+    $or: [{ joinedStatus: "Yes" }],
   }).lean();
   if (students.length !== uniqueIds.length) {
     const error = new Error(
-      deleteAfterDownload
-        ? "Only students marked Completed: Yes and without a generated Gyapan can be added."
-        : "Only students marked Joined: Yes can be added.",
+      "Only students marked Joined: Yes can be added.",
     );
     error.statusCode = 400;
     throw error;

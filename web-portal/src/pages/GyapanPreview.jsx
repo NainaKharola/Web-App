@@ -51,15 +51,15 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
   if (!data && !error)
     return (
       <main className="admin-console admin-shell">
-        <div className="admin-loading">Loading Gyapan preview...</div>
+        <div className="admin-loading">Loading Joining ISM preview...</div>
       </main>
     );
   return (
     <main className="admin-console admin-shell">
       <header className="admin-topbar">
         <div>
-          <p className="portal-eyebrow">Gyapan Preview</p>
-          <h1>{data?.gyapan?.letterNumber || "GYAPAN"}</h1>
+          <p className="portal-eyebrow">Joining ISM Preview</p>
+          <h1>{data?.gyapan?.letterNumber || "Joining ISM"}</h1>
         </div>
         <button className="admin-secondary-btn" type="button" onClick={back}>
           Back

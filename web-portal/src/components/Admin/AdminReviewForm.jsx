@@ -103,7 +103,7 @@ function AdminReviewForm({ student, onUpdated }) {
             onChange={(event) => updateField("recommendedBy", event.target.value)}
           >
             <option value="">Select Recommendation</option>
-            {recommendedByOptions.map((option) => (
+            {[...recommendedByOptions].sort((a, b) => a.localeCompare(b)).map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>

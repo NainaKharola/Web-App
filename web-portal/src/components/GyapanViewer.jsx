@@ -6,7 +6,7 @@ function GyapanViewer({ html, pdfUrl }) {
       <iframe
         id="gyapan-frame"
         className="offer-letter-viewer"
-        title="Gyapan PDF"
+        title="Joining ISM PDF"
         src={getUploadUrl(pdfUrl)}
       />
     );
@@ -16,7 +16,7 @@ function GyapanViewer({ html, pdfUrl }) {
     <iframe
       id="gyapan-frame"
       className="offer-letter-viewer"
-      title="Gyapan preview"
+      title="Joining ISM preview"
       srcDoc={html || "<p>Preview unavailable.</p>"}
     />
   );

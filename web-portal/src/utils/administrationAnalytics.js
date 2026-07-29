@@ -29,7 +29,7 @@ export function formatUtilization(utilization) {
 }
 
 export function sortRecommendations(rows) {
-  return [...rows].sort((left, right) => right.availableSeats - left.availableSeats || left.utilization - right.utilization || left.division.localeCompare(right.division));
+  return [...rows].sort((left, right) => left.division.localeCompare(right.division));
 }
 
 export function getAllocatedStudentCount(students, division, branch, divisions) {
@@ -53,6 +53,6 @@ export function getDivisionAllocationRows(divisions, configurations, students) {
     const allocatedStudents = allocations[division] || 0;
     const totalVacancy = calculateTotalVacancy(configurations?.[division]);
     const availableSeats = calculateAvailableSeats(totalVacancy, allocatedStudents);
-    return { division, totalVacancy, allocatedStudents, availableSeats, utilization: calculateUtilization(allocatedStudents, totalVacancy), isFull: availableSeats === 0 };
+    return { division, totalVacancy, allocatedStudents, availableSeats, utilization: calculateUtilization(allocatedStudents, totalVacancy), isFull: totalVacancy > 0 && availableSeats === 0, isUnconfigured: totalVacancy === 0 && allocatedStudents === 0 };
   }));
 }

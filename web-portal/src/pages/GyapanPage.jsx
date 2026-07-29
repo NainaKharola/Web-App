@@ -70,16 +70,16 @@ function GyapanPage({ bufferMode = false }) {
   return (
     <main className="admin-console admin-shell">
       <header className="admin-topbar">
-        <div><p className="portal-eyebrow">Admin Panel</p><h1>{bufferMode ? "GYAPAN1" : "GYAPAN"}</h1></div>
+        <div><p className="portal-eyebrow">Admin Panel</p><h1>{bufferMode ? "Joining ISM Buffer" : "Joining ISM"}</h1></div>
         <button className="admin-secondary-btn" type="button" onClick={back}>Back to Dashboard</button>
       </header>
       <section className="admin-panel">
         <div className="admin-actions-row">
           <label className="admin-field certificate-date-filter">
-            <span>{bufferMode ? "Joining Date (Optional)" : "Completion Date (Optional)"}</span>
+            <span>Joining Date (Optional)</span>
             <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
           </label>
-          {bufferMode && <label className="admin-field"><span>Search Student</span><input type="text" placeholder="Search by student name..." value={search} onChange={(event) => setSearch(event.target.value)} /></label>}
+          <label className="admin-field"><span>Search Student</span><input type="text" placeholder="Search by student name..." value={search} onChange={(event) => setSearch(event.target.value)} /></label>
           <button className="admin-primary-btn" type="button" onClick={() => loadStudents(date)} disabled={loading}>
             {loading ? "Loading..." : "Apply Filter"}
           </button>
@@ -104,10 +104,10 @@ function GyapanPage({ bufferMode = false }) {
             })}
           </div>
           <div className="admin-actions-row admin-actions-row--spaced">
-            <button className="admin-primary-btn" type="button" disabled={busy} onClick={generate}>{busy ? "Creating Preview..." : "Generate Gyapan"}</button>
+            <button className="admin-primary-btn" type="button" disabled={busy} onClick={generate}>{busy ? "Creating Preview..." : "Generate Joining ISM"}</button>
           </div>
         </>}
-        {!loading && students.length === 0 && !error && <div className="admin-empty-state">{bufferMode ? (date ? "No joined students have this joining date." : "No students with Joined status set to Yes are available.") : (date ? "No completed students have this completion date." : "No students with Completed status set to Yes are available.")}</div>}
+        {!loading && students.length === 0 && !error && <div className="admin-empty-state">{date ? "No joined students have this joining date." : "No students with Joined status set to Yes are available."}</div>}
       </section>
     </main>
   );
