@@ -39,7 +39,8 @@ function fileFilter(req, file, cb) {
     if (file.fieldname === "aadhaarCard") {
       return cb(new Error("Only PDF, JPG, JPEG and PNG files are allowed."));
     }
-    return cb(new Error(`${file.fieldname} has an invalid file type.`));
+    const displayName = file.fieldname === "resume" ? "Curriculum Vitae" : file.fieldname === "result" ? "Marksheet" : file.fieldname;
+    return cb(new Error(`${displayName} has an invalid file type.`));
   }
 
   cb(null, true);
@@ -49,13 +50,18 @@ function validatePerFieldSize(req, file, cb) {
   const maxSize = file.fieldname === "photo" ? PHOTO_MAX_FILE_SIZE : MAX_FILE_SIZE;
 
   if (file.size > maxSize) {
+    let displayName = file.fieldname;
+    if (file.fieldname === "resume") displayName = "Curriculum Vitae";
+    if (file.fieldname === "result") displayName = "Marksheet";
+    if (file.fieldname === "permissionLetter") displayName = "College Recommendation Letter";
+
     return cb(
       new Error(
         file.fieldname === "aadhaarCard"
           ? "Maximum allowed file size is 10 MB."
           : file.fieldname === "photo"
           ? "Photo size should not exceed 1 MB."
-          : `${file.fieldname} size should not exceed 10 MB.`
+          : `${displayName} size should not exceed 10 MB.`
       )
     );
   }

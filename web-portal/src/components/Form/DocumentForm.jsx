@@ -70,7 +70,7 @@ function DocumentForm({ form, errors, onChange }) {
         <h2>Upload Documents</h2>
         <div className="form-grid">
           <FileInput
-            label="Resume (Maximum File Size: 10 MB)"
+            label="Curriculum Vitae (Maximum File Size: 10 MB)"
             name="resume"
             onChange={onChange}
             error={errors.resume}
@@ -78,7 +78,7 @@ function DocumentForm({ form, errors, onChange }) {
             required
           />
           <FileInput
-            label="Result (Last Declared Result showing CGPA) (Maximum File Size: 10 MB)"
+            label="Marksheet (Last Declared Result showing CGPA) (Maximum File Size: 10 MB)"
             name="result"
             onChange={onChange}
             error={errors.result}

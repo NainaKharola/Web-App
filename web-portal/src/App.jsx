@@ -20,6 +20,7 @@ const OfferLetterEditor = lazy(() => import("./pages/OfferLetterEditor"));
 const OfferLetterPreview = lazy(() => import("./pages/OfferLetterPreview"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
 const StudentDetails = lazy(() => import("./pages/StudentDetails"));
+const StudentFullProfile = lazy(() => import("./pages/StudentFullProfile"));
 const StudentLogin = lazy(() => import("./pages/StudentLogin"));
 const Success = lazy(() => import("./pages/Success"));
 
@@ -27,7 +28,7 @@ const protectedPage = (page) => <ProtectedRoute>{page}</ProtectedRoute>;
 
 function StudentDetailsRoute() {
   const { id } = useParams();
-  return <StudentDetails id={id} />;
+  return <StudentDetails id={id} source="approved" />;
 }
 
 function OfferLetterPreviewRoute() {
@@ -71,12 +72,19 @@ function App() {
             <Route path="/admin/login" element={<PublicAdminRoute><AdminLogin /></PublicAdminRoute>} />
             <Route path="/admin/dashboard" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin-dashboard" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/student-management" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/student-management/new" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/student-management/:id" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/approved-students" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/management" element={protectedPage(<CollegeManagement />)} />
             <Route path="/admin/colleges" element={protectedPage(<CollegeManagement />)} />
             <Route path="/admin/profile" element={protectedPage(<AdminProfile />)} />
-            <Route path="/admin/administration" element={protectedPage(<Administration />)} />
+            <Route path="/admin/administration" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/system-configuration" element={protectedPage(<Administration />)} />
             <Route path="/admin/administration/division-configurations" element={protectedPage(<DivisionConfiguration />)} />
             <Route path="/admin/students" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin/students/:id" element={protectedPage(<StudentDetailsRoute />)} />
+            <Route path="/admin/students/:id/full" element={protectedPage(<StudentFullProfile />)} />
             <Route path="/admin/students/:id/offer-letter" element={protectedPage(<OfferLetterPreviewRoute />)} />
             <Route path="/admin/students/:id/offer-letter/edit" element={protectedPage(<OfferLetterEditorRoute />)} />
             <Route path="/admin/certificates" element={protectedPage(<Certificates />)} />

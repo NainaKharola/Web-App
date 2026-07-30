@@ -76,18 +76,6 @@ function AdminReviewForm({ student, onUpdated }) {
 
       <div className="admin-control-grid">
         <label className="admin-field">
-          <span>Status</span>
-          <select
-            value={form.status}
-            onChange={(event) => updateField("status", event.target.value)}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </label>
-
-        <label className="admin-field">
           <span>Reference By</span>
           <input
             value={form.referenceBy}

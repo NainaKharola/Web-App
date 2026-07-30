@@ -223,8 +223,8 @@ function StudentDashboard() {
         <h2>Student Documents</h2>
         <div className="document-actions">
           <FileLink label="View Photo" href={student.photo?.url} />
-          <FileLink label="View Resume" href={student.resume?.url} />
-          <FileLink label="View Result" href={student.result?.url} />
+          <FileLink label="View Curriculum Vitae" href={student.resume?.url} />
+          <FileLink label="View Marksheet" href={student.result?.url} />
           <FileLink
             label="View College Recommendation Letter"
             href={student.permissionLetter?.url}

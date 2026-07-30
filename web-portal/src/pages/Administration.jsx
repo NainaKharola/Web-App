@@ -9,6 +9,7 @@ import {
 } from "../services/adminService";
 import DivisionBranchVacancyConfiguration from "../components/Admin/DivisionBranchVacancyConfiguration";
 import DivisionBranchAnalytics from "../components/Admin/DivisionBranchAnalytics";
+import DivisionStudentDistribution from "../components/Admin/DivisionStudentDistribution";
 import "../styles/admin.css";
 
 function Administration() {
@@ -132,7 +133,10 @@ function Administration() {
           <h1>Administration</h1>
           <p className="administration-subtitle">Manage system configuration, divisions, and administrative settings.</p>
         </div>
-        <button className="admin-secondary-btn" type="button" onClick={navigateBack}>← Dashboard</button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button className="admin-secondary-btn" type="button" onClick={() => { window.history.pushState({}, "", "/admin/administration"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Back to Dashboard</button>
+          <button className="admin-secondary-btn" type="button" onClick={() => { window.history.pushState({}, "", "/admin/dashboard"); window.dispatchEvent(new PopStateEvent("popstate")); }}>🏠 Home</button>
+        </div>
       </header>
 
       {message && <div className="administration-toast administration-toast--success" role="status">✓ {message}</div>}
@@ -195,6 +199,7 @@ function Administration() {
 
           <DivisionBranchVacancyConfiguration key={JSON.stringify(administration.divisionConfigurations)} administration={administration} onSaved={saveDivisionConfiguration} onError={(requestError) => { setMessage(""); setError(requestError); }} />
           <DivisionBranchAnalytics administration={administration} students={students} loading={studentsLoading} error={studentsError} onModeChange={setAnalyticsMode} />
+          <DivisionStudentDistribution administration={administration} students={students} loading={studentsLoading} error={studentsError} />
         </div>
       )}
 

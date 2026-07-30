@@ -6,6 +6,7 @@ function StudentTable({
   onView,
   selectedIds = [],
   students,
+  onStatusChange,
 }) {
   return (
     <div className="admin-table-wrap">
@@ -37,6 +38,7 @@ function StudentTable({
               serialNumber={index + 1}
               student={student}
               onView={onView}
+              onStatusChange={onStatusChange}
             />
           ))}
         </tbody>

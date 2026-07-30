@@ -8,4 +8,6 @@ module.exports = createLocalModel("students.json", {
   gyapanGenerated: false,
   gyapanBufferRemoved: false,
   aadhaarCard: null,
+  collegeAddress: "",
 });
+

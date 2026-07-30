@@ -308,7 +308,7 @@ export default function AdminProfile() {
   };
 
   const navigateBack = () => {
-    window.history.pushState({}, "", "/admin/dashboard");
+    window.history.pushState({}, "", "/admin/administration");
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
@@ -320,9 +320,10 @@ export default function AdminProfile() {
           <h1>Admin Profile</h1>
           <p className="administration-subtitle">Manage your account settings and user access controls.</p>
         </div>
-        <button className="admin-secondary-btn" type="button" onClick={navigateBack}>
-          ← Dashboard
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button className="admin-secondary-btn" type="button" onClick={navigateBack}>Back to Dashboard</button>
+          <button className="admin-secondary-btn" type="button" onClick={() => { window.history.pushState({}, "", "/admin/dashboard"); window.dispatchEvent(new PopStateEvent("popstate")); }}>🏠 Home</button>
+        </div>
       </header>
 
       {successMsg && <div className="administration-toast administration-toast--success" role="status">✓ {successMsg}</div>}

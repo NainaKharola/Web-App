@@ -100,14 +100,14 @@ function AcademicSection({ form, errors, onChange }) {
           />
         )}
 
-        <SearchableDropdown
-          label="College State"
-          name="collegeState"
-          value={form.collegeState}
+        <TextInput
+          label="College Address"
+          name="collegeAddress"
+          value={form.collegeAddress}
           onChange={onChange}
-          options={indianStatesAndUnionTerritories}
-          error={errors.collegeState}
+          error={errors.collegeAddress}
           required
+          as="textarea"
         />
 
         <TextInput
@@ -116,6 +116,16 @@ function AcademicSection({ form, errors, onChange }) {
           value={form.collegeLocation}
           onChange={onChange}
           error={errors.collegeLocation}
+          required
+        />
+
+        <SearchableDropdown
+          label="College State"
+          name="collegeState"
+          value={form.collegeState}
+          onChange={onChange}
+          options={indianStatesAndUnionTerritories}
+          error={errors.collegeState}
           required
         />
       </div>

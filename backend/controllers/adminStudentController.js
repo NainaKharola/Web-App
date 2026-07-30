@@ -12,6 +12,7 @@ const {
 } = require("../services/emailService");
 const { indiaDayRange } = require("../utils/dateRange");
 const { validateDivisionCapacity } = require("../services/divisionCapacityService");
+const { indianStatesAndUnionTerritories } = require("../data/indianStates");
 
 const reviewFields = ["status", "remark", "referenceBy", "recommendedBy"];
 
@@ -156,7 +157,7 @@ async function getStudents(req, res) {
     const filter = buildStudentFilter(req.query);
     const sort = buildSort(req.query.sortBy, req.query.sortOrder);
     const projection =
-      "_id referenceId name collegeName branch year cgpa submittedAt status recommendedBy trainingManagement offerLetterStatus approvedDate";
+      "_id referenceId name course collegeName branch year cgpa submittedAt status recommendedBy trainingManagement offerLetterStatus approvedDate";
 
     const [
       students,
@@ -713,6 +714,176 @@ async function uploadOfferLetter(req, res) {
   }
 }
 
+async function updateStudentDetails(req, res) {
+  try {
+    const student = await Student.findById(req.params.id);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found.",
+      });
+    }
+
+    const body = req.body;
+
+    // Validate using the existing validation rules before saving.
+    if (body.phone && !/^\d{10}$/.test(body.phone)) {
+      return res.status(400).json({ success: false, message: "Phone number must be exactly 10 digits." });
+    }
+
+    if (body.fatherPhone && !/^\d{10}$/.test(body.fatherPhone)) {
+      return res.status(400).json({ success: false, message: "Father contact number must be exactly 10 digits." });
+    }
+
+    if (body.aadhaarNumber && !/^\d{12}$/.test(body.aadhaarNumber)) {
+      return res.status(400).json({ success: false, message: "Aadhaar Number must contain exactly 12 digits." });
+    }
+
+    if (body.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+      return res.status(400).json({ success: false, message: "Enter a valid email address." });
+    }
+
+    if (body.dob && new Date(body.dob) > new Date()) {
+      return res.status(400).json({ success: false, message: "Date of birth cannot be in the future." });
+    }
+
+    if (body.internshipJoiningMonth && !/^\d{4}-\d{2}$/.test(body.internshipJoiningMonth)) {
+      return res.status(400).json({ success: false, message: "Select a valid internship joining month." });
+    }
+
+    if (body.permissionLetterDate && !isValidDateValue(body.permissionLetterDate)) {
+      return res.status(400).json({ success: false, message: "Select a valid college recommendation letter date." });
+    }
+
+    if (body.cgpa) {
+      const cgpa = Number(body.cgpa);
+      if (Number.isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
+        return res.status(400).json({ success: false, message: "CGPA must be between 0 and 10." });
+      }
+    }
+
+    if (body.collegeState && !indianStatesAndUnionTerritories.includes(body.collegeState)) {
+      return res.status(400).json({ success: false, message: "Select a valid college state or union territory." });
+    }
+
+    if (body.collegeAddress !== undefined && !String(body.collegeAddress || "").trim()) {
+      return res.status(400).json({ success: false, message: "College Address is mandatory." });
+    }
+
+    // Update text fields
+    if (body.name !== undefined) student.name = body.name;
+    if (body.phone !== undefined) student.phone = body.phone;
+    if (body.email !== undefined) student.email = body.email.trim().toLowerCase();
+    if (body.aadhaarNumber !== undefined) student.aadhaarNumber = body.aadhaarNumber;
+    if (body.dob !== undefined) student.dob = body.dob;
+
+    if (body.collegeName !== undefined) student.collegeName = body.collegeName;
+    if (body.collegeAddress !== undefined) student.collegeAddress = body.collegeAddress;
+    if (body.collegeLocation !== undefined) student.location = body.collegeLocation;
+    if (body.collegeState !== undefined) student.collegeState = body.collegeState;
+
+    if (body.course !== undefined) student.course = body.course;
+    if (body.branch !== undefined) student.branch = body.branch;
+    if (body.year !== undefined) student.year = body.year;
+    if (body.cgpa !== undefined) student.cgpa = Number(body.cgpa);
+    if (body.collegeId !== undefined) student.collegeId = body.collegeId;
+
+    if (body.currentAddress !== undefined) student.currentAddress = body.currentAddress;
+    if (body.permanentAddress !== undefined) student.permanentAddress = body.permanentAddress;
+
+    if (body.fatherName !== undefined) student.fatherName = body.fatherName;
+    if (body.fatherPhone !== undefined) student.fatherPhone = body.fatherPhone;
+    if (body.fatherOccupation !== undefined) student.fatherOccupation = body.fatherOccupation;
+
+    if (body.internshipDuration !== undefined) student.internshipDuration = body.internshipDuration;
+    if (body.permissionLetterNumber !== undefined) student.permissionLetterNumber = body.permissionLetterNumber;
+    if (body.permissionLetterDate !== undefined) student.permissionLetterDate = body.permissionLetterDate;
+    if (body.internshipJoiningMonth !== undefined) student.internshipJoiningMonth = body.internshipJoiningMonth;
+
+    // Handle document file replacements
+    const filesToReplace = ["resume", "result", "photo", "permissionLetter"];
+    for (const fieldName of filesToReplace) {
+      if (req.uploadedFiles && req.uploadedFiles[fieldName]) {
+        if (student[fieldName]) {
+          await removeLocalFile(student[fieldName]);
+        }
+        student[fieldName] = {
+          url: req.uploadedFiles[fieldName].url,
+          publicId: req.uploadedFiles[fieldName].public_id,
+        };
+      }
+    }
+
+    // Sync with sub-documents
+    if (student.trainingManagement) {
+      student.trainingManagement.studentName = student.name;
+      student.trainingManagement.courseName = student.course;
+      student.trainingManagement.courseYear = student.year;
+      student.trainingManagement.branch = student.branch;
+      student.trainingManagement.collegeName = student.collegeName;
+      student.trainingManagement.collegeLocation = student.location;
+      student.trainingManagement.trainingDuration = student.internshipDuration;
+      student.trainingManagement.collegeAddress = student.collegeAddress;
+    }
+
+    if (student.offerLetter) {
+      student.offerLetter.studentName = student.name;
+      student.offerLetter.course = student.course;
+      student.offerLetter.year = student.year;
+      student.offerLetter.branch = student.branch;
+      student.offerLetter.collegeName = student.collegeName;
+      student.offerLetter.collegeLocation = student.location;
+      student.offerLetter.internshipDuration = student.internshipDuration;
+      student.offerLetter.collegeAddress = student.collegeAddress;
+    }
+
+    await student.save();
+
+    await logActivity({
+      req,
+      module: "Student Module",
+      action: "Edited Student Details",
+      description: `Edited student details for ${student.name}.`,
+      status: "Success",
+    });
+
+    return res.status(200).json({
+      success: true,
+      student,
+      message: "Student details updated successfully.",
+    });
+  } catch (error) {
+    await logActivity({
+      req,
+      module: "Student Module",
+      action: "Edited Student Details",
+      description: `Failed to edit student details. Error: ${error.message}`,
+      status: "Failed",
+    });
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update student details.",
+      error: error.message,
+    });
+  }
+}
+
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+function isValidDateValue(value) {
+  if (!datePattern.test(value)) return false;
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
 module.exports = {
   deleteStudents,
   downloadCertificates,
@@ -723,5 +894,6 @@ module.exports = {
   updateStudentReview,
   uploadOfferLetter,
   saveTrainingManagement,
+  updateStudentDetails,
   recommendedByOptions,
 };

@@ -93,6 +93,7 @@ function buildTemplateData(student, overrides = {}) {
     collegeAddress:
       overrides.collegeAddress ||
       student.offerLetter?.collegeAddress ||
+      student.collegeAddress ||
       "",
 
     internshipDuration: duration,

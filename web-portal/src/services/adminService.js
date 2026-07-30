@@ -320,3 +320,13 @@ export async function downloadUserActivityExport(id, format) {
   }
   return response.blob();
 }
+
+export async function updateStudentDetails(id, formData) {
+  const response = await fetch(`${API_URL}/students/${id}`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: formData,
+  });
+
+  return parseResponse(response);
+}

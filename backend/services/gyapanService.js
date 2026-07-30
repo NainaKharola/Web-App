@@ -56,6 +56,7 @@ function studentToRow(student) {
     division: training.division || "",
     collegeName: training.collegeName || student.collegeName || "",
     collegeLocation: training.collegeLocation || student.location || "",
+    collegeAddress: training.collegeAddress || student.collegeAddress || "",
     trainingStartDate: training.fromDate || "",
     trainingEndDate: training.toDate || "",
   };
@@ -80,6 +81,7 @@ function buildStudentRows(rows) {
 
           <td>
             ${escapeHtml(row.collegeName)}
+            ${row.collegeAddress ? `<br><small>${escapeHtml(row.collegeAddress)}</small>` : ""}
           </td>
 
           <td>

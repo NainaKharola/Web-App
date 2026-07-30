@@ -59,7 +59,7 @@ function generateCertificateHtml(student) {
   <h1>CERTIFICATE OF COMPLETION</h1>
   <p class="presented">This is to certify that</p>
   <h2>${escapeHtml(student.name)}</h2>
-  <p class="copy">of <strong>${escapeHtml(student.collegeName)}</strong>, ${escapeHtml(student.course)} (${escapeHtml(student.branch)}), has successfully completed internship training at DRDO${training.division ? ` in <strong>${escapeHtml(training.division)}</strong>` : ""}.</p>
+  <p class="copy">of <strong>${escapeHtml(student.collegeName)}${student.collegeAddress ? `, ${escapeHtml(student.collegeAddress)}` : ""}</strong>, ${escapeHtml(student.course)} (${escapeHtml(student.branch)}), has successfully completed internship training at DRDO${training.division ? ` in <strong>${escapeHtml(training.division)}</strong>` : ""}.</p>
   <p class="duration">Training period: ${escapeHtml(formatDate(training.fromDate))} to ${escapeHtml(formatDate(training.toDate))}${duration ? ` (${escapeHtml(duration)})` : ""}</p>
   <p class="copy">The student completed the assigned training requirements to the satisfaction of the organisation.</p>
   <div class="footer"><div>Reference ID: ${escapeHtml(student.referenceId)}</div><div class="signature">Authorised Signatory<br />DRDO</div></div>

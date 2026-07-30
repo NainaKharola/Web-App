@@ -19,6 +19,7 @@ const initialForm = {
   dob: "",
   aadhaarNumber: "",
   collegeName: "",
+  collegeAddress: "",
   collegeState: "",
   collegeLocation: "",
   currentAddress: "",
@@ -75,6 +76,7 @@ function validateStepOne(form) {
     "dob",
     "aadhaarNumber",
     "collegeName",
+    "collegeAddress",
     "collegeState",
     "collegeLocation",
     "currentAddress",
@@ -121,8 +123,8 @@ function validateStepTwo(form) {
       ["application/pdf", "image/jpeg", "image/jpg", "image/png"],
       "College Recommendation Letter must be PDF, JPG, JPEG, or PNG.",
     ],
-    ["resume", ["application/pdf"], "Resume must be a PDF."],
-    ["result", ["application/pdf", "image/jpeg", "image/jpg"], "Result must be PDF, JPG, or JPEG."],
+    ["resume", ["application/pdf"], "Curriculum Vitae must be a PDF."],
+    ["result", ["application/pdf", "image/jpeg", "image/jpg"], "Marksheet must be PDF, JPG, or JPEG."],
     ["photo", ["image/png", "image/jpeg", "image/jpg"], "Photo must be PNG, JPG, or JPEG."],
     ["aadhaarCard", ["application/pdf", "image/jpeg", "image/jpg", "image/png"], "Only PDF, JPG, JPEG and PNG files are allowed."],
   ];
@@ -144,10 +146,19 @@ function validateStepTwo(form) {
     } else if (!allowedTypes.includes(form[field].type)) {
       errors[field] = message;
     } else if (form[field].size > fileLimits[field]) {
+      const displayNames = {
+        resume: "Curriculum Vitae",
+        result: "Marksheet",
+        permissionLetter: "College Recommendation Letter",
+        photo: "Photo",
+        aadhaarCard: "Aadhaar Card"
+      };
       errors[field] =
         field === "photo"
           ? "Photo size should not exceed 1 MB."
-          : field === "aadhaarCard" ? "Maximum allowed file size is 10 MB." : `${field === "permissionLetter" ? "College Recommendation Letter" : field[0].toUpperCase() + field.slice(1)} size should not exceed 10 MB.`;
+          : field === "aadhaarCard"
+          ? "Maximum allowed file size is 10 MB."
+          : `${displayNames[field] || field} size should not exceed 10 MB.`;
     }
   });
 
@@ -162,7 +173,7 @@ function validateStepTwo(form) {
   return errors;
 }
 
-function StudentForm() {
+function StudentForm({ embedded = false, onClose }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState(1);
@@ -202,16 +213,73 @@ function StudentForm() {
     try {
       setIsSubmitting(true);
       const response = await submitStudentRegistration(payload);
-      navigate("/student/success", {
-        replace: true,
-        state: { registration: response },
-      });
+      if (embedded && onClose) {
+        onClose(response);
+      } else {
+        navigate("/student/success", {
+          replace: true,
+          state: { registration: response },
+        });
+      }
     } catch (error) {
       setErrors((current) => ({ ...current, submit: error.message }));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className="student-form" noValidate style={embedded ? { padding: 0, border: "none", boxShadow: "none", background: "none", width: "100%" } : {}}>
+      {step === 1 ? (
+        <div className="form-page">
+          <PersonalForm form={form} errors={errors} onChange={handleChange} />
+          <AcademicSection form={form} errors={errors} onChange={handleChange} />
+          <AddressSection form={form} errors={errors} onChange={handleChange} />
+          <ParentSection form={form} errors={errors} onChange={handleChange} />
+          <div className="button-row">
+            <button className="primary-button" type="button" onClick={goToDocuments}>
+              Next
+            </button>
+            {embedded && onClose && (
+              <button className="secondary-button" type="button" onClick={onClose}>
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="form-page">
+          <DocumentForm form={form} errors={errors} onChange={handleChange} />
+          {errors.submit && <p className="submit-error">{errors.submit}</p>}
+          <div className="button-row">
+            <button className="secondary-button" type="button" onClick={() => setStep(1)}>
+              Back
+            </button>
+            <button className="primary-button" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <span className="button-loader" /> : "Submit"}
+            </button>
+          </div>
+        </div>
+      )}
+    </form>
+  );
+
+  if (embedded) {
+    return (
+      <div style={{ width: "100%", padding: 0 }}>
+        <div className="step-meter" aria-label={`Step ${step} of 2`} style={{ margin: "0 0 20px 0" }}>
+          <div className="step-meter__labels">
+            <span className={step === 1 ? "is-active" : ""}>Step 1 of 2</span>
+            <span className={step === 2 ? "is-active" : ""}>Step 2 of 2</span>
+          </div>
+          <div className="step-meter__track">
+            <span style={{ width: step === 1 ? "50%" : "100%" }} />
+          </div>
+        </div>
+        {formContent}
+      </div>
+    );
+  }
 
   return (
     <main className="portal-shell">
@@ -234,32 +302,7 @@ function StudentForm() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="student-form" noValidate>
-          {step === 1 ? (
-            <div className="form-page">
-              <PersonalForm form={form} errors={errors} onChange={handleChange} />
-              <AcademicSection form={form} errors={errors} onChange={handleChange} />
-              <AddressSection form={form} errors={errors} onChange={handleChange} />
-              <ParentSection form={form} errors={errors} onChange={handleChange} />
-              <button className="primary-button" type="button" onClick={goToDocuments}>
-                Next
-              </button>
-            </div>
-          ) : (
-            <div className="form-page">
-              <DocumentForm form={form} errors={errors} onChange={handleChange} />
-              {errors.submit && <p className="submit-error">{errors.submit}</p>}
-              <div className="button-row">
-                <button className="secondary-button" type="button" onClick={() => setStep(1)}>
-                  Back
-                </button>
-                <button className="primary-button" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <span className="button-loader" /> : "Submit"}
-                </button>
-              </div>
-            </div>
-          )}
-        </form>
+        {formContent}
       </section>
     </main>
   );

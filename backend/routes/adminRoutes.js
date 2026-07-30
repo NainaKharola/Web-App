@@ -22,7 +22,9 @@ const {
   saveTrainingManagement,
   updateStudentReview,
   uploadOfferLetter,
+  updateStudentDetails,
 } = require("../controllers/adminStudentController");
+const { uploadStudentDocuments } = require("../middleware/uploadMiddleware");
 const { protectAdmin, requireMainAdmin } = require("../middleware/adminAuth");
 const { ensureApprovedStudent } = require("../middleware/ensureApprovedStudent");
 const { uploadOfferLetter: uploadOfferLetterFile } = require("../middleware/offerLetterUpload");
@@ -78,6 +80,7 @@ router.delete("/certificate1/students", protectAdmin, removeCertificateBufferStu
 router.delete("/students", protectAdmin, deleteStudents);
 router.get("/students/:id", protectAdmin, getStudentById);
 router.patch("/students/:id/review", protectAdmin, updateStudentReview);
+router.patch("/students/:id", protectAdmin, uploadStudentDocuments, updateStudentDetails);
 router.patch(
   "/students/:id/training-management",
   protectAdmin,

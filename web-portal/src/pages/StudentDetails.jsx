@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import AdminReviewForm from "../components/Admin/AdminReviewForm";
 import StatusBadge from "../components/Admin/StatusBadge";
+import StudentDivisionRecommendation from "../components/Admin/StudentDivisionRecommendation";
 import {
   fetchAdminStudent,
   fetchAdministration,
   saveTrainingManagement,
+  updateStudentDetails,
+  deleteAdminStudents,
+  updateStudentReview,
 } from "../services/adminService";
 import {
   generateOfferLetter,
@@ -14,6 +18,7 @@ import { getUploadUrl } from "../utils/uploadUrl";
 import { branches as registeredBranchOptions } from "../data/branches";
 import { internshipDurations } from "../data/internshipDurations";
 import { sortDurations } from "../utils/durationSort";
+import { indianStatesAndUnionTerritories } from "../data/states";
 import "../styles/admin.css";
 
 const courseOptions = [
@@ -44,6 +49,27 @@ function normalizeCourse(course) {
 function formatDate(value) {
   if (!value) return "-";
   return new Date(value).toLocaleString("en-IN");
+}
+
+function calculateDaysRemaining(toDateStr) {
+  if (!toDateStr) return "-";
+  const toDate = new Date(toDateStr);
+  if (isNaN(toDate.getTime())) return "-";
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  toDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = toDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    return "Completed";
+  } else if (diffDays === 0) {
+    return "0 Days Remaining";
+  } else {
+    return `${diffDays} Days Remaining`;
+  }
 }
 
 function DetailGrid({ title, rows }) {
@@ -87,7 +113,7 @@ function addDurationToDate(fromDate, duration) {
   return date.toISOString().slice(0, 10);
 }
 
-function TrainingManagementForm({ student, divisions, onUpdated }) {
+function TrainingManagementForm({ student, divisions, onUpdated, alwaysOpen = false, saveRef = null }) {
   const existing = student.trainingManagement || {};
   const branchOptions = [...new Set([
     ...registeredBranchOptions,
@@ -112,7 +138,7 @@ function TrainingManagementForm({ student, divisions, onUpdated }) {
     leaveAvailed: existing.leaveAvailed || "",
     completed: existing.completed || student.completedStatus || "",
   });
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(alwaysOpen);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -181,13 +207,22 @@ function TrainingManagementForm({ student, divisions, onUpdated }) {
     return () => window.clearTimeout(timer);
   }, [form, dirty]);
 
+  // Expose explicit save via ref for the approved-view action bar
+  useEffect(() => {
+    if (saveRef) {
+      saveRef.current = () => save(form);
+    }
+  }, [saveRef, form]);
+
   return (
     <section className="details-section">
       <div className="details-section__header">
         <h2>Student Joining Details and Completion</h2>
-        <button className="admin-primary-btn" type="button" onClick={() => setOpen((value) => !value)}>
-          Student Joining Details and Completion
-        </button>
+        {!alwaysOpen && (
+          <button className="admin-primary-btn" type="button" onClick={() => setOpen((value) => !value)}>
+            Student Joining Details and Completion
+          </button>
+        )}
       </div>
 
       {open && (
@@ -297,6 +332,16 @@ function TrainingManagementForm({ student, divisions, onUpdated }) {
       />
     </label>
 
+    <label className="admin-field">
+      <span>Days Remaining</span>
+      <input
+        type="text"
+        value={calculateDaysRemaining(form.toDate)}
+        readOnly
+        disabled
+      />
+    </label>
+
     <label className="admin-field training-form__project-title">
       <span>Project Title</span>
       <input
@@ -362,7 +407,9 @@ function TrainingManagementForm({ student, divisions, onUpdated }) {
   );
 }
 
-function StudentDetails({ id }) {
+function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess, onSaveFailure, onDeleteSuccess, inSplitView, source = "approved" }) {
+  const isApprovedView = source === "approved";
+  const trainingFormSaveRef = useRef(null);
   const [student, setStudent] = useState(null);
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -370,6 +417,161 @@ function StudentDetails({ id }) {
   const [letterBusy, setLetterBusy] = useState("");
   const [error, setError] = useState("");
   const [letterError, setLetterError] = useState("");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [newFiles, setNewFiles] = useState({});
+  const [editError, setEditError] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
+  const isFormDirty = () => {
+    if (!isEditing) return false;
+    const fields = [
+      "name", "phone", "email", "aadhaarNumber", "dob",
+      "collegeName", "collegeAddress", "collegeLocation", "collegeState",
+      "course", "branch", "year", "cgpa", "collegeId",
+      "currentAddress", "permanentAddress", "fatherName", "fatherPhone", "fatherOccupation",
+      "internshipDuration", "permissionLetterNumber", "permissionLetterDate", "internshipJoiningMonth"
+    ];
+    const hasTextChanges = fields.some(key => {
+      let original = student[key] || "";
+      if (key === "collegeLocation") original = student.location || "";
+      const current = editForm[key] || "";
+      return String(original).trim() !== String(current).trim();
+    });
+    const hasFileChanges = Object.values(newFiles).some(f => !!f);
+    return hasTextChanges || hasFileChanges;
+  };
+
+  useEffect(() => {
+    if (onDirtyChange && student) {
+      onDirtyChange(isFormDirty());
+    }
+  }, [isEditing, editForm, newFiles, student]);
+
+  useEffect(() => {
+    if (saveTrigger > 0 && isEditing) {
+      handleSaveDetails();
+    }
+  }, [saveTrigger]);
+
+  const handleApprove = async () => {
+    if (window.confirm(`Are you sure you want to approve ${student.name}?`)) {
+      try {
+        const payload = {
+          status: "Approved",
+          remark: student.remark || "Approved via details panel",
+          referenceBy: student.referenceBy || "",
+          recommendedBy: student.recommendedBy || "",
+        };
+        const response = await updateStudentReview(student._id, payload);
+        setStudent(response.student);
+        if (onSaveSuccess) onSaveSuccess(response.student);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  };
+
+  const handleReject = async () => {
+    if (window.confirm(`Are you sure you want to reject ${student.name}?`)) {
+      try {
+        const payload = {
+          status: "Rejected",
+          remark: student.remark || "Rejected via details panel",
+          referenceBy: student.referenceBy || "",
+          recommendedBy: student.recommendedBy || "",
+        };
+        const response = await updateStudentReview(student._id, payload);
+        setStudent(response.student);
+        if (onSaveSuccess) onSaveSuccess(response.student);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this student?\nThis action cannot be undone.")) {
+      try {
+        await deleteAdminStudents([student._id]);
+        if (onDeleteSuccess) onDeleteSuccess(student._id);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  };
+
+  const handleStartEdit = () => {
+    setEditForm({
+      name: student.name || "",
+      phone: student.phone || "",
+      email: student.email || "",
+      aadhaarNumber: student.aadhaarNumber || "",
+      dob: student.dob || "",
+      
+      collegeName: student.collegeName || "",
+      collegeAddress: student.collegeAddress || "",
+      collegeLocation: student.location || "",
+      collegeState: student.collegeState || "",
+      
+      course: student.course || "",
+      branch: student.branch || "",
+      year: student.year || "",
+      cgpa: student.cgpa || "",
+      collegeId: student.collegeId || "",
+      
+      currentAddress: student.currentAddress || "",
+      permanentAddress: student.permanentAddress || "",
+      
+      fatherName: student.fatherName || "",
+      fatherPhone: student.fatherPhone || "",
+      fatherOccupation: student.fatherOccupation || "",
+      
+      internshipDuration: student.internshipDuration || "",
+      permissionLetterNumber: student.permissionLetterNumber || "",
+      permissionLetterDate: student.permissionLetterDate || "",
+      internshipJoiningMonth: student.internshipJoiningMonth || "",
+    });
+    setNewFiles({});
+    setEditError("");
+    setIsEditing(true);
+  };
+
+  const handleEditChange = (name, value) => {
+    setEditForm(current => ({ ...current, [name]: value }));
+  };
+
+  const handleFileChange = (name, file) => {
+    setNewFiles(current => ({ ...current, [name]: file }));
+  };
+
+  const handleSaveDetails = async () => {
+    setEditSaving(true);
+    setEditError("");
+    try {
+      const payload = new FormData();
+      Object.entries(editForm).forEach(([key, value]) => {
+        payload.append(key, value);
+      });
+      Object.entries(newFiles).forEach(([key, value]) => {
+        if (value) {
+          payload.append(key, value);
+        }
+      });
+
+      const response = await updateStudentDetails(student._id, payload);
+      setStudent(response.student);
+      setIsEditing(false);
+      setNewFiles({});
+      if (onSaveSuccess) onSaveSuccess(response.student);
+    } catch (err) {
+      setEditError(err.message);
+      if (onSaveFailure) onSaveFailure(err.message);
+    } finally {
+      setEditSaving(false);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -400,7 +602,10 @@ function StudentDetails({ id }) {
   }, []);
 
   const goBack = () => {
-    window.history.pushState({}, "", "/admin/dashboard");
+    const dest = window.location.pathname.startsWith("/admin/student-management")
+      ? "/admin/student-management"
+      : "/admin/approved-students";
+    window.history.pushState({}, "", dest);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
@@ -467,7 +672,7 @@ function StudentDetails({ id }) {
 
   return (
     <main className="admin-console admin-shell">
-      <header className="admin-topbar">
+      <header className="admin-topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <p className="portal-eyebrow">Student Details</p>
           <h1>{student.name}</h1>
@@ -476,100 +681,417 @@ function StudentDetails({ id }) {
             <span>{student.email}</span>
           </div>
         </div>
-        <button className="admin-secondary-btn" type="button" onClick={goBack}>
-          Back to Dashboard
-        </button>
+        {!inSplitView && (
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            {!isApprovedView && (
+              isEditing ? (
+                <>
+                  <button
+                    className="admin-primary-btn"
+                    disabled={editSaving}
+                    type="button"
+                    onClick={handleSaveDetails}
+                    style={{ padding: "6px 16px", fontSize: "0.875rem", height: "36px", minWidth: "120px" }}
+                  >
+                    {editSaving ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    className="admin-secondary-btn"
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    style={{ padding: "6px 16px", fontSize: "0.875rem", height: "36px", minWidth: "120px" }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="admin-primary-btn"
+                    type="button"
+                    onClick={handleStartEdit}
+                    style={{ padding: "6px 16px", fontSize: "0.875rem", height: "36px", minWidth: "120px" }}
+                  >
+                    Edit
+                  </button>
+                </>
+              )
+            )}
+            <button
+              className="admin-secondary-btn"
+              type="button"
+              onClick={goBack}
+              style={{ padding: "6px 16px", fontSize: "0.875rem", height: "36px", minWidth: "220px" }}
+            >
+              {window.location.pathname.startsWith("/admin/student-management")
+                ? "Back to Student Management"
+                : "Back to Approved Students"}
+            </button>
+          </div>
+        )}
       </header>
 
-      <DetailGrid
-        title="Personal Details"
-        rows={[
-          ["Name", student.name],
-          ["Date of Birth", student.dob],
-          ["Phone Number", student.phone],
-          ["Email", student.email],
-        ]}
-      />
-
-      <DetailGrid
-        title="Academic Details"
-        rows={[
-          ["College / University", student.collegeName],
-          ["College State", student.collegeState],
-          ["College City", student.location],
-          ["Branch", student.branch],
-          ["Year", student.year],
-          ["CGPA", student.cgpa],
-          ["Course", student.course],
-          ["College ID", student.collegeId],
-        ]}
-      />
-
-      <DetailGrid
-        title="Address Details"
-        rows={[
-          ["Current Address", student.currentAddress],
-          ["Permanent Address", student.permanentAddress],
-        ]}
-      />
-
-      <DetailGrid
-        title="Parent / Guardian Details"
-        rows={[
-          ["Father / Guardian Name", student.fatherName],
-          ["Father / Guardian Phone", student.fatherPhone],
-          ["Father / Guardian Occupation", student.fatherOccupation],
-        ]}
-      />
-
-      <DetailGrid
-        title="Internship Details"
-        rows={[
-          ["Internship Duration", student.internshipDuration],
-          ["Joining Month", student.internshipJoiningMonth || student.internshipJoiningDate],
-          ["College Recommendation Letter Number", student.permissionLetterNumber],
-          ["College Recommendation Letter Date", student.permissionLetterDate],
-        ]}
-      />
-
-      <section className="details-section">
-        <h2>Student Documents</h2>
-        <div className="document-actions">
-        <DocumentButton label="Student Photo" file={student.photo} />
-        <DocumentButton label="Resume" file={student.resume} />
-        <DocumentButton label="Result" file={student.result} />
-        <DocumentButton label="Aadhaar Card" file={student.aadhaarCard} />
-        <DocumentButton
-          label="College Recommendation Letter"
-          file={student.permissionLetter}
-  />
-
-  <DocumentButton
-    label="Upload Form 1 and Form 2 (Single PDF)"
-    file={student.completedDocuments}
-  />
-</div>
-      </section>
-
-      {student.status === "Approved" && (
-        <DetailGrid
-          title="Approval and Offer Letter Details"
-          rows={[
-            ["Status", student.status],
-            ["Approved Date", formatDate(student.approvedDate)],
-            ["Reviewed By", student.reviewedBy],
-            ["Reviewed At", formatDate(student.reviewedAt)],
-            ["Offer Letter Uploaded Date", formatDate(student.offerLetterUploadedDate)],
-            ["Offer Letter Sent Date", formatDate(student.offerLetterSentDate)],
-            ["Offer Letter Status", student.offerLetterStatus],
-            ["Student Email Address", student.email],
-          ]}
-        />
+      {editError && (
+        <div className="administration-toast administration-toast--error" style={{ marginBottom: "16px" }} role="alert">
+          {editError}
+        </div>
       )}
 
-      <TrainingManagementForm student={student} divisions={divisions} onUpdated={setStudent} />
+      {!isApprovedView && (isEditing ? (
+        <section className="details-section">
+          <h2>Personal Details</h2>
+          <div className="details-grid">
+            <label className="admin-field">
+              <span>Name</span>
+              <input
+                value={editForm.name}
+                onChange={(e) => handleEditChange("name", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>Date of Birth</span>
+              <input
+                type="date"
+                value={editForm.dob}
+                onChange={(e) => handleEditChange("dob", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>Phone Number</span>
+              <input
+                value={editForm.phone}
+                onChange={(e) => handleEditChange("phone", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>Email</span>
+              <input
+                value={editForm.email}
+                onChange={(e) => handleEditChange("email", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>Aadhaar Number</span>
+              <input
+                value={editForm.aadhaarNumber}
+                onChange={(e) => handleEditChange("aadhaarNumber", e.target.value)}
+              />
+            </label>
+          </div>
+        </section>
+      ) : (
+        <DetailGrid
+          title="Personal Details"
+          rows={[
+            ["Name", student.name],
+            ["Date of Birth", student.dob],
+            ["Phone Number", student.phone],
+            ["Email", student.email],
+            ["Aadhaar Number", student.aadhaarNumber || "-"],
+          ]}
+        />
+      ))}
 
-      {student.status === "Approved" && (
+      {!isApprovedView && (isEditing ? (
+        <section className="details-section">
+          <h2>College Details</h2>
+          <div className="details-grid">
+            <label className="admin-field">
+              <span>College Name</span>
+              <input
+                value={editForm.collegeName}
+                onChange={(e) => handleEditChange("collegeName", e.target.value)}
+              />
+            </label>
+            <label className="admin-field" style={{ gridColumn: "span 3" }}>
+              <span>College Address</span>
+              <textarea
+                rows={4}
+                value={editForm.collegeAddress}
+                onChange={(e) => handleEditChange("collegeAddress", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>College Location</span>
+              <input
+                value={editForm.collegeLocation}
+                onChange={(e) => handleEditChange("collegeLocation", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>College State</span>
+              <select
+                value={editForm.collegeState}
+                onChange={(e) => handleEditChange("collegeState", e.target.value)}
+              >
+                <option value="">Select State</option>
+                {indianStatesAndUnionTerritories.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
+      ) : (
+        <DetailGrid
+          title="College Details"
+          rows={[
+            ["College / University", student.collegeName],
+            ["College Address", student.collegeAddress || "-"],
+            ["College Location", student.location],
+            ["College State", student.collegeState],
+          ]}
+        />
+      ))}
+
+      {!isApprovedView && (isEditing ? (
+        <section className="details-section">
+          <h2>Academic Details</h2>
+          <div className="details-grid">
+            <label className="admin-field">
+              <span>Course</span>
+              <select
+                value={editForm.course}
+                onChange={(e) => handleEditChange("course", e.target.value)}
+              >
+                <option value="">Select Course</option>
+                {courseOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="admin-field">
+              <span>Branch</span>
+              <select
+                value={editForm.branch}
+                onChange={(e) => handleEditChange("branch", e.target.value)}
+              >
+                <option value="">Select Branch</option>
+                {registeredBranchOptions.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="admin-field">
+              <span>Year</span>
+              <select
+                value={editForm.year}
+                onChange={(e) => handleEditChange("year", e.target.value)}
+              >
+                <option value="">Select Year</option>
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="admin-field">
+              <span>CGPA</span>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                step="0.01"
+                value={editForm.cgpa}
+                onChange={(e) => handleEditChange("cgpa", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>College ID</span>
+              <input
+                value={editForm.collegeId}
+                onChange={(e) => handleEditChange("collegeId", e.target.value)}
+              />
+            </label>
+          </div>
+        </section>
+      ) : (
+        <DetailGrid
+          title="Academic Details"
+          rows={[
+            ["Course", student.course],
+            ["Branch", student.branch],
+            ["Year", student.year],
+            ["CGPA", student.cgpa],
+            ["College ID", student.collegeId],
+          ]}
+        />
+      ))}
+
+      {!isApprovedView && (isEditing ? (
+        <section className="details-section">
+          <h2>Address Details</h2>
+          <div className="details-grid">
+            <label className="admin-field" style={{ gridColumn: "span 3" }}>
+              <span>Current Address</span>
+              <textarea
+                rows={4}
+                value={editForm.currentAddress}
+                onChange={(e) => handleEditChange("currentAddress", e.target.value)}
+              />
+            </label>
+            <label className="admin-field" style={{ gridColumn: "span 3" }}>
+              <span>Permanent Address</span>
+              <textarea
+                rows={4}
+                value={editForm.permanentAddress}
+                onChange={(e) => handleEditChange("permanentAddress", e.target.value)}
+              />
+            </label>
+          </div>
+        </section>
+      ) : (
+        <DetailGrid
+          title="Address Details"
+          rows={[
+            ["Current Address", student.currentAddress],
+            ["Permanent Address", student.permanentAddress],
+          ]}
+        />
+      ))}
+
+      {!isApprovedView && (isEditing ? (
+        <section className="details-section">
+          <h2>Parent / Guardian Details</h2>
+          <div className="details-grid">
+            <label className="admin-field">
+              <span>Father / Guardian Name</span>
+              <input
+                value={editForm.fatherName}
+                onChange={(e) => handleEditChange("fatherName", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>Father / Guardian Phone</span>
+              <input
+                value={editForm.fatherPhone}
+                onChange={(e) => handleEditChange("fatherPhone", e.target.value)}
+              />
+            </label>
+            <label className="admin-field">
+              <span>Father / Guardian Occupation</span>
+              <input
+                value={editForm.fatherOccupation}
+                onChange={(e) => handleEditChange("fatherOccupation", e.target.value)}
+              />
+            </label>
+          </div>
+        </section>
+      ) : (
+        <DetailGrid
+          title="Parent / Guardian Details"
+          rows={[
+            ["Father / Guardian Name", student.fatherName],
+            ["Father / Guardian Phone", student.fatherPhone],
+            ["Father / Guardian Occupation", student.fatherOccupation],
+          ]}
+        />
+      ))}
+
+
+      {!isApprovedView && (isEditing ? (
+        <section className="details-section">
+          <h2>Student Documents</h2>
+          <div className="details-grid">
+            <label className="admin-field">
+              <span>Student Photo</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={(e) => handleFileChange("photo", e.target.files[0])}
+              />
+              {student.photo?.url && (
+                <a href={getUploadUrl(student.photo.url)} target="_blank" rel="noreferrer" style={{ marginTop: "4px", fontSize: "0.86rem", color: "var(--primary)", fontWeight: "bold" }}>
+                  Current Photo
+                </a>
+              )}
+            </label>
+            <label className="admin-field">
+              <span>Curriculum Vitae</span>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => handleFileChange("resume", e.target.files[0])}
+              />
+              {student.resume?.url && (
+                <a href={getUploadUrl(student.resume.url)} target="_blank" rel="noreferrer" style={{ marginTop: "4px", fontSize: "0.86rem", color: "var(--primary)", fontWeight: "bold" }}>
+                  Current Curriculum Vitae
+                </a>
+              )}
+            </label>
+            <label className="admin-field">
+              <span>Marksheet</span>
+              <input
+                type="file"
+                accept="application/pdf,image/jpeg,image/jpg"
+                onChange={(e) => handleFileChange("result", e.target.files[0])}
+              />
+              {student.result?.url && (
+                <a href={getUploadUrl(student.result.url)} target="_blank" rel="noreferrer" style={{ marginTop: "4px", fontSize: "0.86rem", color: "var(--primary)", fontWeight: "bold" }}>
+                  Current Marksheet
+                </a>
+              )}
+            </label>
+            <label className="admin-field">
+              <span>College Recommendation Letter</span>
+              <input
+                type="file"
+                accept="application/pdf,image/jpeg,image/jpg,image/png"
+                onChange={(e) => handleFileChange("permissionLetter", e.target.files[0])}
+              />
+              {student.permissionLetter?.url && (
+                <a href={getUploadUrl(student.permissionLetter.url)} target="_blank" rel="noreferrer" style={{ marginTop: "4px", fontSize: "0.86rem", color: "var(--primary)", fontWeight: "bold" }}>
+                  Current Recommendation Letter
+                </a>
+              )}
+            </label>
+          </div>
+        </section>
+      ) : (
+        <section className="details-section">
+          <h2>Student Documents</h2>
+          <div className="document-actions">
+            <DocumentButton label="Student Photo" file={student.photo} />
+            <DocumentButton label="Curriculum Vitae" file={student.resume} />
+            <DocumentButton label="Marksheet" file={student.result} />
+            <DocumentButton label="Aadhaar Card" file={student.aadhaarCard} />
+            <DocumentButton
+              label="College Recommendation Letter"
+              file={student.permissionLetter}
+            />
+            <DocumentButton
+              label="Upload Form 1 and Form 2 (Single PDF)"
+              file={student.completedDocuments}
+            />
+          </div>
+        </section>
+      ))}
+
+      {!isEditing && isApprovedView && <TrainingManagementForm student={student} divisions={divisions} onUpdated={setStudent} alwaysOpen={isApprovedView} saveRef={isApprovedView ? trainingFormSaveRef : null} />}
+
+      {/* Approved-view action bar: Save Changes + Suggest Division */}
+      {isApprovedView && !isEditing && (
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", margin: "16px 0", padding: "16px 0", borderTop: "1px solid var(--border-color, #e2e8f0)", borderBottom: "1px solid var(--border-color, #e2e8f0)" }}>
+          <button
+            className="admin-primary-btn"
+            type="button"
+            onClick={() => trainingFormSaveRef.current?.()}
+            style={{ padding: "6px 20px", fontSize: "0.875rem", height: "36px", minWidth: "140px" }}
+          >
+            Save Changes
+          </button>
+          <StudentDivisionRecommendation student={student} />
+        </div>
+      )}
+
+      {isApprovedView && student.status === "Approved" && !isEditing && (
         <section className="offer-letter-box offer-letter-box--actions">
           <div>
             <h2>Offer Letter</h2>
@@ -611,7 +1133,7 @@ function StudentDetails({ id }) {
         </section>
       )}
 
-      <AdminReviewForm student={student} onUpdated={setStudent} />
+
     </main>
   );
 }

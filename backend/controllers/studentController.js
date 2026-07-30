@@ -19,6 +19,7 @@ const requiredFields = [
   "dob",
   "aadhaarNumber",
   "collegeName",
+  "collegeAddress",
   "collegeState",
   "collegeLocation",
   "currentAddress",
@@ -67,10 +68,36 @@ function validateRequest(body, files) {
   }
 
   if (missingFields.length || missingFiles.length) {
-    return `Missing required fields: ${[
-      ...missingFields,
-      ...missingFiles,
-    ].join(", ")}`;
+    const displayNames = {
+      resume: "Curriculum Vitae",
+      result: "Marksheet",
+      collegeLocation: "College Location (City)",
+      collegeState: "College State",
+      collegeAddress: "College Address",
+      collegeId: "College ID Card Number",
+      currentAddress: "Current Address",
+      permanentAddress: "Permanent Address",
+      fatherName: "Father's Name",
+      fatherPhone: "Father's Phone Number",
+      fatherOccupation: "Father's Occupation",
+      internshipJoiningMonth: "Internship Joining Month",
+      permissionLetterNumber: "Permission Letter Number",
+      permissionLetterDate: "Permission Letter Date",
+      permissionLetter: "Permission Letter",
+      aadhaarNumber: "Aadhaar Number",
+      aadhaarCard: "Aadhaar Card",
+      dob: "Date of Birth",
+      currentYear: "Current Year",
+      name: "Student Name",
+      course: "Course",
+      branch: "Branch",
+      phone: "Phone Number",
+      email: "Email Address",
+      dob: "Date of Birth",
+      cgpa: "CGPA",
+    };
+    const allMissing = [...missingFields, ...missingFiles].map(f => displayNames[f] || f);
+    return `Missing required fields: ${allMissing.join(", ")}`;
   }
 
   if (!/^\d{10}$/.test(body.phone)) {
@@ -229,6 +256,7 @@ async function createStudent(req, res) {
       aadhaarNumber: req.body.aadhaarNumber,
 
       collegeName: req.body.collegeName,
+      collegeAddress: req.body.collegeAddress,
       collegeState: req.body.collegeState,
       location: req.body.collegeLocation,
 

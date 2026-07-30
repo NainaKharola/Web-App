@@ -48,7 +48,7 @@ function Certificates({ bufferMode = false }) {
   };
 
   const goBack = () => {
-    window.history.pushState({}, "", "/admin/dashboard");
+    window.history.pushState({}, "", "/admin/approved-students");
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
