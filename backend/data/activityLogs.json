@@ -493,5 +493,104 @@
     "status": "Success",
     "timestamp": "2026-07-30T21:27:30.108Z",
     "_id": "c713a71e2c1bf6c220de229a"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:28:41.811Z",
+    "_id": "31c26cd33220238d9b43f7cd"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:28:43.548Z",
+    "_id": "c9c277c542bdebe7375e8fd9"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:28:45.165Z",
+    "_id": "012646c0bd0c881abea43b95"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:28:46.762Z",
+    "_id": "e498b8290c4adb2bb1c155f4"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:28:47.688Z",
+    "_id": "41c2ef71683ad9d905e7adb8"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Changed Division",
+    "description": "Changed division for abc from 'None' to 'Servo System'.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:29:12.222Z",
+    "_id": "0c73f8794045f465f43b2582"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for abc.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:29:17.674Z",
+    "_id": "31d75b5585e87d67c76b9fce"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:37:49.360Z",
+    "_id": "80369ced0ef92ccdfac256f5"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-30T21:37:50.823Z",
+    "_id": "6f08e95f8af89c9828241579"
   }
 ]

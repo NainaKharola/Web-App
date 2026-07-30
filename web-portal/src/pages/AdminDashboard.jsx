@@ -484,6 +484,11 @@ function AdminDashboard() {
           </h1>
         </div>
         <div className="admin-topbar__actions">
+          {currentView === "approved-students" && (
+            <button className="admin-secondary-btn" type="button" onClick={openAdministration}>
+              System Configurations
+            </button>
+          )}
           {currentView !== "home" && (
             <button className="admin-secondary-btn" type="button" onClick={handleGoHomeWithCheck}>
               🏠 Home
@@ -751,10 +756,6 @@ function AdminDashboard() {
         <div style={{ marginTop: "24px" }}>
           <h2 style={{ marginBottom: "20px" }}>System Administration Modules</h2>
           <div className="admin-dashboard-home-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-            <div className="admin-summary-card admin-summary-card--interactive" onClick={openAdministration} style={{ cursor: "pointer", padding: "28px", borderRadius: "12px", border: "1px solid var(--border-color, #e2e8f0)" }}>
-              <h3 style={{ marginTop: 0, color: "var(--primary)" }}>⚙️ System Configurations</h3>
-              <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem" }}>Configure divisions, branch capacities, and review vacancy status.</p>
-            </div>
             <div className="admin-summary-card admin-summary-card--interactive" onClick={openCollegeManagement} style={{ cursor: "pointer", padding: "28px", borderRadius: "12px", border: "1px solid var(--border-color, #e2e8f0)" }}>
               <h3 style={{ marginTop: 0, color: "var(--primary)" }}>🏫 College Management</h3>
               <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem" }}>Register, edit, import, or remove registered college listings.</p>

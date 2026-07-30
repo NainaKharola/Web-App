@@ -134,7 +134,7 @@ function Administration() {
           <p className="administration-subtitle">Manage system configuration, divisions, and administrative settings.</p>
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
-          <button className="admin-secondary-btn" type="button" onClick={() => { window.history.pushState({}, "", "/admin/administration"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Back to Dashboard</button>
+          <button className="admin-secondary-btn" type="button" onClick={() => { window.history.pushState({}, "", "/admin/approved-students"); window.dispatchEvent(new PopStateEvent("popstate")); }}>Back to Dashboard</button>
           <button className="admin-secondary-btn" type="button" onClick={() => { window.history.pushState({}, "", "/admin/dashboard"); window.dispatchEvent(new PopStateEvent("popstate")); }}>🏠 Home</button>
         </div>
       </header>
