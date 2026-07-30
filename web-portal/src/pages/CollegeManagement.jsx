@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { addCollege, addManagementItem, deleteCollege, deleteManagementItem, fetchAdminColleges, fetchManagementItems, updateCollege, updateManagementItem } from "../services/adminService";
+import { compareDurations } from "../utils/durationSort";
 import "../styles/admin.css";
 
 const sections = [
@@ -13,7 +14,7 @@ function ManagementSection({ config, initiallyOpen = true }) {
   const [items, setItems] = useState([]), [name, setName] = useState(""), [search, setSearch] = useState(""), [editing, setEditing] = useState(null), [open, setOpen] = useState(initiallyOpen), [loading, setLoading] = useState(true), [saving, setSaving] = useState(false), [error, setError] = useState("");
   const load = async () => { setLoading(true); try { setItems(await config.list(config.key)); } catch (err) { setError(err.message); } finally { setLoading(false); } };
   useEffect(() => { Promise.resolve().then(load); }, []);
-  const visible = useMemo(() => { const term = search.trim().toLowerCase(); return (term ? items.filter((item) => item.name.toLowerCase().includes(term)) : items).sort((a, b) => a.name.localeCompare(b.name)); }, [items, search]);
+  const visible = useMemo(() => { const term = search.trim().toLowerCase(); return (term ? items.filter((item) => item.name.toLowerCase().includes(term)) : items).sort((a, b) => config.key === "durations" ? compareDurations(a.name, b.name) : a.name.localeCompare(b.name)); }, [config.key, items, search]);
   const submit = async (event) => { event.preventDefault(); if (!name.trim()) return setError(`${config.singular} name is required.`); setSaving(true); setError(""); try { editing ? await config.update(config.key, editing.id, name) : await config.add(config.key, name); setName(""); setEditing(null); await load(); } catch (err) { setError(err.message); } finally { setSaving(false); } };
   const remove = async (item) => { if (!window.confirm(`Delete "${item.name}"?`)) return; try { await config.remove(config.key, item.id); await load(); } catch (err) { setError(err.message); } };
   const listLabel = `${config.singular} List`;

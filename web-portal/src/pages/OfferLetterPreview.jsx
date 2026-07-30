@@ -69,6 +69,27 @@ function OfferLetterPreview({ studentId }) {
     }
   };
 
+  const handleDownloadUploaded = async () => {
+    if (!preview?.pdfUrl) return;
+    setBusy("download");
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(getUploadUrl(preview.pdfUrl));
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Offer-Letter-${preview.student?.name || studentId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message || "Failed to download PDF.");
+    } finally {
+      setBusy("");
+    }
+  };
+
   const handleSend = async () => {
     setBusy("send");
     setError("");
@@ -119,9 +140,9 @@ function OfferLetterPreview({ studentId }) {
             {busy === "download" ? "Preparing..." : "Download PDF"}
           </button>
           {preview?.uploadType === "Uploaded" && preview?.pdfUrl && (
-            <a className="admin-secondary-btn admin-link-button" href={getUploadUrl(preview.pdfUrl)} target="_blank" rel="noreferrer">
-              Open PDF
-            </a>
+            <button className="admin-secondary-btn" type="button" onClick={handleDownloadUploaded}>
+              Download PDF
+            </button>
           )}
           <button className="admin-primary-btn" disabled={busy === "send"} type="button" onClick={handleSend}>
             {busy === "send" ? "Sending..." : "Send Offer Letter"}

@@ -3,6 +3,7 @@ import AdminReviewForm from "../components/Admin/AdminReviewForm";
 import StatusBadge from "../components/Admin/StatusBadge";
 import {
   fetchAdminStudent,
+  fetchAdministration,
   saveTrainingManagement,
 } from "../services/adminService";
 import {
@@ -86,7 +87,7 @@ function addDurationToDate(fromDate, duration) {
   return date.toISOString().slice(0, 10);
 }
 
-function TrainingManagementForm({ student, onUpdated }) {
+function TrainingManagementForm({ student, divisions, onUpdated }) {
   const existing = student.trainingManagement || {};
   const branchOptions = [...new Set([
     ...registeredBranchOptions,
@@ -104,6 +105,7 @@ function TrainingManagementForm({ student, onUpdated }) {
     fromDate: existing.fromDate || "",
     toDate: existing.toDate || "",
     joined: existing.joined || student.joinedStatus || "",
+    division: existing.division || "",
     projectTitle: existing.projectTitle || "",
     projectGuide: existing.projectGuide || "",
     designation: existing.designation || "",
@@ -115,6 +117,7 @@ function TrainingManagementForm({ student, onUpdated }) {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const initialRender = useRef(true);
+  const savedForm = useRef(form);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -133,15 +136,38 @@ function TrainingManagementForm({ student, onUpdated }) {
     setDirty(true);
   };
 
-  const save = async () => {
+  const save = async (payload = form) => {
     setSaving(true);
     setMessage("");
 
     try {
-      const response = await saveTrainingManagement(student._id, form);
+      const response = await saveTrainingManagement(student._id, payload);
+      savedForm.current = payload;
       onUpdated(response.student);
       setMessage(response.message);
     } catch (err) {
+      setForm(savedForm.current);
+      setDirty(false);
+      setMessage(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDivisionChange = async (event) => {
+    const division = event.target.value;
+    const next = { ...form, division };
+
+    setSaving(true);
+    setMessage("");
+    try {
+      const response = await saveTrainingManagement(student._id, next);
+      savedForm.current = next;
+      setForm(next);
+      onUpdated(response.student);
+      setMessage(response.message);
+    } catch (err) {
+      setForm(savedForm.current);
       setMessage(err.message);
     } finally {
       setSaving(false);
@@ -151,7 +177,7 @@ function TrainingManagementForm({ student, onUpdated }) {
   useEffect(() => {
     if (initialRender.current) { initialRender.current = false; return undefined; }
     if (!dirty) return undefined;
-    const timer = window.setTimeout(() => { setDirty(false); save(); }, 750);
+    const timer = window.setTimeout(() => { setDirty(false); save(form); }, 750);
     return () => window.clearTimeout(timer);
   }, [form, dirty]);
 
@@ -219,6 +245,16 @@ function TrainingManagementForm({ student, onUpdated }) {
           <option key={branch} value={branch}>
             {branch}
           </option>
+        ))}
+      </select>
+    </label>
+
+    <label className="admin-field">
+      <span>Division</span>
+      <select name="division" value={form.division} onChange={handleDivisionChange} disabled={saving}>
+        <option value="">Select Division</option>
+        {[...divisions].sort((a, b) => a.localeCompare(b)).map((division) => (
+          <option key={division} value={division}>{division}</option>
         ))}
       </select>
     </label>
@@ -319,7 +355,7 @@ function TrainingManagementForm({ student, onUpdated }) {
             </label>
           ))}
 
-          <p className="admin-muted" role="status">{saving ? "Saving..." : message || (dirty ? "Changes pending..." : "Saved")}</p>
+          <p className={message.startsWith("Unable") || message.startsWith("No ") || message.startsWith("Select ") ? "admin-error" : "admin-muted"} role="status">{saving ? "Saving..." : message || (dirty ? "Changes pending..." : "Saved")}</p>
         </form>
       )}
     </section>
@@ -328,6 +364,7 @@ function TrainingManagementForm({ student, onUpdated }) {
 
 function StudentDetails({ id }) {
   const [student, setStudent] = useState(null);
+  const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [letterFile, setLetterFile] = useState(null);
   const [letterBusy, setLetterBusy] = useState("");
@@ -357,6 +394,10 @@ function StudentDetails({ id }) {
       ignore = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    fetchAdministration().then((response) => setDivisions(response.administration?.divisions || [])).catch(() => setDivisions([]));
+  }, []);
 
   const goBack = () => {
     window.history.pushState({}, "", "/admin/dashboard");
@@ -526,7 +567,7 @@ function StudentDetails({ id }) {
         />
       )}
 
-      <TrainingManagementForm student={student} onUpdated={setStudent} />
+      <TrainingManagementForm student={student} divisions={divisions} onUpdated={setStudent} />
 
       {student.status === "Approved" && (
         <section className="offer-letter-box offer-letter-box--actions">

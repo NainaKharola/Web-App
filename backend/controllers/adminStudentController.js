@@ -1,5 +1,6 @@
 const Student = require("../models/Student");
 const { generatePdfsFromHtml } = require("../services/pdfService");
+const { logActivity } = require("../utils/activityLogger");
 const {
   certificateFileName,
   generateCertificateHtml,
@@ -10,7 +11,6 @@ const {
   sendRejectionEmail,
 } = require("../services/emailService");
 const { indiaDayRange } = require("../utils/dateRange");
-const { getAdministration } = require("../services/administrationService");
 const { validateDivisionCapacity } = require("../services/divisionCapacityService");
 
 const reviewFields = ["status", "remark", "referenceBy", "recommendedBy"];
@@ -156,7 +156,7 @@ async function getStudents(req, res) {
     const filter = buildStudentFilter(req.query);
     const sort = buildSort(req.query.sortBy, req.query.sortOrder);
     const projection =
-      "_id referenceId name collegeName branch year cgpa submittedAt status recommendedBy offerLetterStatus approvedDate";
+      "_id referenceId name collegeName branch year cgpa submittedAt status recommendedBy trainingManagement offerLetterStatus approvedDate";
 
     const [
       students,
@@ -205,6 +205,7 @@ async function getCertificateStudents(req, res) {
     const filter = {
       $and: [
         { $or: completionStatus },
+        ...(req.bufferMode === true ? [{ certificateBufferRemoved: { $ne: true } }] : []),
         ...(deleteAfterDownload ? [{ certificateGenerated: { $ne: true } }] : []),
       ],
     };
@@ -240,6 +241,13 @@ async function getCertificateStudents(req, res) {
       message: "Unable to fetch completed trainees.",
     });
   }
+}
+
+async function removeCertificateBufferStudents(req, res) {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+  if (!ids.length) return res.status(400).json({ success: false, message: "Select at least one student to remove." });
+  await Promise.all(ids.map((id) => Student.findByIdAndUpdate(id, { certificateBufferRemoved: true })));
+  return res.json({ success: true, message: "Selected students removed from the certificate buffer." });
 }
 
 async function downloadCertificates(req, res) {
@@ -290,6 +298,14 @@ async function downloadCertificates(req, res) {
       });
     }
 
+    await logActivity({
+      req,
+      module: "Certificate",
+      action: "Printed Certificate",
+      description: `Printed certificate for ${student.name}.`,
+      status: "Success",
+    });
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -297,6 +313,14 @@ async function downloadCertificates(req, res) {
     );
     return res.status(200).send(pdf);
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Certificate",
+      action: "Printed Certificate",
+      description: `Failed to print certificate. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     if (!res.headersSent) {
       return res
         .status(500)
@@ -348,25 +372,8 @@ async function updateStudentReview(req, res) {
       });
     }
 
-    const administration = await getAdministration();
-    if (req.body.recommendedBy && !administration.divisions.includes(req.body.recommendedBy)) {
-      return res.status(400).json({
-        success: false,
-        message: "Select a valid recommendation.",
-      });
-    }
-
-    if (req.body.status === "Approved" && req.body.recommendedBy) {
-      const capacityError = await validateDivisionCapacity({
-        Student,
-        studentId: student._id,
-        division: req.body.recommendedBy,
-        branch: student.branch,
-      });
-      if (capacityError) return res.status(400).json({ success: false, message: capacityError });
-    }
-
     const wasRejected = student.status === "Rejected";
+    const oldStatus = student.status;
 
     reviewFields.forEach((field) => {
       student[field] = req.body[field] || "";
@@ -387,6 +394,26 @@ async function updateStudentReview(req, res) {
       emailResult = await sendRejectionEmail(student);
     }
 
+    let logAction = "Edited Student Details";
+    let logDescription = `Edited student details for ${student.name}.`;
+    if (oldStatus !== student.status) {
+      if (student.status === "Approved") {
+        logAction = "Approved Student";
+        logDescription = `Approved student ${student.name}.`;
+      } else if (student.status === "Rejected") {
+        logAction = "Rejected Student";
+        logDescription = `Rejected student ${student.name}.`;
+      }
+    }
+
+    await logActivity({
+      req,
+      module: "Student Module",
+      action: logAction,
+      description: logDescription,
+      status: "Success",
+    });
+
     return res.status(200).json({
       success: true,
       student,
@@ -394,6 +421,14 @@ async function updateStudentReview(req, res) {
       message: "Review updated successfully.",
     });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Student Module",
+      action: req.body?.status === "Approved" ? "Approved Student" : (req.body?.status === "Rejected" ? "Rejected Student" : "Edited Student Details"),
+      description: `Failed to update student review/details. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return res.status(500).json({
       success: false,
       message: "Unable to update review.",
@@ -419,12 +454,28 @@ async function deleteStudents(req, res) {
       _id: { $in: students.map((student) => student._id) },
     });
 
+    await logActivity({
+      req,
+      module: "Student Module",
+      action: "Deleted Student",
+      description: `Deleted ${students.length} student registrations: ${students.map((student) => student.name).join(", ")}.`,
+      status: "Success",
+    });
+
     return res.status(200).json({
       success: true,
       deletedCount: students.length,
       message: "Selected registrations deleted successfully.",
     });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Student Module",
+      action: "Deleted Student",
+      description: `Failed to delete student registrations. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return res.status(500).json({
       success: false,
       message: "Unable to delete selected registrations.",
@@ -444,6 +495,23 @@ async function saveTrainingManagement(req, res) {
       });
     }
 
+    const oldDiv = student.trainingManagement?.division;
+    const oldJoined = student.joinedStatus;
+    const oldCompleted = student.completedStatus;
+    const oldFromDate = student.trainingManagement?.fromDate;
+    const oldToDate = student.trainingManagement?.toDate;
+
+    const division = String(req.body.division || "").trim();
+    if (division) {
+      const capacityError = await validateDivisionCapacity({
+        Student,
+        studentId: student._id,
+        division,
+        branch: req.body.branch || student.branch,
+      });
+      if (capacityError) return res.status(400).json({ success: false, message: capacityError });
+    }
+
     const training = {
       studentName: req.body.studentName || student.name,
       courseName: req.body.courseName || student.course,
@@ -460,6 +528,7 @@ async function saveTrainingManagement(req, res) {
           req.body.trainingDuration || student.internshipDuration,
         ),
       joined: req.body.joined || "",
+      division,
       joinedDate:
         req.body.joined === "Yes"
           ? (student.trainingManagement?.joined === "Yes" &&
@@ -472,11 +541,11 @@ async function saveTrainingManagement(req, res) {
       leaveAvailed: req.body.leaveAvailed || "",
       completed: req.body.completed || "",
       completionDate:
-  req.body.completed === "Yes"
-    ? (student.trainingManagement?.completed === "Yes" &&
-        student.trainingManagement?.completionDate) ||
-      new Date(`${new Date().toLocaleDateString("en-CA")}T12:00:00`)
-    : null,
+        req.body.completed === "Yes"
+          ? (student.trainingManagement?.completed === "Yes" &&
+              student.trainingManagement?.completionDate) ||
+            new Date(`${new Date().toLocaleDateString("en-CA")}T12:00:00`)
+          : null,
       updatedBy: req.admin.email,
       updatedAt: new Date(),
     };
@@ -514,12 +583,45 @@ async function saveTrainingManagement(req, res) {
 
     await student.save();
 
+    let logAction = "Updated Training Details";
+    let logDescription = `Updated training details for ${student.name}.`;
+
+    if (oldDiv !== division) {
+      logAction = "Changed Division";
+      logDescription = `Changed division for ${student.name} from '${oldDiv || "None"}' to '${division || "None"}'.`;
+    } else if (oldJoined !== req.body.joined) {
+      logAction = "Updated Joined Status";
+      logDescription = `Updated joined status for ${student.name} to '${req.body.joined}'.`;
+    } else if (oldCompleted !== req.body.completed) {
+      logAction = "Updated Completion Status";
+      logDescription = `Updated completion status for ${student.name} to '${req.body.completed}'.`;
+    } else if (oldFromDate !== req.body.fromDate || oldToDate !== training.toDate) {
+      logAction = "Updated Dates";
+      logDescription = `Updated training dates for ${student.name}.`;
+    }
+
+    await logActivity({
+      req,
+      module: "Training Management",
+      action: logAction,
+      description: logDescription,
+      status: "Success",
+    });
+
     return res.status(200).json({
       success: true,
       student,
       message: "Training details saved successfully.",
     });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Training Management",
+      action: "Updated Training Details",
+      description: `Failed to update training details. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return res.status(500).json({
       success: false,
       message: "Unable to save Training Management details.",
@@ -575,6 +677,14 @@ async function uploadOfferLetter(req, res) {
 
     await student.save();
 
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Sent Offer Letter",
+      description: `Uploaded and sent offer letter to ${student.name}.`,
+      status: "Success",
+    });
+
     return res.status(200).json({
       success: true,
       student,
@@ -586,6 +696,14 @@ async function uploadOfferLetter(req, res) {
     });
   } catch (error) {
     console.error(error);
+
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Sent Offer Letter",
+      description: `Failed to upload and send offer letter. Error: ${error.message}`,
+      status: "Failed",
+    });
 
     return res.status(500).json({
       success: false,
@@ -599,6 +717,7 @@ module.exports = {
   deleteStudents,
   downloadCertificates,
   getCertificateStudents,
+  removeCertificateBufferStudents,
   getStudents,
   getStudentById,
   updateStudentReview,

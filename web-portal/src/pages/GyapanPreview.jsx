@@ -48,6 +48,38 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
       frame.addEventListener("load", printDocument, { once: true });
     }
   };
+
+  const handleDownloadPdf = async () => {
+    if (!data?.gyapan?.pdfUrl) return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch(getUploadUrl(data.gyapan.pdfUrl));
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Gyapan-${data.gyapan.letterNumber || gyapanId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message || "Failed to download PDF.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (data) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("print") === "true") {
+        printPreview();
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, [data]);
+
   if (!data && !error)
     return (
       <main className="admin-console admin-shell">
@@ -71,14 +103,14 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
             Edit
           </button>
           {data?.gyapan?.pdfUrl ? (
-            <a
-              className="admin-secondary-btn admin-link-button"
-              href={getUploadUrl(data.gyapan.pdfUrl)}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              className="admin-secondary-btn"
+              type="button"
+              disabled={busy}
+              onClick={handleDownloadPdf}
             >
-              Download Preview
-            </a>
+              {busy ? "Preparing..." : "Download Preview"}
+            </button>
           ) : (
             <button
               className="admin-secondary-btn"

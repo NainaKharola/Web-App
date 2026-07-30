@@ -9,6 +9,7 @@ const DivisionConfiguration = lazy(() => import("./pages/DivisionConfiguration")
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const Certificates = lazy(() => import("./pages/Certificates"));
 const CollegeManagement = lazy(() => import("./pages/CollegeManagement"));
+const AdminProfile = lazy(() => import("./pages/AdminProfile"));
 const GyapanEditor = lazy(() => import("./pages/GyapanEditor"));
 const GyapanPage = lazy(() => import("./pages/GyapanPage"));
 const GyapanPreview = lazy(() => import("./pages/GyapanPreview"));
@@ -71,6 +72,7 @@ function App() {
             <Route path="/admin/dashboard" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin-dashboard" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin/colleges" element={protectedPage(<CollegeManagement />)} />
+            <Route path="/admin/profile" element={protectedPage(<AdminProfile />)} />
             <Route path="/admin/administration" element={protectedPage(<Administration />)} />
             <Route path="/admin/administration/division-configurations" element={protectedPage(<DivisionConfiguration />)} />
             <Route path="/admin/students" element={protectedPage(<AdminDashboard />)} />

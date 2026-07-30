@@ -9,7 +9,6 @@ import {
 } from "../services/adminService";
 import DivisionBranchVacancyConfiguration from "../components/Admin/DivisionBranchVacancyConfiguration";
 import DivisionBranchAnalytics from "../components/Admin/DivisionBranchAnalytics";
-import DivisionRecommendation from "../components/Admin/DivisionRecommendation";
 import "../styles/admin.css";
 
 function Administration() {
@@ -26,6 +25,7 @@ function Administration() {
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [studentsError, setStudentsError] = useState("");
+  const [analyticsMode, setAnalyticsMode] = useState("branch");
 
   const applyAdministration = useCallback((next, successMessage = "") => {
     setAdministration(next);
@@ -194,8 +194,7 @@ function Administration() {
           </div>
 
           <DivisionBranchVacancyConfiguration key={JSON.stringify(administration.divisionConfigurations)} administration={administration} onSaved={saveDivisionConfiguration} onError={(requestError) => { setMessage(""); setError(requestError); }} />
-          <DivisionBranchAnalytics administration={administration} students={students} loading={studentsLoading} error={studentsError} />
-          <DivisionRecommendation administration={administration} students={students} loading={studentsLoading} error={studentsError} />
+          <DivisionBranchAnalytics administration={administration} students={students} loading={studentsLoading} error={studentsError} onModeChange={setAnalyticsMode} />
         </div>
       )}
 

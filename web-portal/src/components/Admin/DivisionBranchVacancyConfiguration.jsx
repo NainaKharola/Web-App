@@ -46,7 +46,7 @@ export default function DivisionBranchVacancyConfiguration({ administration, onS
   };
 
   return <section className="administration-card administration-card--configuration">
-    <div className="administration-card__heading"><span className="administration-icon" aria-hidden="true">⚙</span><div><h2>Division Branch &amp; Vacancy Configuration</h2><p>Configure eligible branches and branch-wise internship seats for every division.</p></div></div>
+    <div className="administration-card__heading"><span className="administration-icon" aria-hidden="true">⚙</span><div><h2>Division wise Branch &amp; Vacancy Configuration</h2><p>Configure eligible branches and branch-wise internship seats for every division.</p></div></div>
     <div className="division-configuration-table-wrap"><table className="division-configuration-table"><thead><tr><th>Division Names</th><th>Allowed Branches</th><th>Branch Seats</th><th>Total Vacancy</th></tr></thead><tbody>
       {[...administration.divisions].sort((a, b) => a.localeCompare(b)).map((division) => {
         const configuration = configurations[division] || emptyConfiguration();

@@ -53,6 +53,7 @@ function studentToRow(student) {
     course: training.courseName || training.course || student.course || "",
     courseYear: training.courseYear || student.year || "",
     branch: training.branch || training.department || student.branch || student.department || "",
+    division: training.division || "",
     collegeName: training.collegeName || student.collegeName || "",
     collegeLocation: training.collegeLocation || student.location || "",
     trainingStartDate: training.fromDate || "",
@@ -74,6 +75,7 @@ function buildStudentRows(rows) {
             ${escapeHtml(row.course)}
             ${escapeHtml(row.courseYear)},
             ${escapeHtml(row.branch)}
+            ${row.division ? `<br><small>Division: ${escapeHtml(row.division)}</small>` : ""}
           </td>
 
           <td>
@@ -94,10 +96,11 @@ function buildStudentRows(rows) {
     .join("");
 }
 
-async function generateGyapanHtml({ rows, letterNumber, issueDate }) {
+async function generateGyapanHtml({ rows, letterNumber, issueDate, division }) {
   const template = await fs.readFile(templatePath, "utf8");
-  return template.replace(/{{(studentRows|letterNumber|issueDate)}}/g, (_, key) => {
+  return template.replace(/{{(studentRows|letterNumber|issueDate|division)}}/g, (_, key) => {
     if (key === "studentRows") return buildStudentRows(rows);
+    if (key === "division") return escapeHtml(division || "");
     return escapeHtml(key === "issueDate" ? formatDate(issueDate) : letterNumber);
   });
 }

@@ -7,6 +7,7 @@ const {
 const { generatePdfFromHtml } = require("../services/pdfService");
 const { saveLocalFile } = require("../services/localStorageService");
 const { sendOfferLetterEmail } = require("../services/emailService");
+const { logActivity } = require("../utils/activityLogger");
 
 function syncLegacyOfferLetterFields(
   student,
@@ -113,6 +114,14 @@ async function generateOfferLetter(req, res) {
 
     await student.save();
 
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Generated Offer Letter",
+      description: `Generated offer letter for ${student.name}.`,
+      status: "Success",
+    });
+
     return res.status(200).json({
       success: true,
       html,
@@ -121,6 +130,14 @@ async function generateOfferLetter(req, res) {
       message: "Offer Letter generated successfully.",
     });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Generated Offer Letter",
+      description: `Failed to generate offer letter. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return sendError(res, error, "Unable to generate Offer Letter.");
   }
 }
@@ -286,6 +303,14 @@ async function generateOfferLetterPdf(req, res) {
 
     await student.save();
 
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Printed Offer Letter",
+      description: `Printed offer letter for ${student.name}.`,
+      status: "Success",
+    });
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -293,6 +318,14 @@ async function generateOfferLetterPdf(req, res) {
     );
     return res.status(200).send(pdfBuffer);
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Printed Offer Letter",
+      description: `Failed to print offer letter. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return sendError(res, error, "PDF generation failed.");
   }
 }
@@ -389,12 +422,28 @@ async function sendOfferLetter(req, res) {
 
     await student.save();
 
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Sent Offer Letter",
+      description: `Sent offer letter to ${student.name}.`,
+      status: "Success",
+    });
+
     return res.status(200).json({
       success: true,
       student: serializeStudent(student),
       message: "Offer Letter sent successfully.",
     });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Offer Letter",
+      action: "Sent Offer Letter",
+      description: `Failed to send offer letter. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     try {
       await Student.findByIdAndUpdate(req.params.studentId, {
         offerLetterStatus: "Email Failed",

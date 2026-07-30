@@ -1,0 +1,123 @@
+[
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Profile",
+    "action": "Added User",
+    "description": "Added new sub-user: xyz@gmail.com.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:28:24.112Z",
+    "_id": "bd8fb67791571ee1b4d63bf4"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Profile",
+    "action": "Create Password for Users",
+    "description": "Created/updated password for user xyz@gmail.com.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:28:57.122Z",
+    "_id": "0c4747d8619ca3556721b026"
+  },
+  {
+    "userId": "99d651a5ed848a1c96c3bcaf",
+    "userName": "xyz",
+    "role": "SUB_ADMIN",
+    "module": "Offer Letter",
+    "action": "Generated Offer Letter",
+    "description": "Generated offer letter for qw.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:29:26.083Z",
+    "_id": "1041f21288df07d665efcaad"
+  },
+  {
+    "userId": "99d651a5ed848a1c96c3bcaf",
+    "userName": "xyz",
+    "role": "SUB_ADMIN",
+    "module": "Joining ISM",
+    "action": "Generated ISM",
+    "description": "Generated Joining ISM preview for 1 trainee(s) in division 'AI'.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:30:01.221Z",
+    "_id": "77f45e30be0ca66b08715305"
+  },
+  {
+    "userId": "99d651a5ed848a1c96c3bcaf",
+    "userName": "xyz",
+    "role": "SUB_ADMIN",
+    "module": "Joining ISM",
+    "action": "Generated ISM",
+    "description": "Generated Joining ISM preview for 1 trainee(s) in division 'ABS'.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:30:46.563Z",
+    "_id": "2433ba6e247cc78e7b85ba29"
+  },
+  {
+    "userId": "99d651a5ed848a1c96c3bcaf",
+    "userName": "xyz",
+    "role": "SUB_ADMIN",
+    "module": "Joining ISM",
+    "action": "Generated ISM",
+    "description": "Generated Joining ISM preview for 1 trainee(s) in division 'ABS'.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:30:59.274Z",
+    "_id": "9c8f7ba2cb54ae6468b6d319"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Profile",
+    "action": "Deleted User",
+    "description": "Deleted sub-user: xyz@gmail.com.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:31:52.142Z",
+    "_id": "5ffb2d75dd7c1cf44284c341"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Joining ISM",
+    "action": "Generated ISM",
+    "description": "Generated Joining ISM preview for 1 trainee(s) in division 'ABS'.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:32:02.443Z",
+    "_id": "c187a6869b0f52dd4ed60a37"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Joining ISM",
+    "action": "Generated ISM",
+    "description": "Generated Joining ISM preview for 1 trainee(s) in division 'ABS'.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:33:10.697Z",
+    "_id": "06efd43333b294e23cb91533"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Joining ISM",
+    "action": "Printed ISM",
+    "description": "Printed final Joining ISM PDF for letter number 'DRDO/GYAPAN/2026/1785364390684'.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:33:29.851Z",
+    "_id": "909ddc7bc667d570e9aa9199"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Certificate",
+    "action": "Printed Certificate",
+    "description": "Printed certificate for ab.",
+    "status": "Success",
+    "timestamp": "2026-07-29T22:34:02.312Z",
+    "_id": "41e694a8c67626e070a47622"
+  }
+]

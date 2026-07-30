@@ -1,4 +1,5 @@
 const { getAdministration, saveAdministration } = require("../services/administrationService");
+const { logActivity } = require("../utils/activityLogger");
 
 const normalise = (value) => String(value || "").trim().replace(/\s+/g, " ");
 const isDuplicate = (divisions, name, excluded = "") => divisions.some((division) => division.toLocaleLowerCase() === name.toLocaleLowerCase() && division !== excluded);
@@ -18,8 +19,26 @@ async function addDivision(req, res, next) {
     administration.divisions.push(name);
     administration.divisionConfigurations[name] = { allowedBranches: [], totalVacancy: 0, branchSeats: {} };
     await saveAdministration(administration);
+
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Added Division",
+      description: `Added new division: ${name}.`,
+      status: "Success",
+    });
+
     res.status(201).json({ success: true, message: "Division added successfully.", administration });
-  } catch (error) { next(error); }
+  } catch (error) {
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Added Division",
+      description: `Failed to add division. Error: ${error.message}`,
+      status: "Failed",
+    });
+    next(error);
+  }
 }
 
 async function updateDivision(req, res, next) {
@@ -48,8 +67,26 @@ async function deleteDivision(req, res, next) {
     administration.divisions.splice(index, 1);
     delete administration.divisionConfigurations[name];
     await saveAdministration(administration);
+
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Deleted Division",
+      description: `Deleted division: ${name}.`,
+      status: "Success",
+    });
+
     res.json({ success: true, message: "Division deleted successfully.", administration });
-  } catch (error) { next(error); }
+  } catch (error) {
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Deleted Division",
+      description: `Failed to delete division. Error: ${error.message}`,
+      status: "Failed",
+    });
+    next(error);
+  }
 }
 
 async function updateSeats(req, res, next) {
@@ -61,8 +98,26 @@ async function updateSeats(req, res, next) {
     if (configuredVacancies > totalAllocatedSeats) return respondError(res, `Total division vacancies (${configuredVacancies}) cannot exceed total allocated seats (${totalAllocatedSeats}). Reduce division vacancies first.`);
     administration.totalAllocatedSeats = totalAllocatedSeats;
     await saveAdministration(administration);
+
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Updated Vacancy",
+      description: `Updated total allocated seats to ${totalAllocatedSeats}.`,
+      status: "Success",
+    });
+
     res.json({ success: true, message: "Seat allocation updated successfully.", administration });
-  } catch (error) { next(error); }
+  } catch (error) {
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Updated Vacancy",
+      description: `Failed to update total allocated seats. Error: ${error.message}`,
+      status: "Failed",
+    });
+    next(error);
+  }
 }
 
 async function getDivisionConfigurations(req, res, next) {
@@ -95,8 +150,26 @@ async function saveDivisionConfigurations(req, res, next) {
     if (configuredVacancies > administration.totalAllocatedSeats) return respondError(res, `Total division vacancies (${configuredVacancies}) cannot exceed the configured total allocated seats (${administration.totalAllocatedSeats}). Reduce division vacancies before saving.`);
     administration.divisionConfigurations = configurations;
     await saveAdministration(administration);
+
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Updated Branch Configuration",
+      description: "Updated division vacancy and allowed branch configurations.",
+      status: "Success",
+    });
+
     res.json({ success: true, message: "Division configuration updated successfully.", configurations });
-  } catch (error) { next(error); }
+  } catch (error) {
+    await logActivity({
+      req,
+      module: "Administration",
+      action: "Updated Branch Configuration",
+      description: `Failed to update division branch configuration. Error: ${error.message}`,
+      status: "Failed",
+    });
+    next(error);
+  }
 }
 
 module.exports = { getConfiguration, addDivision, updateDivision, deleteDivision, updateSeats, getDivisionConfigurations, saveDivisionConfigurations };

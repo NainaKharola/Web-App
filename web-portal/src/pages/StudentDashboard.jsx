@@ -32,13 +32,32 @@ function DetailGrid({ title, rows }) {
   );
 }
 
-function FileLink({ label, href }) {
+function FileLink({ label, href, download }) {
   if (!href) return null;
+
+  const handleClick = async (e) => {
+    if (!download) return;
+    e.preventDefault();
+    try {
+      const response = await fetch(getUploadUrl(href));
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = typeof download === "string" ? download : "document.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
+
   return (
     <a
       className="student-document-link"
       href={getUploadUrl(href)}
-      target="_blank"
+      target={download ? undefined : "_blank"}
+      onClick={handleClick}
       rel="noreferrer"
     >
       {label}
@@ -225,10 +244,12 @@ function StudentDashboard() {
             <FileLink
               label="Download Declaration Form (Form 1)"
               href={studentDocumentUrl("declaration", credentials)}
+              download="Declaration-Form.pdf"
             />
             <FileLink
               label="Download Character Certificate (Form 2)"
               href={studentDocumentUrl("character", credentials)}
+              download="Character-Certificate.pdf"
             />
           </div>
         ) : (

@@ -1,6 +1,6 @@
 export function getAllocatedStudents(students, divisions) {
   const divisionSet = new Set(divisions);
-  return students.filter((student) => student.status === "Approved" && Boolean(student.submittedAt) && divisionSet.has(student.recommendedBy));
+  return students.filter((student) => student.status === "Approved" && Boolean(student.submittedAt) && divisionSet.has(student.trainingManagement?.division));
 }
 
 const nonNegativeNumber = (value) => Math.max(0, Number(value) || 0);
@@ -33,7 +33,7 @@ export function sortRecommendations(rows) {
 }
 
 export function getAllocatedStudentCount(students, division, branch, divisions) {
-  return getAllocatedStudents(students, divisions).filter((student) => student.recommendedBy === division && student.branch === branch).length;
+  return getAllocatedStudents(students, divisions).filter((student) => student.trainingManagement?.division === division && student.branch === branch).length;
 }
 
 export function getBranchDivisionRecommendations(divisions, configurations, students, branch) {
@@ -41,18 +41,66 @@ export function getBranchDivisionRecommendations(divisions, configurations, stud
     const configuredSeats = getBranchSeatCapacity(configurations?.[division], branch);
     const allocatedStudents = getAllocatedStudentCount(students, division, branch, divisions);
     const availableSeats = calculateAvailableSeats(configuredSeats, allocatedStudents);
-    return { division, configuredSeats, allocatedStudents, availableSeats, utilization: calculateUtilization(allocatedStudents, configuredSeats) };
+    const isNull = configuredSeats === 0;
+    return {
+      division,
+      configuredSeats,
+      allocatedStudents,
+      availableSeats,
+      utilization: calculateUtilization(allocatedStudents, configuredSeats),
+      isNull
+    };
   });
-  return sortRecommendations(rows.filter((row) => row.availableSeats > 0));
+
+  const filteredRows = rows.filter((row) => row.configuredSeats > 0);
+
+  return filteredRows.sort((left, right) => {
+    if (left.availableSeats !== right.availableSeats) {
+      return right.availableSeats - left.availableSeats;
+    }
+    return left.division.localeCompare(right.division);
+  });
 }
 
 export function getDivisionAllocationRows(divisions, configurations, students) {
   const allocated = getAllocatedStudents(students, divisions);
-  const allocations = allocated.reduce((counts, student) => ({ ...counts, [student.recommendedBy]: (counts[student.recommendedBy] || 0) + 1 }), {});
+  const allocations = allocated.reduce((counts, student) => ({ ...counts, [student.trainingManagement?.division]: (counts[student.trainingManagement?.division] || 0) + 1 }), {});
   return sortRecommendations(divisions.map((division) => {
     const allocatedStudents = allocations[division] || 0;
     const totalVacancy = calculateTotalVacancy(configurations?.[division]);
     const availableSeats = calculateAvailableSeats(totalVacancy, allocatedStudents);
     return { division, totalVacancy, allocatedStudents, availableSeats, utilization: calculateUtilization(allocatedStudents, totalVacancy), isFull: totalVacancy > 0 && availableSeats === 0, isUnconfigured: totalVacancy === 0 && allocatedStudents === 0 };
   }));
+}
+
+export function getGeneralDivisionRecommendations(divisions, configurations, students) {
+  const allocated = getAllocatedStudents(students, divisions);
+  const allocations = allocated.reduce((counts, student) => ({ ...counts, [student.trainingManagement?.division]: (counts[student.trainingManagement?.division] || 0) + 1 }), {});
+
+  const rows = divisions.map((division) => {
+    const configuredSeats = calculateTotalVacancy(configurations?.[division]);
+    const allocatedStudents = allocations[division] || 0;
+    const availableSeats = calculateAvailableSeats(configuredSeats, allocatedStudents);
+    const isNull = configuredSeats === 0;
+    return {
+      division,
+      configuredSeats,
+      allocatedStudents,
+      availableSeats,
+      utilization: calculateUtilization(allocatedStudents, configuredSeats),
+      isNull
+    };
+  });
+
+  return rows.sort((left, right) => {
+    if (left.isNull !== right.isNull) {
+      return left.isNull ? 1 : -1;
+    }
+    if (!left.isNull) {
+      if (left.availableSeats !== right.availableSeats) {
+        return right.availableSeats - left.availableSeats;
+      }
+    }
+    return left.division.localeCompare(right.division);
+  });
 }

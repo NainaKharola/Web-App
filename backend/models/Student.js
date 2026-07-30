@@ -4,6 +4,8 @@ module.exports = createLocalModel("students.json", {
   status: "Pending",
   offerLetterStatus: "",
   certificateGenerated: false,
+  certificateBufferRemoved: false,
   gyapanGenerated: false,
+  gyapanBufferRemoved: false,
   aadhaarCard: null,
 });

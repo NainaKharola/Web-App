@@ -40,4 +40,24 @@ async function protectAdmin(req, res, next) {
   }
 }
 
-module.exports = { protectAdmin };
+async function requireMainAdmin(req, res, next) {
+  if (!req.admin) {
+    return res.status(401).json({
+      success: false,
+      message: "Admin authentication required.",
+    });
+  }
+
+  const role = req.admin.email === "naina@gmail.com" || req.admin.email === "vaibhav@gmail.com" ? "MAIN_ADMIN" : (req.admin.role || "SUB_ADMIN");
+
+  if (role !== "MAIN_ADMIN") {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Main Admin role required.",
+    });
+  }
+
+  next();
+}
+
+module.exports = { protectAdmin, requireMainAdmin };

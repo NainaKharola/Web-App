@@ -1,57 +1,44 @@
 {
   "totalAllocatedSeats": 100,
   "divisions": [
-    "Servo System",
     "ABS",
-    "SS & ST",
-    "NS (Naval System)",
-    "OD (Optical Design)",
-    "CS & S",
-    "ALTDS",
-    "LI",
-    "LS",
-    "LPF",
-    "Photonics",
-    "EAD",
-    "LIDAR",
-    "FTIR",
-    "HR",
-    "MS",
-    "ISO",
     "AI",
-    "VI",
-    "IRST",
-    "OME",
-    "LIC",
-    "ENV",
-    "Reprography",
-    "MT",
-    "P & C",
+    "ALTDS",
     "AV",
     "CMD",
+    "CS & S",
     "DIR",
-    "HRD",
-    "WORKS",
-    "MI",
-    "SECURITY",
+    "EAD",
+    "ENV",
     "EOTS & ITF",
     "FACET",
-    "TFDI"
+    "FTIR",
+    "HR",
+    "HRD",
+    "IRST",
+    "ISO",
+    "LI",
+    "LIC",
+    "LIDAR",
+    "LPF",
+    "LS",
+    "MI",
+    "MS",
+    "MT",
+    "NS (Naval System)",
+    "OD (Optical Design)",
+    "OME",
+    "P & C",
+    "Photonics",
+    "Reprography",
+    "SECURITY",
+    "Servo System",
+    "SS & ST",
+    "TFDI",
+    "VI",
+    "WORKS"
   ],
   "divisionConfigurations": {
-    "Servo System": {
-      "allowedBranches": [
-        "Computer Science and Engineering",
-        "Information Technology",
-        "Electronics and Communication"
-      ],
-      "totalVacancy": 10,
-      "branchSeats": {
-        "Computer Science and Engineering": 0,
-        "Information Technology": 10,
-        "Electronics and Communication": 0
-      }
-    },
     "ABS": {
       "allowedBranches": [
         "Electronics and Communication",
@@ -60,135 +47,27 @@
         "Aerospace Engineering",
         "Artificial Intelligence and Data Science"
       ],
-      "totalVacancy": 43,
+      "totalVacancy": 28,
       "branchSeats": {
         "Electronics and Communication": 3,
         "Electrical Engineering": 8,
         "Civil Engineering": 9,
-        "Aerospace Engineering": 20,
+        "Aerospace Engineering": 5,
         "Artificial Intelligence and Data Science": 3
       }
     },
-    "SS & ST": {
+    "AI": {
       "allowedBranches": [
-        "Electronics and Communication"
+        "Computer Science and Engineering",
+        "Information Technology"
       ],
-      "totalVacancy": 5,
+      "totalVacancy": 12,
       "branchSeats": {
-        "Electronics and Communication": 5
+        "Computer Science and Engineering": 10,
+        "Information Technology": 2
       }
     },
-    "NS (Naval System)": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "OD (Optical Design)": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "CS & S": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
     "ALTDS": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "LI": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "LS": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "LPF": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "Photonics": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "EAD": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "LIDAR": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "FTIR": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "HR": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "MS": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "ISO": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "AI": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "VI": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "IRST": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "OME": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "LIC": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "ENV": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "Reprography": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "MT": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "P & C": {
       "allowedBranches": [],
       "totalVacancy": 0,
       "branchSeats": {}
@@ -203,27 +82,22 @@
       "totalVacancy": 0,
       "branchSeats": {}
     },
+    "CS & S": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
     "DIR": {
       "allowedBranches": [],
       "totalVacancy": 0,
       "branchSeats": {}
     },
-    "HRD": {
+    "EAD": {
       "allowedBranches": [],
       "totalVacancy": 0,
       "branchSeats": {}
     },
-    "WORKS": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "MI": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
-    },
-    "SECURITY": {
+    "ENV": {
       "allowedBranches": [],
       "totalVacancy": 0,
       "branchSeats": {}
@@ -238,7 +112,147 @@
       "totalVacancy": 0,
       "branchSeats": {}
     },
+    "FTIR": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "HR": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "HRD": {
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Electronics and Communication",
+        "Information Technology"
+      ],
+      "totalVacancy": 30,
+      "branchSeats": {
+        "Computer Science and Engineering": 10,
+        "Electronics and Communication": 10,
+        "Information Technology": 10
+      }
+    },
+    "IRST": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "ISO": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "LI": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "LIC": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "LIDAR": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "LPF": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "LS": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "MI": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "MS": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "MT": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "NS (Naval System)": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "OD (Optical Design)": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "OME": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "P & C": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "Photonics": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "Reprography": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "SECURITY": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "Servo System": {
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology",
+        "Electronics and Communication"
+      ],
+      "totalVacancy": 10,
+      "branchSeats": {
+        "Computer Science and Engineering": 0,
+        "Information Technology": 10,
+        "Electronics and Communication": 0
+      }
+    },
+    "SS & ST": {
+      "allowedBranches": [
+        "Electronics and Communication"
+      ],
+      "totalVacancy": 5,
+      "branchSeats": {
+        "Electronics and Communication": 5
+      }
+    },
     "TFDI": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "VI": {
+      "allowedBranches": [],
+      "totalVacancy": 0,
+      "branchSeats": {}
+    },
+    "WORKS": {
       "allowedBranches": [],
       "totalVacancy": 0,
       "branchSeats": {}

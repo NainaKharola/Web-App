@@ -78,7 +78,7 @@ function DivisionConfiguration() {
   const filteredBranches = branches.filter((branch) => branch.toLowerCase().includes(search.toLowerCase()));
 
   return <main className="admin-console admin-shell division-configuration-page">
-    <header className="admin-topbar administration-topbar"><div><p className="portal-eyebrow">Administration</p><h1>Division Branch &amp; Vacancy Configuration</h1><p className="administration-subtitle">Configure the eligible branches and internship vacancies for every division.</p></div><button className="admin-secondary-btn" type="button" onClick={navigateBack}>← Administration</button></header>
+    <header className="admin-topbar administration-topbar"><div><p className="portal-eyebrow">Administration</p><h1>Division wise Branch &amp; Vacancy Configuration</h1><p className="administration-subtitle">Configure the eligible branches and internship vacancies for every division.</p></div><button className="admin-secondary-btn" type="button" onClick={navigateBack}>← Administration</button></header>
     {message && <div className="administration-toast administration-toast--success" role="status">✓ {message}</div>}
     {error && <div className="administration-toast administration-toast--error" role="alert">{error}</div>}
     <section className="division-configuration-card">

@@ -1,6 +1,7 @@
 const Gyapan = require("../models/Gyapan");
 const Student = require("../models/Student");
 const { generatePdfFromHtml } = require("../services/pdfService");
+const { logActivity } = require("../utils/activityLogger");
 const { saveLocalFile } = require("../services/localStorageService");
 const {
   generateGyapanHtml,
@@ -18,6 +19,7 @@ async function getGyapanStudents(req, res) {
         {
           $or: eligibleStatus,
         },
+        ...(req.bufferMode === true ? [{ gyapanBufferRemoved: { $ne: true } }] : []),
         ...(deleteAfterDownload ? [{ gyapanGenerated: { $ne: true } }] : []),
       ],
     };
@@ -58,6 +60,13 @@ async function getGyapanStudents(req, res) {
   }
 }
 
+async function removeGyapanBufferStudents(req, res) {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+  if (!ids.length) return res.status(400).json({ success: false, message: "Select at least one student to remove." });
+  await Promise.all(ids.map((id) => Student.findByIdAndUpdate(id, { gyapanBufferRemoved: true })));
+  return res.json({ success: true, message: "Selected students removed from the Joining ISM buffer." });
+}
+
 async function selectedRows(ids, deleteAfterDownload = true) {
   const uniqueIds = [...new Set(Array.isArray(ids) ? ids : [])];
   if (!uniqueIds.length) {
@@ -95,7 +104,7 @@ async function createPreview(req, res) {
       req.body.letterNumber ||
         `DRDO/GYAPAN/${new Date().getFullYear()}/${Date.now()}`,
     ).trim();
-    const html = await generateGyapanHtml({ rows, letterNumber, issueDate });
+    const html = await generateGyapanHtml({ rows, letterNumber, issueDate, division: rows[0]?.division || "" });
     const gyapan = await Gyapan.create({
       letterNumber,
       issueDate,
@@ -105,6 +114,15 @@ async function createPreview(req, res) {
       generatedBy: req.admin.email,
       bufferMode: !deleteAfterDownload,
     });
+
+    await logActivity({
+      req,
+      module: "Joining ISM",
+      action: "Generated ISM",
+      description: `Generated Joining ISM preview for ${rows.length} trainee(s) in division '${rows[0]?.division || "N/A"}'.`,
+      status: "Success",
+    });
+
     return res
       .status(201)
       .json({
@@ -118,6 +136,14 @@ async function createPreview(req, res) {
         },
       });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Joining ISM",
+      action: "Generated ISM",
+      description: `Failed to generate Joining ISM preview. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return res
       .status(error.statusCode || 500)
       .json({
@@ -190,6 +216,7 @@ async function editPreview(req, res) {
       rows,
       letterNumber: gyapan.letterNumber,
       issueDate,
+      division: rows[0]?.division || ""
     });
     await gyapan.save();
     return res.json({
@@ -242,6 +269,15 @@ async function generateFinalPdf(req, res) {
         await Student.findByIdAndUpdate(studentId, { $set: { gyapanGenerated: true } });
       }
     }
+
+    await logActivity({
+      req,
+      module: "Joining ISM",
+      action: "Printed ISM",
+      description: `Printed final Joining ISM PDF for letter number '${gyapan.letterNumber}'.`,
+      status: "Success",
+    });
+
     return res.json({
       success: true,
       gyapan,
@@ -249,6 +285,14 @@ async function generateFinalPdf(req, res) {
       message: "Gyapan PDF generated and uploaded successfully.",
     });
   } catch (error) {
+    await logActivity({
+      req,
+      module: "Joining ISM",
+      action: "Printed ISM",
+      description: `Failed to print Joining ISM PDF. Error: ${error.message}`,
+      status: "Failed",
+    });
+
     return res
       .status(500)
       .json({
@@ -263,5 +307,6 @@ module.exports = {
   editPreview,
   generateFinalPdf,
   getGyapanStudents,
+  removeGyapanBufferStudents,
   getPreview,
 };

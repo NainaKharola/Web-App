@@ -12,9 +12,10 @@ async function createBrowser() {
     console.log("Using Chrome (prod):", executablePath);
     return puppeteer.launch({
       executablePath,
-      headless: chromium.headless,
+      headless: chromium.headless === false ? true : chromium.headless,
       args: [
         ...chromium.args,
+        "--headless",
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
@@ -26,6 +27,7 @@ async function createBrowser() {
     return puppeteer.launch({
       headless: true,
       args: [
+        "--headless",
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",

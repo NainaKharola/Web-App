@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   downloadCertificates,
   fetchCertificateStudents,
+  removeCertificateBufferStudents,
 } from "../services/adminService";
 import "../styles/admin.css";
 
@@ -15,6 +16,7 @@ function Certificates({ bufferMode = false }) {
   const [date, setDate] = useState("");
   const [search, setSearch] = useState("");
   const [batch, setBatch] = useState(null);
+  const [deleteMode, setDeleteMode] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -59,22 +61,51 @@ function Certificates({ bufferMode = false }) {
     setBatch({ ids: [...selectedIds], index: 0, successfulIds: [] });
   };
 
-  const downloadCurrentCertificate = async () => {
+  const removeSelected = async () => {
+    if (!selectedCount) return setError("Select one or more students to remove.");
+    if (!window.confirm("Remove the selected students from the certificate buffer?")) return;
+    setDownloading(true);
+    try {
+      await removeCertificateBufferStudents(selectedIds);
+      setStudents((current) => current.filter((student) => !selectedIds.includes(student._id)));
+      setSelectedIds([]);
+      setDeleteMode(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const printCurrentCertificate = async () => {
     const id = batch.ids[batch.index];
     const student = students.find((item) => item._id === id);
     if (!student) return setBatch((current) => ({ ...current, index: current.index + 1 }));
     setDownloading(true);
     let succeeded = false;
     try {
-      const { blob, filename } = await downloadCertificates([id], endpoint);
+      const { blob } = await downloadCertificates([id], endpoint);
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      let iframe = document.getElementById("certificate-print-iframe");
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.id = "certificate-print-iframe";
+        iframe.style.position = "absolute";
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.border = "none";
+        iframe.style.left = "-9999px";
+        document.body.appendChild(iframe);
+      }
+      
+      iframe.onload = () => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 5000);
+      };
+      iframe.src = url;
       succeeded = true;
     } catch (err) {
       setError(`Unable to generate certificate for ${student.name}.`);
@@ -101,7 +132,7 @@ function Certificates({ bufferMode = false }) {
       <header className="admin-topbar">
         <div>
           <p className="portal-eyebrow">Admin Panel</p>
-          <h1>{bufferMode ? "Certificate1" : "Certificates"}</h1>
+          <h1>{bufferMode ? "Certificate Generate" : "Certificates"}</h1>
         </div>
         <button className="admin-secondary-btn" type="button" onClick={goBack}>
           Back to Dashboard
@@ -134,16 +165,15 @@ function Certificates({ bufferMode = false }) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </label>
-          <button
+          {bufferMode && <button className="admin-danger-btn" type="button" disabled={downloading} onClick={() => { setDeleteMode((current) => !current); setSelectedIds([]); }}>{deleteMode ? "Cancel Delete" : "Delete Entry"}</button>}
+          {bufferMode && deleteMode ? <button className="admin-danger-btn" type="button" disabled={downloading || !selectedCount} onClick={removeSelected}>Delete Selected</button> : <button
             className="admin-primary-btn"
             type="button"
             disabled={downloading || !selectedCount}
             onClick={handleDownload}
           >
-            {downloading
-              ? "Generating..."
-              : `Download Certificates${selectedCount ? ` (${selectedCount})` : ""}`}
-          </button>
+            {downloading ? "Generating..." : `Print Certificates${selectedCount ? ` (${selectedCount})` : ""}`}
+          </button>}
         </div>
         {error && <p className="admin-error">{error}</p>}
         {loading ? (
@@ -232,7 +262,7 @@ function Certificates({ bufferMode = false }) {
             <h2>Certificate Ready</h2>
             <p>Student: <strong>{student.name}</strong></p>
             <div className="admin-actions-row">
-              <button className="admin-primary-btn" type="button" disabled={downloading} onClick={downloadCurrentCertificate}>{downloading ? "Generating..." : "Download"}</button>
+              <button className="admin-primary-btn" type="button" disabled={downloading} onClick={printCurrentCertificate}>{downloading ? "Generating..." : "Print Certificate"}</button>
               <button className="admin-secondary-btn" type="button" disabled={downloading} onClick={() => { setBatch(null); setSelectedIds([]); }}>Cancel</button>
             </div>
           </section>

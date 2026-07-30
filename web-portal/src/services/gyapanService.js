@@ -9,3 +9,4 @@ export async function createGyapanPreview(payload, module = "gyapan") { return p
 export async function getGyapan(id, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/${id}`, { headers: headers() })); }
 export async function updateGyapan(id, payload, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/${id}/edit`, { method: "PUT", headers: headers(), body: JSON.stringify(payload) })); }
 export async function generateGyapanPdf(id, module = "gyapan") { return parse(await fetch(`${apiUrl(module)}/${id}/generate`, { method: "POST", headers: headers() })); }
+export async function removeGyapanBufferStudents(ids) { return parse(await fetch(`${apiUrl("gyapan1")}/students`, { method: "DELETE", headers: headers(), body: JSON.stringify({ ids }) })); }

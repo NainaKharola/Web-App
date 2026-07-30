@@ -9,6 +9,7 @@ import {
   deleteAdminStudents,
   fetchAdminStudents,
 } from "../services/adminService";
+import { useAdminAuth } from "../auth/useAdminAuth";
 import "../styles/admin.css";
 
 const initialFilters = {
@@ -20,6 +21,8 @@ const initialFilters = {
 };
 
 function AdminDashboard() {
+  const { admin } = useAdminAuth();
+  const isMainAdmin = admin?.role === "MAIN_ADMIN";
   const [students, setStudents] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [summary, setSummary] = useState({});
@@ -117,11 +120,11 @@ function AdminDashboard() {
     window.history.pushState({}, "", "/admin/gyapan");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
-  const openCertificate1 = useCallback(() => {
+  const openCertificateBuffer = useCallback(() => {
     window.history.pushState({}, "", "/admin/certificate1");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
-  const openGyapan1 = useCallback(() => {
+  const openGyapanBuffer = useCallback(() => {
     window.history.pushState({}, "", "/admin/gyapan1");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
@@ -131,6 +134,10 @@ function AdminDashboard() {
   }, []);
   const openCollegeManagement = useCallback(() => {
     window.history.pushState({}, "", "/admin/colleges");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+  const openProfile = useCallback(() => {
+    window.history.pushState({}, "", "/admin/profile");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
 
@@ -179,6 +186,11 @@ function AdminDashboard() {
           <button className="admin-primary-btn admin-administration-btn" type="button" onClick={openCollegeManagement}>
             Management
           </button>
+          {isMainAdmin && (
+            <button className="admin-primary-btn admin-administration-btn" type="button" onClick={openProfile}>
+              👤 Profile
+            </button>
+          )}
           <button className="admin-secondary-btn" type="button" onClick={handleLogout}>
             Logout
           </button>
@@ -236,12 +248,15 @@ function AdminDashboard() {
           />
         )}
       </section>
-      <section className="admin-panel">
-        <div className="admin-panel__header"><h2>Temporary Buffer</h2></div>
-        <div className="admin-actions-row">
-          <button className="admin-secondary-btn" type="button" onClick={openCertificate1}>Certificate1</button>
-          <button className="admin-secondary-btn" type="button" onClick={openGyapan1}>Joining ISM Buffer</button>
-        </div>
+      <section className="admin-quick-generate" aria-label="Document generation">
+        <article className="admin-quick-generate__card">
+          <h2>Certificate Generate</h2>
+          <button className="admin-primary-btn" type="button" onClick={openCertificateBuffer}>Generate</button>
+        </article>
+        <article className="admin-quick-generate__card">
+          <h2>Joining ISM Generate</h2>
+          <button className="admin-primary-btn" type="button" onClick={openGyapanBuffer}>Generate</button>
+        </article>
       </section>
     </main>
   );

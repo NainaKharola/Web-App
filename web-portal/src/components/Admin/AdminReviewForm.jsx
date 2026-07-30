@@ -129,7 +129,7 @@ function AdminReviewForm({ student, onUpdated }) {
         <button className="admin-primary-btn" disabled={saving} type="submit">
           {saving ? "Saving..." : "Save Changes"}
         </button>
-        {student.status === "Approved" && <StudentDivisionRecommendation student={student} />}
+        <StudentDivisionRecommendation student={student} />
       </div>
     </form>
   );

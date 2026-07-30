@@ -800,6 +800,7 @@
 .analytics-table-wrap { width: 100%; overflow: auto; overscroll-behavior-inline: contain; }
 .analytics-table { min-width: 430px; }
 .analytics-chart { grid-template-columns: minmax(0, 176px) minmax(0, 1fr); }
+.analytics-chart--empty { min-height: 208px; }.analytics-pie--empty { background: #e8f1fa; }.analytics-chart__empty-message { margin: 0; color: var(--admin-muted); font-weight: 700; }
 .analytics-selector { max-width: 100%; overscroll-behavior-inline: contain; }
 .recommendation-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; padding: 14px 16px; border: 1px solid #d7e5f3; border-radius: 13px; background: #f8fbff; }
 .recommendation-toolbar p { max-width: 700px; margin: 0; font-size: .9rem; }
@@ -816,6 +817,9 @@
 .branch-seat-inputs .vacancy-input { min-height: 36px; padding: 6px 8px; }
 .branch-seat-inputs__empty { color: var(--admin-muted); font-size: .82rem; }
 .admin-review-form__actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.admin-quick-generate { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 22px; }
+.admin-quick-generate__card { display: grid; justify-items: center; gap: 22px; min-height: 156px; padding: 27px; border: 1px solid #b8cfe7; border-radius: 18px; background: linear-gradient(135deg, #fff, #f2f8fe); box-shadow: 0 14px 30px rgba(22, 65, 112, .13); }
+.admin-quick-generate__card h2 { margin: 0; color: var(--admin-ink); font-size: 1.18rem; text-align: center; }
 .recommendation-modal-backdrop { z-index: 1100; }
 .recommendation-modal { width: min(1120px, 100%); max-height: min(86vh, 800px); overflow: auto; padding: 26px; border: 1px solid #dbe7f4; border-radius: 16px; background: #fff; box-shadow: 0 22px 54px rgba(6, 30, 62, .28); animation: dialog-enter 220ms ease-out; }
 .recommendation-modal__heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; }.recommendation-modal__heading h2 { margin: 3px 0 8px; color: var(--admin-ink); }.recommendation-modal__heading p { margin: 0; color: var(--admin-muted); }.recommendation-modal__heading strong { color: var(--admin-ink); }
@@ -827,7 +831,7 @@
 @keyframes analytics-shimmer { to { background-position: -200% 0; } }
 @keyframes dialog-fade { from { opacity: 0; } to { opacity: 1; } } @keyframes dialog-enter { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } } @keyframes administration-spin { to { transform: rotate(360deg); } }
 @media (max-width: 850px) { .administration-grid, .administration-top-grid, .analytics-content { grid-template-columns: 1fr; }.analytics-chart { grid-template-columns: 176px minmax(0, 1fr); } }
-@media (max-width: 640px) { .admin-topbar__actions { width: 100%; }.admin-topbar__actions > button { flex: 1; }.admin-console .admin-topbar > .admin-secondary-btn { width: auto; } }
+@media (max-width: 640px) { .admin-topbar__actions { width: 100%; }.admin-topbar__actions > button { flex: 1; }.admin-console .admin-topbar > .admin-secondary-btn { width: auto; }.admin-quick-generate { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .administration-card { padding: 18px; border-radius: 14px; }.administration-add-form, .seat-allocation-form { display: grid; grid-template-columns: 1fr; }.administration-add-form .admin-primary-btn, .seat-allocation-form .admin-primary-btn { width: 100%; }.division-row { align-items: flex-start; flex-wrap: wrap; }.division-row__actions { width: 100%; margin-left: 25px; }.division-row__actions > * { flex: 1; }.administration-dialog__actions > * { flex: 1; } }
 @media (max-width: 560px) { .division-configuration-actions { align-items: stretch; flex-direction: column; }.division-configuration-actions .admin-primary-btn { width: 100%; } }
 @media (max-width: 560px) { .analytics-tabs { display: flex; width: 100%; }.analytics-tabs button { flex: 1; padding-inline: 9px; font-size: .86rem; }.analytics-chart { grid-template-columns: 1fr; justify-items: center; }.analytics-legend { width: 100%; }.analytics-selector { margin-inline: -2px; } }
