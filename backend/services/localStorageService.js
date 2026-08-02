@@ -69,7 +69,12 @@ function applyUpdate(record, update = {}) {
 
 function project(record, projection) {
   if (!projection) return record;
-  const keys = String(projection).split(/\s+/).filter(Boolean).map((key) => key.replace(/^\+/, ""));
+  const tokens = String(projection).split(/\s+/).filter(Boolean);
+  const includeAll = tokens.some((token) => token.startsWith("+"));
+  const keys = tokens.map((key) => key.replace(/^\+/, ""));
+  if (includeAll) {
+    return { ...record };
+  }
   const result = { _id: record._id };
   keys.forEach((key) => { if (record[key] !== undefined) result[key] = record[key]; });
   return result;

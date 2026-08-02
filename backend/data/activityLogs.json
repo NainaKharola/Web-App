@@ -1065,5 +1065,16 @@
     "status": "Success",
     "timestamp": "2026-08-02T19:47:26.071Z",
     "_id": "4f14d99f38f3d01fca00eed0"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Profile",
+    "action": "Changed Own Password",
+    "description": "Changed own account password successfully.",
+    "status": "Success",
+    "timestamp": "2026-08-02T20:16:28.202Z",
+    "_id": "d8e9d7ff73788df48a5d9a66"
   }
 ]
