@@ -476,9 +476,24 @@ function AdminDashboard() {
   }, [selectedIds, query]);
 
   const handleStatusChange = useCallback((id, updatedStudent) => {
-    setAllStudents((current) =>
-      current.map((s) => (s._id === id ? { ...s, ...updatedStudent } : s))
-    );
+    setAllStudents((current) => {
+      const oldStudent = current.find((s) => s._id === id);
+      const oldStatus = oldStudent?.status;
+      const newStatus = updatedStudent.status;
+      if (oldStatus !== newStatus) {
+        setSummary((prev) => {
+          if (!prev) return prev;
+          let approvedDiff = 0;
+          if (oldStatus === "Approved") approvedDiff -= 1;
+          if (newStatus === "Approved") approvedDiff += 1;
+          return {
+            ...prev,
+            approvedStudents: Math.max(0, (prev.approvedStudents || 0) + approvedDiff),
+          };
+        });
+      }
+      return current.map((s) => (s._id === id ? { ...s, ...updatedStudent } : s));
+    });
     setStudents((current) =>
       current.map((s) => (s._id === id ? { ...s, ...updatedStudent } : s))
     );
@@ -689,6 +704,26 @@ function AdminDashboard() {
               + New Student
             </button>
           </div>
+
+          {/* Dynamic Summary Cards */}
+          <section className="admin-summary-grid" style={{ marginBottom: "20px" }}>
+            <div className="admin-summary-card">
+              <span>Total Students</span>
+              <strong>{allStudents.length}</strong>
+            </div>
+            <div className="admin-summary-card">
+              <span>Approved Students</span>
+              <strong>{allStudents.filter(s => s.status === "Approved").length}</strong>
+            </div>
+            <div className="admin-summary-card">
+              <span>Pending Students</span>
+              <strong>{allStudents.filter(s => s.status === "Pending" || !s.status).length}</strong>
+            </div>
+            <div className="admin-summary-card">
+              <span>Rejected Students</span>
+              <strong>{allStudents.filter(s => s.status === "Rejected").length}</strong>
+            </div>
+          </section>
           
           {/* Local Search and Filters */}
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "16px" }}>
@@ -700,6 +735,12 @@ function AdminDashboard() {
               style={{ flex: "1 1 100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)" }}
             />
             <button className="admin-secondary-btn" type="button" onClick={() => setManagementFieldsOpen(true)}>Select Fields</button>
+            <button className="admin-danger-btn" type="button" onClick={toggleDeleteMode}>{deleteMode ? "Cancel Delete" : "Delete Entry"}</button>
+            {deleteMode && (
+              <button className="admin-danger-btn" type="button" onClick={deleteSelected}>
+                Delete Selected
+              </button>
+            )}
           </div>
 
           {/* Counts */}
@@ -713,6 +754,7 @@ function AdminDashboard() {
             <table className="admin-table student-management-table" style={{ tableLayout: "auto", width: "max-content", minWidth: "1500px" }}>
               <thead>
                 <tr>
+                  {deleteMode && <th>Select</th>}
                   <th hidden={!managementFields.includes("serial")}>S.No.</th>
                   <th hidden={!managementFields.includes("name")} style={{ cursor: "pointer", width: "25%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("name")}>
                     Name {sort.sortBy === "name" && (sort.sortOrder === "asc" ? "▲" : "▼")}
@@ -747,6 +789,16 @@ function AdminDashboard() {
                     style={{ cursor: "pointer" }}
                     onClick={() => handleSelectStudentWithCheck(student._id)}
                   >
+                    {deleteMode && (
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(student._id)}
+                          onChange={(e) => toggleSelected(student._id, e.target.checked)}
+                          aria-label={`Select ${student.name}`}
+                        />
+                      </td>
+                    )}
                     <td hidden={!managementFields.includes("serial")}>{sortedStudents.indexOf(student) + 1}</td>
                     <td hidden={!managementFields.includes("name")} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.name}</td>
                     <td hidden={!managementFields.includes("referenceId")}>{student.referenceId || "-"}</td>

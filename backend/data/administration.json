@@ -1,5 +1,5 @@
 {
-  "totalAllocatedSeats": 100,
+  "totalAllocatedSeats": 150,
   "divisions": [
     "ABS",
     "AI",
@@ -73,9 +73,19 @@
       "branchSeats": {}
     },
     "AV": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Mechanical Engineering",
+        "Civil Engineering",
+        "Electrical Engineering",
+        "Electronics and Communication"
+      ],
+      "totalVacancy": 17,
+      "branchSeats": {
+        "Mechanical Engineering": 5,
+        "Civil Engineering": 6,
+        "Electrical Engineering": 2,
+        "Electronics and Communication": 4
+      }
     },
     "CMD": {
       "allowedBranches": [],
@@ -118,9 +128,23 @@
       "branchSeats": {}
     },
     "HR": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Computer Science and Engineering",
+        "Information Technology",
+        "Electrical Engineering",
+        "Electronics and Communication",
+        "Civil Engineering",
+        "Artificial Intelligence and Data Science"
+      ],
+      "totalVacancy": 26,
+      "branchSeats": {
+        "Computer Science and Engineering": 2,
+        "Information Technology": 3,
+        "Electrical Engineering": 6,
+        "Electronics and Communication": 6,
+        "Civil Engineering": 5,
+        "Artificial Intelligence and Data Science": 4
+      }
     },
     "HRD": {
       "allowedBranches": [
@@ -248,9 +272,15 @@
       "branchSeats": {}
     },
     "VI": {
-      "allowedBranches": [],
-      "totalVacancy": 0,
-      "branchSeats": {}
+      "allowedBranches": [
+        "Information Technology",
+        "Computer Science and Engineering"
+      ],
+      "totalVacancy": 7,
+      "branchSeats": {
+        "Information Technology": 2,
+        "Computer Science and Engineering": 5
+      }
     },
     "WORKS": {
       "allowedBranches": [],

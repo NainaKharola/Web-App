@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 const cards = [
-  ["Total Students", "totalStudents"],
+  ["Approved Students", "approvedStudents"],
 ];
 
 const DashboardCards = memo(function DashboardCards({ summary }) {
