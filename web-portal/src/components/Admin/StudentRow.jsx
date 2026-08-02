@@ -44,6 +44,7 @@ const StudentRow = memo(function StudentRow({
   student,
   onView,
   onStatusChange,
+  certificateDownloaded = false,
 }) {
   const [updating, setUpdating] = useState(false);
 
@@ -84,7 +85,7 @@ const StudentRow = memo(function StudentRow({
   };
 
   return (
-    <tr>
+    <tr className={certificateDownloaded ? "certificate-downloaded-row" : ""}>
       {deleteMode && (
         <td>
           <input

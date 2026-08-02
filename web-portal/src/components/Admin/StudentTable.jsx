@@ -7,6 +7,7 @@ function StudentTable({
   selectedIds = [],
   students,
   onStatusChange,
+  certificateDownloadedIds = [],
 }) {
   return (
     <div className="admin-table-wrap">
@@ -39,6 +40,7 @@ function StudentTable({
               student={student}
               onView={onView}
               onStatusChange={onStatusChange}
+              certificateDownloaded={certificateDownloadedIds.includes(student._id)}
             />
           ))}
         </tbody>

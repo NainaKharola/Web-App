@@ -140,7 +140,7 @@ export default function DivisionStudentDistribution({ administration, students, 
     administration.divisions.forEach((div) => { counts[div] = 0; });
     students.forEach((student) => {
       const div = student.trainingManagement?.division;
-      if (div && Object.prototype.hasOwnProperty.call(counts, div)) {
+      if (student.trainingManagement?.completed !== "Yes" && div && Object.prototype.hasOwnProperty.call(counts, div)) {
         counts[div]++;
       }
     });

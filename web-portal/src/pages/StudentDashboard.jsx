@@ -203,9 +203,9 @@ function StudentDashboard() {
       <DetailGrid
         title="Parent Details"
         rows={[
-          ["Father / Guardian Name", student.fatherName],
-          ["Father / Guardian Phone", student.fatherPhone],
-          ["Father / Guardian Occupation", student.fatherOccupation],
+          ["Parent's Name", student.fatherName],
+          ["Parent's Contact Number", student.fatherPhone],
+          ["Parent's Occupation", student.fatherOccupation],
         ]}
       />
 

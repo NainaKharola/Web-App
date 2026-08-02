@@ -61,7 +61,13 @@ function buildStudentFilter(query) {
   if (query.search) {
     const expression = { $regex: query.search, $options: "i" };
     conditions.push({
-      $or: [{ name: expression }, { referenceId: expression }],
+      $or: [
+        { name: expression },
+        { referenceId: expression },
+        { email: expression },
+        { phone: expression },
+        { collegeName: expression },
+      ],
     });
   }
 
@@ -201,13 +207,9 @@ async function getStudents(req, res) {
 
 async function getCertificateStudents(req, res) {
   try {
-    const deleteAfterDownload = req.bufferMode !== true;
-    const completionStatus = [{ completedStatus: "Yes" }];
     const filter = {
       $and: [
-        { $or: completionStatus },
-        ...(req.bufferMode === true ? [{ certificateBufferRemoved: { $ne: true } }] : []),
-        ...(deleteAfterDownload ? [{ certificateGenerated: { $ne: true } }] : []),
+        { status: "Approved" },
       ],
     };
     if (req.query.search?.trim()) {
@@ -220,12 +222,10 @@ async function getCertificateStudents(req, res) {
       if (!range) {
         return res
           .status(400)
-          .json({ success: false, message: "Select a valid completion date." });
+          .json({ success: false, message: "Select a valid date." });
       }
       filter.$and.push({
-        $or: [
-          { completedStatus: "Yes", completedDate: range },
-        ],
+        approvedDate: range,
       });
     }
     const students = await Student.find(
@@ -239,7 +239,7 @@ async function getCertificateStudents(req, res) {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Unable to fetch completed trainees.",
+      message: "Unable to fetch approved students.",
     });
   }
 }
@@ -277,15 +277,14 @@ async function downloadCertificates(req, res) {
 
     const students = await Student.find({
       _id: { $in: ids },
-      ...(deleteAfterDownload ? { certificateGenerated: { $ne: true } } : {}),
-      $or: [{ completedStatus: "Yes" }],
+      status: "Approved",
     }).lean();
 
     if (students.length !== ids.length) {
       return res.status(400).json({
         success: false,
         message:
-          "Certificates are available only for students marked as completed.",
+          "Certificates are available only for approved students.",
       });
     }
 

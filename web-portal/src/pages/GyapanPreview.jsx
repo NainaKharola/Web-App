@@ -8,13 +8,21 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const queue = new URLSearchParams(window.location.search).get("queue")?.split(",").filter(Boolean) || [];
+  const queueIndex = Number(new URLSearchParams(window.location.search).get("index") || 0);
+  const hasNext = queueIndex + 1 < queue.length;
   useEffect(() => {
     getGyapan(gyapanId, module)
       .then(setData)
       .catch((err) => setError(err.message));
   }, [gyapanId, module]);
   const back = () => {
-    window.history.pushState({}, "", `/admin/${module}`);
+    if (hasNext) {
+      const nextIndex = queueIndex + 1;
+      window.history.pushState({}, "", `/admin/${module}/${queue[nextIndex]}?queue=${encodeURIComponent(queue.join(","))}&index=${nextIndex}`);
+    } else {
+      window.history.pushState({}, "", `/admin/${module}`);
+    }
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
   const edit = () => {
@@ -94,7 +102,7 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
           <h1>{data?.gyapan?.letterNumber || "Joining ISM"}</h1>
         </div>
         <button className="admin-secondary-btn" type="button" onClick={back}>
-          Back
+          {hasNext ? "Next ISM" : "Back"}
         </button>
       </header>
       <section className="details-section">
@@ -109,7 +117,7 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
               disabled={busy}
               onClick={handleDownloadPdf}
             >
-              {busy ? "Preparing..." : "Download Preview"}
+              {busy ? "Preparing..." : "Download"}
             </button>
           ) : (
             <button
@@ -117,7 +125,7 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
               type="button"
               onClick={printPreview}
             >
-              Download Preview
+              Print
             </button>
           )}
           <button
@@ -132,6 +140,11 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
                 ? "Generating PDF..."
                 : "Generate Final PDF"}
           </button>
+          {hasNext && (
+            <button className="admin-secondary-btn" type="button" onClick={back}>
+              Next ISM
+            </button>
+          )}
         </div>
         {error && <p className="admin-error">{error}</p>}
         <GyapanViewer html={data?.html} pdfUrl={data?.gyapan?.pdfUrl} />

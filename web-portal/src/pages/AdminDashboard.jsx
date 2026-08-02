@@ -7,9 +7,12 @@ import StudentTable from "../components/Admin/StudentTable";
 import {
   clearAdminToken,
   deleteAdminStudents,
+  downloadCertificates,
   fetchAdminStudents,
   updateStudentReview,
 } from "../services/adminService";
+import { createGyapanPreview, generateGyapanPdf } from "../services/gyapanService";
+import { getUploadUrl } from "../utils/uploadUrl";
 import { useAdminAuth } from "../auth/useAdminAuth";
 import StudentForm from "../components/Form/StudentForm";
 import StudentDetails from "./StudentDetails";
@@ -22,6 +25,16 @@ const initialFilters = {
   status: "",
   registrationDate: "",
 };
+const CERTIFICATE_DOWNLOADS_KEY = "drdoCertificateDownloadedStudentIds";
+
+function savedCertificateDownloadIds() {
+  try {
+    const value = JSON.parse(localStorage.getItem(CERTIFICATE_DOWNLOADS_KEY) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
 
 function getInitialView() {
   const path = window.location.pathname;
@@ -73,6 +86,15 @@ function AdminDashboard() {
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [error, setError] = useState("");
+  const [documentModal, setDocumentModal] = useState(null);
+  const [documentSelectedIds, setDocumentSelectedIds] = useState([]);
+  const [documentBusy, setDocumentBusy] = useState(false);
+  const [documentError, setDocumentError] = useState("");
+  const [documentSearch, setDocumentSearch] = useState("");
+  const [documentQueue, setDocumentQueue] = useState([]);
+  const [documentIndex, setDocumentIndex] = useState(0);
+  const [certificatePreview, setCertificatePreview] = useState(null);
+  const [certificateDownloadedIds, setCertificateDownloadedIds] = useState(savedCertificateDownloadIds);
 
   // Inline status dropdown confirmation state (Student Management only)
   const [statusConfirm, setStatusConfirm] = useState(null); // { studentId, oldStatus, newStatus }
@@ -303,23 +325,99 @@ function AdminDashboard() {
     }));
   }, []);
 
-  const openCertificates = useCallback(() => {
-    window.history.pushState({}, "", "/admin/certificates");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }, []);
+  const openDocumentModal = useCallback((type) => {
+    setDocumentModal(type);
+    setDocumentSelectedIds([]);
+    setDocumentSearch("");
+    setDocumentError("");
+    setDocumentQueue([]);
+    setDocumentIndex(0);
+    if (certificatePreview?.url) URL.revokeObjectURL(certificatePreview.url);
+    setCertificatePreview(null);
+  }, [certificatePreview]);
 
-  const openGyapan = useCallback(() => {
-    window.history.pushState({}, "", "/admin/gyapan");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }, []);
-  const openCertificateBuffer = useCallback(() => {
-    window.history.pushState({}, "", "/admin/certificate1");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }, []);
-  const openGyapanBuffer = useCallback(() => {
-    window.history.pushState({}, "", "/admin/gyapan1");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }, []);
+  const closeDocumentModal = useCallback(() => {
+    if (certificatePreview?.url) URL.revokeObjectURL(certificatePreview.url);
+    setDocumentModal(null);
+    setDocumentQueue([]);
+    setCertificatePreview(null);
+    setDocumentError("");
+  }, [certificatePreview]);
+
+  const documentStudents = useMemo(() => allStudents.filter((student) => student.status === "Approved").filter((student) => {
+    const term = documentSearch.trim().toLowerCase();
+    return !term || [student.name, student.referenceId, student.collegeName, student.branch, student.course].some((value) => String(value || "").toLowerCase().includes(term));
+  }), [allStudents, documentSearch]);
+
+  const toggleDocumentStudent = useCallback((id, checked) => setDocumentSelectedIds((current) => checked ? [...new Set([...current, id])] : current.filter((value) => value !== id)), []);
+  const selectAllDocumentStudents = useCallback(() => setDocumentSelectedIds(documentStudents.map((student) => student._id)), [documentStudents]);
+
+  const startDocumentGeneration = useCallback(async () => {
+    if (!documentSelectedIds.length) return setDocumentError("Select at least one student.");
+    setDocumentBusy(true); setDocumentError("");
+    try {
+      if (documentModal === "ism") {
+        const groups = documentSelectedIds.reduce((result, id) => {
+          const student = allStudents.find((item) => item._id === id);
+          const division = student?.trainingManagement?.division?.trim();
+          if (!division) throw new Error("Every selected student needs an allocated division before an ISM can be generated.");
+          (result[division] ||= []).push(id);
+          return result;
+        }, {});
+        const generated = [];
+        for (const ids of Object.values(groups)) generated.push(await createGyapanPreview({ ids }));
+        setDocumentQueue(generated);
+      } else {
+        setDocumentQueue(documentSelectedIds.map((id) => ({ student: allStudents.find((item) => item._id === id) })));
+      }
+      setDocumentIndex(0);
+    } catch (err) { setDocumentError(err.message); }
+    finally { setDocumentBusy(false); }
+  }, [allStudents, documentModal, documentSelectedIds]);
+
+  const prepareCertificate = useCallback(async () => {
+    const student = documentQueue[documentIndex]?.student;
+    if (!student) return;
+    setDocumentBusy(true); setDocumentError("");
+    try {
+      const { blob, filename } = await downloadCertificates([student._id]);
+      setCertificatePreview({ url: URL.createObjectURL(blob), filename });
+    } catch (err) { setDocumentError(`Unable to generate certificate for ${student.name}.`); }
+    finally { setDocumentBusy(false); }
+  }, [documentIndex, documentQueue]);
+
+  const downloadCertificate = useCallback(() => {
+    if (!certificatePreview) return;
+    const link = document.createElement("a");
+    link.href = certificatePreview.url;
+    link.download = certificatePreview.filename;
+    link.click();
+    const studentId = documentQueue[documentIndex]?.student?._id;
+    if (studentId) {
+      setCertificateDownloadedIds((current) => {
+        const next = [...new Set([...current, studentId])];
+        localStorage.setItem(CERTIFICATE_DOWNLOADS_KEY, JSON.stringify(next));
+        return next;
+      });
+    }
+  }, [certificatePreview, documentIndex, documentQueue]);
+
+  const downloadIsm = useCallback(async () => {
+    const item = documentQueue[documentIndex];
+    if (!item?.gyapan?._id) return;
+    setDocumentBusy(true); setDocumentError("");
+    try {
+      const result = await generateGyapanPdf(item.gyapan._id);
+      const response = await fetch(getUploadUrl(result.pdfUrl));
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Gyapan-${item.gyapan.letterNumber || item.gyapan._id}.pdf`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (err) { setDocumentError(err.message || "Unable to download ISM."); }
+    finally { setDocumentBusy(false); }
+  }, [documentIndex, documentQueue]);
   const openAdministration = useCallback(() => {
     window.history.pushState({}, "", "/admin/system-configuration");
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -400,7 +498,8 @@ function AdminDashboard() {
           student.name?.toLowerCase().includes(term) ||
           student.referenceId?.toLowerCase().includes(term) ||
           student.email?.toLowerCase().includes(term) ||
-          student.phone?.toLowerCase().includes(term);
+          student.phone?.toLowerCase().includes(term) ||
+          student.collegeName?.toLowerCase().includes(term);
         if (!matchesSearch) return false;
       }
       return true;
@@ -541,7 +640,7 @@ function AdminDashboard() {
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "16px" }}>
             <input
               type="text"
-              placeholder="Search by Name, Reference ID, Email, Phone..."
+              placeholder="Search by Name, Reference ID, Email, Phone, College Name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ flex: "1 1 100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)" }}
@@ -571,6 +670,9 @@ function AdminDashboard() {
                   <th style={{ cursor: "pointer", width: "10%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("year")}>
                     Year {sort.sortBy === "year" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
+                  <th style={{ cursor: "pointer", width: "20%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("collegeName")}>
+                    College Name {sort.sortBy === "collegeName" && (sort.sortOrder === "asc" ? "▲" : "▼")}
+                  </th>
                   <th style={{ cursor: "pointer", width: "10%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("status")}>
                     Status {sort.sortBy === "status" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
@@ -581,6 +683,7 @@ function AdminDashboard() {
                 {sortedStudents.map((student) => (
                   <tr
                     key={student._id}
+                    className={certificateDownloadedIds.includes(student._id) ? "certificate-downloaded-row" : ""}
                     style={{ cursor: "pointer" }}
                     onClick={() => handleSelectStudentWithCheck(student._id)}
                   >
@@ -588,6 +691,7 @@ function AdminDashboard() {
                     <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.course}</td>
                     <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.branch}</td>
                     <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.year}</td>
+                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.collegeName || "-"}</td>
                     <td style={{ whiteSpace: "normal", wordBreak: "break-word", verticalAlign: "middle" }}
                         onClick={e => e.stopPropagation()}>
                       <select
@@ -627,7 +731,7 @@ function AdminDashboard() {
                 ))}
                 {sortedStudents.length === 0 && (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>
                       No registrations found matching the filters.
                     </td>
                   </tr>
@@ -697,11 +801,11 @@ function AdminDashboard() {
               <button className="admin-secondary-btn" type="button" onClick={toggleApprovedStudents}>
                 {filters.status === "Approved" ? "All Students" : "Approved Students"}
               </button>
-              <button className="admin-secondary-btn" type="button" onClick={openCertificates}>
-                Certificates
+              <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("certificate")}>
+                Generate Certificate
               </button>
-              <button className="admin-secondary-btn" type="button" onClick={openGyapan}>
-                Joining ISM
+              <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("ism")}>
+                Generate ISM
               </button>
               <button
                 className="admin-danger-btn"
@@ -738,16 +842,38 @@ function AdminDashboard() {
             )}
           </section>
           
-          <section className="admin-quick-generate" aria-label="Document generation">
-            <article className="admin-quick-generate__card">
-              <h2>Certificate Generate</h2>
-              <button className="admin-primary-btn" type="button" onClick={openCertificateBuffer}>Generate</button>
-            </article>
-            <article className="admin-quick-generate__card">
-              <h2>Joining ISM Generate</h2>
-              <button className="admin-primary-btn" type="button" onClick={openGyapanBuffer}>Generate</button>
-            </article>
-          </section>
+          {documentModal && (() => {
+            const currentDocument = documentQueue[documentIndex];
+            const selectionOpen = documentQueue.length === 0;
+            const allDocumentStudentsSelected = documentStudents.length > 0 && documentStudents.every((student) => documentSelectedIds.includes(student._id));
+            const moveNext = () => {
+              if (certificatePreview?.url) URL.revokeObjectURL(certificatePreview.url);
+              setCertificatePreview(null);
+              if (documentIndex + 1 >= documentQueue.length) closeDocumentModal();
+              else setDocumentIndex((index) => index + 1);
+            };
+            const printDocument = () => documentModal === "certificate"
+              ? document.getElementById("dashboard-certificate-preview")?.contentWindow?.print()
+              : document.getElementById("dashboard-ism-preview")?.contentWindow?.print();
+            return <div className="certificate-modal-backdrop" role="dialog" aria-modal="true" aria-label={`Generate ${documentModal === "ism" ? "ISM" : "Certificate"}`}>
+              <section className="certificate-modal certificate-modal--wide">
+                {selectionOpen ? <>
+                  <h2>Generate {documentModal === "ism" ? "ISM" : "Certificate"}</h2>
+                  <p className="admin-muted">Select approved students, then generate {documentModal === "ism" ? "ISM documents grouped by division" : "one certificate for each student"}.</p>
+                  <div className="admin-actions-row"><label className="admin-field"><span>Search Students</span><input type="search" placeholder="Student name or college name" value={documentSearch} onChange={(event) => setDocumentSearch(event.target.value)} /></label><button className="admin-secondary-btn" type="button" onClick={selectAllDocumentStudents}>Select All</button><button className="admin-secondary-btn" type="button" onClick={() => setDocumentSelectedIds([])}>Deselect All</button></div>
+                  <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th><input type="checkbox" checked={allDocumentStudentsSelected} onChange={(event) => event.target.checked ? selectAllDocumentStudents() : setDocumentSelectedIds([])} /></th><th>Student Name</th><th>Reference ID</th><th>Division</th><th>College Name</th><th>Branch</th><th>Course</th></tr></thead><tbody>{documentStudents.map((student) => <tr key={student._id}><td><input type="checkbox" checked={documentSelectedIds.includes(student._id)} onChange={(event) => toggleDocumentStudent(student._id, event.target.checked)} aria-label={`Select ${student.name}`} /></td><td>{student.name}</td><td>{student.referenceId || "-"}</td><td>{student.trainingManagement?.division || "-"}</td><td>{student.trainingManagement?.collegeName || student.collegeName || "-"}</td><td>{student.trainingManagement?.branch || student.branch || "-"}</td><td>{student.trainingManagement?.courseName || student.course || "-"}</td></tr>)}</tbody></table>{!documentStudents.length && <div className="admin-empty-state">No approved students found.</div>}</div>
+                  {documentError && <p className="admin-error">{documentError}</p>}
+                  <div className="admin-actions-row"><button className="admin-primary-btn" type="button" disabled={documentBusy || !documentSelectedIds.length} onClick={startDocumentGeneration}>{documentBusy ? "Generating..." : "Generate"}</button><button className="admin-secondary-btn" type="button" disabled={documentBusy} onClick={closeDocumentModal}>Cancel</button></div>
+                </> : <>
+                  <h2>{documentModal === "ism" ? `ISM ${documentIndex + 1} of ${documentQueue.length}` : `Certificate ${documentIndex + 1} of ${documentQueue.length}`}</h2>
+                  <p>{documentModal === "ism" ? `Division: ${currentDocument.gyapan.studentRows?.[0]?.division || "-"}` : <>Student: <strong>{currentDocument.student?.name}</strong></>}</p>
+                  {documentModal === "ism" ? <iframe id="dashboard-ism-preview" title="ISM preview" className="certificate-preview-frame" srcDoc={currentDocument.html || "<p>Preview unavailable.</p>"} /> : certificatePreview ? <iframe id="dashboard-certificate-preview" title="Certificate preview" className="certificate-preview-frame" src={certificatePreview.url} /> : <p className="admin-muted">Prepare this certificate to preview, print, or download it.</p>}
+                  {documentError && <p className="admin-error">{documentError}</p>}
+                  <div className="admin-actions-row">{documentModal === "certificate" && !certificatePreview ? <button className="admin-primary-btn" type="button" disabled={documentBusy} onClick={prepareCertificate}>{documentBusy ? "Generating..." : "Preview Certificate"}</button> : <><button className="admin-secondary-btn" type="button" onClick={printDocument}>Print</button>{documentModal === "ism" ? <button className="admin-primary-btn" type="button" disabled={documentBusy} onClick={downloadIsm}>{documentBusy ? "Preparing..." : "Download"}</button> : <button className="admin-primary-btn" type="button" onClick={downloadCertificate}>Download</button>}<button className="admin-secondary-btn" type="button" onClick={moveNext}>{documentIndex + 1 === documentQueue.length ? "Finish" : "Next"}</button></>}<button className="admin-secondary-btn" type="button" disabled={documentBusy} onClick={closeDocumentModal}>Close</button></div>
+                </>}
+              </section>
+            </div>;
+          })()}
         </>
       )}
 

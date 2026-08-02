@@ -79,7 +79,7 @@ function validateRequest(body, files) {
       permanentAddress: "Permanent Address",
       fatherName: "Father's Name",
       fatherPhone: "Father's Phone Number",
-      fatherOccupation: "Father's Occupation",
+      fatherOccupation: "Parent's Occupation",
       internshipJoiningMonth: "Internship Joining Month",
       permissionLetterNumber: "Permission Letter Number",
       permissionLetterDate: "Permission Letter Date",

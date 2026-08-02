@@ -962,21 +962,21 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
           <h2>Parent / Guardian Details</h2>
           <div className="details-grid">
             <label className="admin-field">
-              <span>Father / Guardian Name</span>
+              <span>Parent's Name</span>
               <input
                 value={editForm.fatherName}
                 onChange={(e) => handleEditChange("fatherName", e.target.value)}
               />
             </label>
             <label className="admin-field">
-              <span>Father / Guardian Phone</span>
+              <span>Parent's Contact Number</span>
               <input
                 value={editForm.fatherPhone}
                 onChange={(e) => handleEditChange("fatherPhone", e.target.value)}
               />
             </label>
             <label className="admin-field">
-              <span>Father / Guardian Occupation</span>
+              <span>Parent's Occupation</span>
               <input
                 value={editForm.fatherOccupation}
                 onChange={(e) => handleEditChange("fatherOccupation", e.target.value)}
@@ -988,9 +988,9 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
         <DetailGrid
           title="Parent / Guardian Details"
           rows={[
-            ["Father / Guardian Name", student.fatherName],
-            ["Father / Guardian Phone", student.fatherPhone],
-            ["Father / Guardian Occupation", student.fatherOccupation],
+            ["Parent's Name", student.fatherName],
+            ["Parent's Contact Number", student.fatherPhone],
+            ["Parent's Occupation", student.fatherOccupation],
           ]}
         />
       ))}

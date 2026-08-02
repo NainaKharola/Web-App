@@ -6,7 +6,7 @@ function ParentSection({ form, errors, onChange }) {
       <h2>Parent Details</h2>
       <div className="form-grid">
         <TextInput
-          label="Father's Name"
+          label="Parent's Name"
           name="fatherName"
           value={form.fatherName}
           onChange={onChange}
@@ -14,7 +14,7 @@ function ParentSection({ form, errors, onChange }) {
           required
         />
         <TextInput
-          label="Father's Contact Number"
+          label="Parent's Contact Number"
           name="fatherPhone"
           value={form.fatherPhone}
           onChange={onChange}
@@ -22,7 +22,7 @@ function ParentSection({ form, errors, onChange }) {
           required
         />
         <TextInput
-          label="Father's Occupation"
+          label="Parent's Occupation"
           name="fatherOccupation"
           value={form.fatherOccupation}
           onChange={onChange}

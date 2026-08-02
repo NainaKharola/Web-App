@@ -2,10 +2,6 @@ import { memo } from "react";
 
 const cards = [
   ["Total Students", "totalStudents"],
-  ["Pending Applications", "pendingApplications"],
-  ["Approved Students", "approvedStudents"],
-  ["Rejected Students", "rejectedStudents"],
-  ["Offer Letters Sent", "offerLettersSent"],
 ];
 
 const DashboardCards = memo(function DashboardCards({ summary }) {

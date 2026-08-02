@@ -23,7 +23,11 @@ async function validateDivisionCapacity({ Student, studentId, division, branch }
   const totalVacancy = calculateTotalVacancy(configuration);
   if (!configuration?.allowedBranches?.includes(branch) || branchSeats === 0) return `No seats are configured for ${branch} in ${division}.`;
 
-  const assigned = await Student.find({ status: "Approved", "trainingManagement.division": division }).lean();
+  const assigned = await Student.find({
+    status: "Approved",
+    "trainingManagement.division": division,
+    completedStatus: { $ne: "Yes" },
+  }).lean();
   const otherStudents = assigned.filter((assignedStudent) => String(assignedStudent._id) !== String(studentId));
   if (calculateAvailableSeats(totalVacancy, otherStudents.length) === 0) return `${division} is full.`;
   const allocatedForBranch = otherStudents.filter((assignedStudent) => assignedStudent.branch === branch).length;

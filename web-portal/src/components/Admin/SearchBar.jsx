@@ -1,12 +1,12 @@
 function SearchBar({ value, onChange }) {
   return (
     <label className="admin-field admin-field--wide">
-      <span>Search Student Name or Reference ID</span>
+      <span>Search by Name, Reference ID, Email, Phone, or College</span>
       <input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Type a student name or reference ID"
+        placeholder="Type a name, reference ID, email, phone, or college"
       />
     </label>
   );

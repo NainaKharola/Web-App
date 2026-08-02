@@ -12,15 +12,9 @@ const { indiaDayRange } = require("../utils/dateRange");
 
 async function getGyapanStudents(req, res) {
   try {
-    const deleteAfterDownload = req.bufferMode !== true;
-    const eligibleStatus = [{ joinedStatus: "Yes" }];
     const filter = {
       $and: [
-        {
-          $or: eligibleStatus,
-        },
-        ...(req.bufferMode === true ? [{ gyapanBufferRemoved: { $ne: true } }] : []),
-        ...(deleteAfterDownload ? [{ gyapanGenerated: { $ne: true } }] : []),
+        { status: "Approved" },
       ],
     };
 
@@ -35,7 +29,7 @@ async function getGyapanStudents(req, res) {
       }
 
       filter.$and.push({
-        $or: [{ joinedStatus: "Yes", joinedDate: range }],
+        approvedDate: range,
       });
     }
     if (req.query.search?.trim()) {
@@ -55,7 +49,7 @@ async function getGyapanStudents(req, res) {
 
     return res.status(500).json({
       success: false,
-      message: "Unable to fetch completed students.",
+      message: "Unable to fetch approved students.",
     });
   }
 }
@@ -67,7 +61,7 @@ async function removeGyapanBufferStudents(req, res) {
   return res.json({ success: true, message: "Selected students removed from the Joining ISM buffer." });
 }
 
-async function selectedRows(ids, deleteAfterDownload = true) {
+async function selectedRows(ids) {
   const uniqueIds = [...new Set(Array.isArray(ids) ? ids : [])];
   if (!uniqueIds.length) {
     const error = new Error("Select at least one student.");
@@ -76,12 +70,11 @@ async function selectedRows(ids, deleteAfterDownload = true) {
   }
   const students = await Student.find({
     _id: { $in: uniqueIds },
-    ...(deleteAfterDownload ? { gyapanGenerated: { $ne: true } } : {}),
-    $or: [{ joinedStatus: "Yes" }],
+    status: "Approved",
   }).lean();
   if (students.length !== uniqueIds.length) {
     const error = new Error(
-      "Only students marked Joined: Yes can be added.",
+      "Only approved students can be added.",
     );
     error.statusCode = 400;
     throw error;
@@ -92,7 +85,7 @@ async function selectedRows(ids, deleteAfterDownload = true) {
 async function createPreview(req, res) {
   try {
     const deleteAfterDownload = req.bufferMode !== true;
-    const rows = await selectedRows(req.body.ids, deleteAfterDownload);
+    const rows = await selectedRows(req.body.ids);
     const issueDate = req.body.issueDate
       ? new Date(req.body.issueDate)
       : new Date();
