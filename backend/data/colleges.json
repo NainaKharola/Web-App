@@ -1276,6 +1276,10 @@
     "name": "Graphic Era Hill University"
   },
   {
+    "id": 1113,
+    "name": "Graphic Era University"
+  },
+  {
     "id": 321,
     "name": "GSFC University"
   },
@@ -4446,9 +4450,5 @@
   {
     "id": 1112,
     "name": "Yogi Vemana University"
-  },
-  {
-    "id": 1113,
-    "name": "Graphic Era University"
   }
 ]

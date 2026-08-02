@@ -6,7 +6,7 @@ function ParentSection({ form, errors, onChange }) {
       <h2>Parent Details</h2>
       <div className="form-grid">
         <TextInput
-          label="Parent's Name"
+          label="Father's Name"
           name="fatherName"
           value={form.fatherName}
           onChange={onChange}

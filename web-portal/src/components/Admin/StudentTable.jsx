@@ -8,6 +8,9 @@ function StudentTable({
   students,
   onStatusChange,
   certificateDownloadedIds = [],
+  offerLetterMode = false,
+  offerLetterIds = [],
+  onOfferLetterSelect,
 }) {
   return (
     <div className="admin-table-wrap">
@@ -15,6 +18,7 @@ function StudentTable({
         <thead>
           <tr>
             {deleteMode && <th>Select</th>}
+            {offerLetterMode && <th>Select</th>}
             <th>Serial No.</th>
             <th>Reference ID</th>
             <th>Student Name</th>
@@ -40,7 +44,10 @@ function StudentTable({
               student={student}
               onView={onView}
               onStatusChange={onStatusChange}
-              certificateDownloaded={certificateDownloadedIds.includes(student._id)}
+              certificateDownloaded={certificateDownloadedIds.includes(student._id) || student.certificateGenerated}
+              offerLetterMode={offerLetterMode}
+              offerLetterSelected={offerLetterIds.includes(student._id)}
+              onOfferLetterSelect={onOfferLetterSelect}
             />
           ))}
         </tbody>

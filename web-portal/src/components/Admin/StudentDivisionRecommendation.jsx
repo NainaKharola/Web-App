@@ -7,7 +7,7 @@ export default function StudentDivisionRecommendation({ student }) {
   const showRecommendations = async () => {
     setOpen(true); setLoading(true); setError("");
     try {
-      const [{ administration }, { students }] = await Promise.all([fetchAdministration(), fetchAdminStudents({ status: "Approved", sortBy: "submittedAt", sortOrder: "desc" })]);
+      const [{ administration }, { students }] = await Promise.all([fetchAdministration(), fetchAdminStudents({ sortBy: "submittedAt", sortOrder: "desc" })]);
       if (student) {
         setRecommendations(getBranchDivisionRecommendations(administration.divisions, administration.divisionConfigurations, students, student.branch));
       } else {

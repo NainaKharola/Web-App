@@ -12,6 +12,7 @@ import {
   updateStudentReview,
 } from "../services/adminService";
 import { createGyapanPreview, generateGyapanPdf } from "../services/gyapanService";
+import { downloadOfferLetterPdf } from "../services/offerLetterService";
 import { getUploadUrl } from "../utils/uploadUrl";
 import { useAdminAuth } from "../auth/useAdminAuth";
 import StudentForm from "../components/Form/StudentForm";
@@ -26,6 +27,9 @@ const initialFilters = {
   registrationDate: "",
 };
 const CERTIFICATE_DOWNLOADS_KEY = "drdoCertificateDownloadedStudentIds";
+const MANAGEMENT_COLUMNS = [
+  ["serial", "S.No."], ["name", "Name"], ["referenceId", "Reference ID"], ["course", "Course"], ["branch", "Branch"], ["year", "Year"], ["collegeName", "College Name"], ["location", "College Location"], ["email", "Email"], ["phone", "Phone"], ["status", "Status"],
+];
 
 function savedCertificateDownloadIds() {
   try {
@@ -95,6 +99,13 @@ function AdminDashboard() {
   const [documentIndex, setDocumentIndex] = useState(0);
   const [certificatePreview, setCertificatePreview] = useState(null);
   const [certificateDownloadedIds, setCertificateDownloadedIds] = useState(savedCertificateDownloadIds);
+  const [offerLetterMode, setOfferLetterMode] = useState(false);
+  const [offerLetterIds, setOfferLetterIds] = useState([]);
+  const [offerLetterBusy, setOfferLetterBusy] = useState(false);
+  const [offerLetterQueue, setOfferLetterQueue] = useState([]);
+  const [offerLetterAction, setOfferLetterAction] = useState("");
+  const [managementFieldsOpen, setManagementFieldsOpen] = useState(false);
+  const [managementFields, setManagementFields] = useState(() => MANAGEMENT_COLUMNS.map(([key]) => key));
 
   // Inline status dropdown confirmation state (Student Management only)
   const [statusConfirm, setStatusConfirm] = useState(null); // { studentId, oldStatus, newStatus }
@@ -568,6 +579,45 @@ function AdminDashboard() {
       return { sortBy: field, sortOrder: order };
     });
   };
+  const processOfferLetter = async (action) => {
+    const studentId = offerLetterQueue[0];
+    if (!studentId) return;
+    const student = students.find((item) => item._id === studentId);
+    setOfferLetterBusy(true);
+    try {
+      if (action !== "skip") {
+        const blob = await downloadOfferLetterPdf(studentId);
+        const url = URL.createObjectURL(blob);
+        if (offerLetterAction === "print") {
+          const popup = window.open(url, "_blank");
+          if (popup) window.setTimeout(() => popup.print(), 800);
+        } else {
+          const link = document.createElement("a");
+          link.href = url; link.download = `DRDO-Offer-Letter-${student?.name || studentId}.pdf`; link.click();
+        }
+        window.setTimeout(() => URL.revokeObjectURL(url), offerLetterAction === "print" ? 60000 : 1000);
+      }
+      setOfferLetterIds((current) => current.filter((id) => id !== studentId));
+    } catch (err) {
+      setError(err.message || "Unable to generate offer letter.");
+    } finally {
+      setOfferLetterBusy(false);
+      setOfferLetterQueue((current) => {
+        const nextQueue = current.slice(1);
+        if (nextQueue.length === 0) {
+          setOfferLetterMode(false);
+          setOfferLetterAction("");
+          setOfferLetterIds([]);
+        }
+        return nextQueue;
+      });
+    }
+  };
+  const startOfferLetterWorkflow = (action) => { setOfferLetterAction(action); setOfferLetterQueue([...offerLetterIds]); };
+  const cancelOfferLetterWorkflow = () => { setOfferLetterQueue([]); setOfferLetterIds([]); setOfferLetterAction(""); setOfferLetterMode(false); };
+  const stopOfferLetterWorkflow = () => { setOfferLetterQueue([]); setOfferLetterAction(""); };
+  const visibleManagementColumns = MANAGEMENT_COLUMNS.filter(([key]) => managementFields.includes(key));
+  const toggleManagementField = (key) => setManagementFields((current) => current.includes(key) ? current.filter((value) => value !== key) : [...current, key]);
 
   return (
     <main className="admin-console admin-shell">
@@ -614,6 +664,10 @@ function AdminDashboard() {
             <h2 style={{ margin: 0, fontSize: "1.5rem", color: "var(--primary)" }}>⚙️ Administration</h2>
             <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.95rem" }}>Manage divisions, system configurations, list colleges, and edit admin profile.</p>
           </div>
+          <div className="admin-summary-card admin-summary-card--interactive" onClick={() => { window.history.pushState({}, "", "/admin/reports"); window.dispatchEvent(new PopStateEvent("popstate")); }} style={{ cursor: "pointer", padding: "32px", display: "flex", flexDirection: "column", gap: "12px", borderRadius: "12px", border: "1px solid var(--border-color, #e2e8f0)", transition: "transform 0.2s, box-shadow 0.2s" }}>
+            <h2 style={{ margin: 0, fontSize: "1.5rem", color: "var(--primary)" }}>📊 Reports</h2>
+            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.95rem" }}>Filter approved, joined, and completed students and export a tailored report.</p>
+          </div>
         </div>
       )}
 
@@ -645,6 +699,7 @@ function AdminDashboard() {
               onChange={(e) => setSearch(e.target.value)}
               style={{ flex: "1 1 100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)" }}
             />
+            <button className="admin-secondary-btn" type="button" onClick={() => setManagementFieldsOpen(true)}>Select Fields</button>
           </div>
 
           {/* Counts */}
@@ -654,26 +709,31 @@ function AdminDashboard() {
           </div>
 
           {/* Sorting List Table */}
-          <div className="admin-table-wrap" style={{ overflowX: "hidden" }}>
-            <table className="admin-table" style={{ tableLayout: "fixed", width: "100%" }}>
+          <div className="admin-table-wrap" style={{ overflowX: "auto" }}>
+            <table className="admin-table student-management-table" style={{ tableLayout: "auto", width: "max-content", minWidth: "1500px" }}>
               <thead>
                 <tr>
-                  <th style={{ cursor: "pointer", width: "25%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("name")}>
+                  <th hidden={!managementFields.includes("serial")}>S.No.</th>
+                  <th hidden={!managementFields.includes("name")} style={{ cursor: "pointer", width: "25%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("name")}>
                     Name {sort.sortBy === "name" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th style={{ cursor: "pointer", width: "22%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("course")}>
+                  <th hidden={!managementFields.includes("referenceId")}>Reference ID</th>
+                  <th hidden={!managementFields.includes("course")} style={{ cursor: "pointer", width: "22%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("course")}>
                     Course {sort.sortBy === "course" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th style={{ cursor: "pointer", width: "25%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("branch")}>
+                  <th hidden={!managementFields.includes("branch")} style={{ cursor: "pointer", width: "25%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("branch")}>
                     Branch {sort.sortBy === "branch" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th style={{ cursor: "pointer", width: "10%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("year")}>
+                  <th hidden={!managementFields.includes("year")} style={{ cursor: "pointer", width: "10%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("year")}>
                     Year {sort.sortBy === "year" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th style={{ cursor: "pointer", width: "20%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("collegeName")}>
+                  <th hidden={!managementFields.includes("collegeName")} style={{ cursor: "pointer", width: "20%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("collegeName")}>
                     College Name {sort.sortBy === "collegeName" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th style={{ cursor: "pointer", width: "10%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("status")}>
+                  <th hidden={!managementFields.includes("location")}>College Location</th>
+                  <th hidden={!managementFields.includes("email")}>Email</th>
+                  <th hidden={!managementFields.includes("phone")}>Phone</th>
+                  <th hidden={!managementFields.includes("status")} style={{ cursor: "pointer", width: "10%", whiteSpace: "normal", wordBreak: "break-word" }} onClick={() => handleSortClick("status")}>
                     Status {sort.sortBy === "status" && (sort.sortOrder === "asc" ? "▲" : "▼")}
                   </th>
                   <th style={{ width: "8%" }}>Action</th>
@@ -687,12 +747,17 @@ function AdminDashboard() {
                     style={{ cursor: "pointer" }}
                     onClick={() => handleSelectStudentWithCheck(student._id)}
                   >
-                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.name}</td>
-                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.course}</td>
-                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.branch}</td>
-                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.year}</td>
-                    <td style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.collegeName || "-"}</td>
-                    <td style={{ whiteSpace: "normal", wordBreak: "break-word", verticalAlign: "middle" }}
+                    <td hidden={!managementFields.includes("serial")}>{sortedStudents.indexOf(student) + 1}</td>
+                    <td hidden={!managementFields.includes("name")} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.name}</td>
+                    <td hidden={!managementFields.includes("referenceId")}>{student.referenceId || "-"}</td>
+                    <td hidden={!managementFields.includes("course")} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.course}</td>
+                    <td hidden={!managementFields.includes("branch")} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.branch}</td>
+                    <td hidden={!managementFields.includes("year")} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.year}</td>
+                    <td hidden={!managementFields.includes("collegeName")} style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{student.collegeName || "-"}</td>
+                    <td hidden={!managementFields.includes("location")}>{student.location || "-"}</td>
+                    <td hidden={!managementFields.includes("email")}>{student.email || "-"}</td>
+                    <td hidden={!managementFields.includes("phone")}>{student.phone || "-"}</td>
+                    <td hidden={!managementFields.includes("status")} style={{ whiteSpace: "normal", wordBreak: "break-word", verticalAlign: "middle" }}
                         onClick={e => e.stopPropagation()}>
                       <select
                         value={student.status}
@@ -741,6 +806,8 @@ function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {managementFieldsOpen && <div className="reports-dialog-backdrop" role="presentation"><section className="reports-dialog" role="dialog" aria-modal="true" aria-label="Select student table fields"><h2>Select Fields</h2><div className="reports-field-list">{MANAGEMENT_COLUMNS.map(([key, label]) => <label key={key}><input type="checkbox" checked={managementFields.includes(key)} onChange={() => toggleManagementField(key)} /> {label}</label>)}</div><div className="reports-dialog-actions"><button className="admin-secondary-btn" type="button" onClick={() => setManagementFields(MANAGEMENT_COLUMNS.map(([key]) => key))}>Select All</button><button className="admin-primary-btn" type="button" onClick={() => setManagementFieldsOpen(false)}>Done</button></div></section></div>}
 
       {/* VIEW 2b: Student Registration (100% width) */}
       {currentView === "student-management-new" && (
@@ -798,26 +865,59 @@ function AdminDashboard() {
             </div>
 
             <div className="admin-actions-row">
-              <button className="admin-secondary-btn" type="button" onClick={toggleApprovedStudents}>
-                {filters.status === "Approved" ? "All Students" : "Approved Students"}
-              </button>
-              <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("certificate")}>
-                Generate Certificate
-              </button>
-              <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("ism")}>
-                Generate ISM
-              </button>
-              <button
-                className="admin-danger-btn"
-                type="button"
-                onClick={toggleDeleteMode}
-              >
-                {deleteMode ? "Cancel Delete" : "Delete Entry"}
-              </button>
-              {deleteMode && (
-                <button className="admin-danger-btn" type="button" onClick={deleteSelected}>
-                  Delete Selected
-                </button>
+              {offerLetterMode ? (
+                <>
+                  <button
+                    className="admin-primary-btn admin-btn-small"
+                    type="button"
+                    disabled={offerLetterBusy || !offerLetterIds.length}
+                    onClick={() => startOfferLetterWorkflow("download")}
+                  >
+                    Download Offer Letters
+                  </button>
+                  <button
+                    className="admin-secondary-btn admin-btn-small"
+                    type="button"
+                    disabled={offerLetterBusy || !offerLetterIds.length}
+                    onClick={() => startOfferLetterWorkflow("print")}
+                  >
+                    Print Offer Letters
+                  </button>
+                  <button
+                    className="admin-secondary-btn admin-btn-small"
+                    type="button"
+                    onClick={cancelOfferLetterWorkflow}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="admin-secondary-btn" type="button" onClick={toggleApprovedStudents}>
+                    {filters.status === "Approved" ? "All Students" : "Approved Students"}
+                  </button>
+                  <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("certificate")}>
+                    Generate Certificate
+                  </button>
+                  <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("ism")}>
+                    Generate ISM
+                  </button>
+                  <button className="admin-secondary-btn" type="button" onClick={() => { setOfferLetterMode(true); setOfferLetterIds([]); }}>
+                    Generate Offer Letter
+                  </button>
+                  <button
+                    className="admin-danger-btn"
+                    type="button"
+                    onClick={toggleDeleteMode}
+                  >
+                    {deleteMode ? "Cancel Delete" : "Delete Entry"}
+                  </button>
+                  {deleteMode && (
+                    <button className="admin-danger-btn" type="button" onClick={deleteSelected}>
+                      Delete Selected
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
@@ -838,6 +938,10 @@ function AdminDashboard() {
                 selectedIds={selectedIds}
                 students={students}
                 onStatusChange={handleStatusChange}
+                certificateDownloadedIds={certificateDownloadedIds}
+                offerLetterMode={offerLetterMode}
+                offerLetterIds={offerLetterIds}
+                onOfferLetterSelect={(ids, checked) => setOfferLetterIds((current) => checked ? [...new Set([...current, ...ids])] : current.filter((id) => !ids.includes(id)))}
               />
             )}
           </section>
@@ -876,6 +980,12 @@ function AdminDashboard() {
           })()}
         </>
       )}
+
+      {offerLetterQueue.length > 0 && (() => {
+        const student = students.find((item) => item._id === offerLetterQueue[0]);
+        const verb = offerLetterAction === "print" ? "Print" : "Download";
+        return <div className="administration-dialog-backdrop" role="presentation"><section className="administration-dialog" role="dialog" aria-modal="true" aria-label={`${verb} offer letter`}><h2>{verb} Offer Letter</h2><p>{verb} Offer Letter for <strong>{student?.name || "this student"}</strong>?</p><div className="administration-dialog__actions"><button className="admin-primary-btn" type="button" disabled={offerLetterBusy} onClick={() => processOfferLetter(verb.toLowerCase())}>{offerLetterBusy ? "Generating..." : verb}</button><button className="admin-secondary-btn" type="button" disabled={offerLetterBusy} onClick={() => processOfferLetter("skip")}>Skip</button><button className="admin-danger-btn" type="button" disabled={offerLetterBusy} onClick={stopOfferLetterWorkflow}>Cancel Remaining</button></div></section></div>;
+      })()}
 
       {/* VIEW 4: Administration Module Groups */}
       {currentView === "administration" && (

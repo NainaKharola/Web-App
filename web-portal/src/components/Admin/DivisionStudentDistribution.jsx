@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { getAllocatedStudents } from "../../utils/administrationAnalytics";
 
 // ── colour palette ─────────────────────────────────────────────────────────
 const PALETTE = [
@@ -138,9 +139,9 @@ export default function DivisionStudentDistribution({ administration, students, 
     if (!administration?.divisions?.length || !students) return [];
     const counts = {};
     administration.divisions.forEach((div) => { counts[div] = 0; });
-    students.forEach((student) => {
+    getAllocatedStudents(students, administration.divisions).forEach((student) => {
       const div = student.trainingManagement?.division;
-      if (student.trainingManagement?.completed !== "Yes" && div && Object.prototype.hasOwnProperty.call(counts, div)) {
+      if (Object.prototype.hasOwnProperty.call(counts, div)) {
         counts[div]++;
       }
     });

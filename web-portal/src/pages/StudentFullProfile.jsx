@@ -141,7 +141,7 @@ function StudentFullProfile() {
       <DetailGrid
         title="Section 4: Guardian Details"
         rows={[
-          ["Parent's Name", student.fatherName],
+          ["Father's Name", student.fatherName],
           ["Parent's Contact Number", student.fatherPhone],
           ["Parent's Occupation", student.fatherOccupation],
         ]}

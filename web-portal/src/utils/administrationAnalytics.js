@@ -1,6 +1,6 @@
 export function getAllocatedStudents(students, divisions) {
   const divisionSet = new Set(divisions);
-  return students.filter((student) => student.status === "Approved" && student.trainingManagement?.completed !== "Yes" && Boolean(student.submittedAt) && divisionSet.has(student.trainingManagement?.division));
+  return students.filter((student) => student.status === "Approved" && divisionSet.has(student.trainingManagement?.division) && student.trainingManagement?.completed !== "Yes");
 }
 
 const nonNegativeNumber = (value) => Math.max(0, Number(value) || 0);
@@ -32,14 +32,14 @@ export function sortRecommendations(rows) {
   return [...rows].sort((left, right) => left.division.localeCompare(right.division));
 }
 
-export function getAllocatedStudentCount(students, division, branch, divisions) {
-  return getAllocatedStudents(students, divisions).filter((student) => student.trainingManagement?.division === division && student.branch === branch).length;
+export function getAllocatedStudentCount(students, division, divisions) {
+  return getAllocatedStudents(students, divisions).filter((student) => student.trainingManagement?.division === division).length;
 }
 
 export function getBranchDivisionRecommendations(divisions, configurations, students, branch) {
   const rows = divisions.map((division) => {
     const configuredSeats = getBranchSeatCapacity(configurations?.[division], branch);
-    const allocatedStudents = getAllocatedStudentCount(students, division, branch, divisions);
+    const allocatedStudents = getAllocatedStudentCount(students, division, divisions);
     const availableSeats = calculateAvailableSeats(configuredSeats, allocatedStudents);
     const isNull = configuredSeats === 0;
     return {

@@ -29,6 +29,10 @@ export default function AdminProfile() {
   const [isChangePassOpen, setIsChangePassOpen] = useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isCreatePassOpen, setIsCreatePassOpen] = useState(false);
+  const [userToReset, setUserToReset] = useState(null);
+  const [resetPassForm, setResetPassForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [resetPassError, setResetPassError] = useState("");
+  const [resetPassLoading, setResetPassLoading] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
   // Form States - Change Password
@@ -291,6 +295,23 @@ export default function AdminProfile() {
     }
   };
 
+  const handleResetPassSubmit = async (event) => {
+    event.preventDefault();
+    setResetPassError("");
+    if (!resetPassForm.newPassword || !resetPassForm.confirmPassword) return setResetPassError("All fields are required.");
+    if (resetPassForm.newPassword.length < 8) return setResetPassError("Password must be at least 8 characters long.");
+    if (resetPassForm.newPassword !== resetPassForm.confirmPassword) return setResetPassError("Passwords do not match.");
+    setResetPassLoading(true);
+    try {
+      await createSubUserPassword(userToReset.id || userToReset._id, resetPassForm);
+      setSuccessMsg("Password reset successfully for the user.");
+      setUserToReset(null);
+      setResetPassForm({ newPassword: "", confirmPassword: "" });
+      loadUsers();
+    } catch (err) { setResetPassError(err.message || "Failed to reset password."); }
+    finally { setResetPassLoading(false); }
+  };
+
   // Handle Delete Sub User
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
@@ -416,6 +437,11 @@ export default function AdminProfile() {
                             </td>
                             <td>
                               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                {row.role !== "MAIN_ADMIN" && (
+                                  <button className="admin-secondary-btn admin-icon-button" style={{ padding: "4px 8px", fontSize: "0.85rem" }} type="button" onClick={() => { setUserToReset(row); setResetPassError(""); }}>
+                                    Reset Password
+                                  </button>
+                                )}
                                 {row.role !== "MAIN_ADMIN" && (
                                   <button 
                                     className="admin-secondary-btn admin-icon-button" 
@@ -671,6 +697,8 @@ export default function AdminProfile() {
           </form>
         </div>
       )}
+
+      {userToReset && <div className="administration-dialog-backdrop" role="presentation"><form className="administration-dialog" onSubmit={handleResetPassSubmit} style={{ maxWidth: "420px" }}><h2>Reset Password for Users</h2><p>Reset the password for <strong>{userToReset.name}</strong>.</p>{resetPassError && <p className="admin-error">{resetPassError}</p>}<div style={{ display: "flex", flexDirection: "column", gap: "12px" }}><label className="admin-field"><span>New Password</span><input type="password" value={resetPassForm.newPassword} onChange={(event) => setResetPassForm({ ...resetPassForm, newPassword: event.target.value })} required /></label><label className="admin-field"><span>Confirm Password</span><input type="password" value={resetPassForm.confirmPassword} onChange={(event) => setResetPassForm({ ...resetPassForm, confirmPassword: event.target.value })} required /></label></div><div className="administration-dialog__actions" style={{ marginTop: "20px" }}><button className="admin-secondary-btn" type="button" onClick={() => setUserToReset(null)}>Cancel</button><button className="admin-primary-btn" type="submit" disabled={resetPassLoading}>{resetPassLoading ? "Saving..." : "Reset Password"}</button></div></form></div>}
 
       {/* Delete User Confirmation Modal */}
       {userToDelete && (

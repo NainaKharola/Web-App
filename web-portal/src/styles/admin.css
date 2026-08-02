@@ -735,8 +735,9 @@
 .certificate-modal p { margin: 0 0 22px; }
 .certificate-modal--wide { width: min(100%, 900px); max-height: 90vh; overflow: auto; }
 .certificate-preview-frame { display: block; width: 100%; min-height: 58vh; margin: 0 0 20px; border: 1px solid #d7e5f3; }
-.certificate-downloaded-row { background: #e5f7ea; }
-.certificate-downloaded-row:hover { background: #d8f1df !important; }
+.certificate-downloaded-row { background: #cfeFD2 !important; }
+.certificate-downloaded-row td { color: #174c27; }
+.certificate-downloaded-row:hover { background: #bde8c2 !important; }
 
 /* Administration module */
 .admin-administration-btn { gap: 8px; }
@@ -841,3 +842,31 @@
 @media (max-width: 560px) { .analytics-tabs { display: flex; width: 100%; }.analytics-tabs button { flex: 1; padding-inline: 9px; font-size: .86rem; }.analytics-chart { grid-template-columns: 1fr; justify-items: center; }.analytics-legend { width: 100%; }.analytics-selector { margin-inline: -2px; } }
 @media (max-width: 560px) { .recommendation-toolbar { align-items: stretch; flex-direction: column; }.recommendation-toolbar .admin-primary-btn { width: 100%; } }
 @media (max-width: 560px) { .recommendation-modal { padding: 19px; }.recommendation-modal__heading { align-items: stretch; flex-direction: column; }.recommendation-modal__heading .admin-secondary-btn { width: 100%; } .admin-review-form__actions > * { flex: 1; } }
+
+/* Reports module */
+.reports-filter-row { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.reports-page .admin-actions-row { justify-content: flex-end; }
+.reports-table { min-width: 1450px; }
+.reports-export-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px; }
+.reports-dialog-backdrop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 18px; background: rgba(8, 31, 59, .48); }
+.reports-dialog { width: min(100%, 580px); max-height: min(86vh, 760px); overflow: auto; padding: 26px; border: 1px solid #dbe7f4; border-radius: 16px; background: #fff; box-shadow: 0 22px 54px rgba(6, 30, 62, .28); }
+.reports-dialog--small { width: min(100%, 400px); }
+.reports-dialog h2 { margin: 0; color: var(--admin-ink); }
+.reports-dialog p { color: var(--admin-muted); }
+.reports-field-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.reports-field-list label { display: flex; align-items: center; gap: 8px; color: var(--admin-ink); font-weight: 700; }
+.reports-field-list input { width: 17px; height: 17px; accent-color: var(--admin-navy); }
+.reports-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+@media (max-width: 980px) { .reports-filter-row { grid-template-columns: repeat(3, minmax(150px, 1fr)); } }
+@media (max-width: 640px) { .reports-filter-row { grid-template-columns: 1fr; }.reports-export-actions { justify-content: stretch; }.reports-export-actions > button { flex: 1; }.reports-field-list { grid-template-columns: 1fr; }.reports-dialog-actions > button { flex: 1; } }
+
+.student-management-table th, .student-management-table td { min-width: 120px; white-space: normal; overflow-wrap: anywhere; }
+.student-management-table th:nth-child(7), .student-management-table td:nth-child(7) { min-width: 260px; }
+.student-management-table th:nth-child(5), .student-management-table td:nth-child(5) { min-width: 210px; }
+
+.admin-btn-small {
+  min-height: 36px !important;
+  padding: 6px 12px !important;
+  font-size: 0.85rem !important;
+  border-radius: 9px !important;
+}

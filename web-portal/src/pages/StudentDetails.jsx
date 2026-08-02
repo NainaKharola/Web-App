@@ -170,6 +170,7 @@ function TrainingManagementForm({ student, divisions, onUpdated, alwaysOpen = fa
       const response = await saveTrainingManagement(student._id, payload);
       savedForm.current = payload;
       onUpdated(response.student);
+      window.dispatchEvent(new Event("student-division-updated"));
       setMessage(response.message);
     } catch (err) {
       setForm(savedForm.current);
@@ -191,6 +192,7 @@ function TrainingManagementForm({ student, divisions, onUpdated, alwaysOpen = fa
       savedForm.current = next;
       setForm(next);
       onUpdated(response.student);
+      window.dispatchEvent(new Event("student-division-updated"));
       setMessage(response.message);
     } catch (err) {
       setForm(savedForm.current);
@@ -962,7 +964,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
           <h2>Parent / Guardian Details</h2>
           <div className="details-grid">
             <label className="admin-field">
-              <span>Parent's Name</span>
+              <span>Father's Name</span>
               <input
                 value={editForm.fatherName}
                 onChange={(e) => handleEditChange("fatherName", e.target.value)}
@@ -988,7 +990,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
         <DetailGrid
           title="Parent / Guardian Details"
           rows={[
-            ["Parent's Name", student.fatherName],
+            ["Father's Name", student.fatherName],
             ["Parent's Contact Number", student.fatherPhone],
             ["Parent's Occupation", student.fatherOccupation],
           ]}
@@ -1091,7 +1093,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
         </div>
       )}
 
-      {isApprovedView && student.status === "Approved" && !isEditing && (
+      {false && isApprovedView && student.status === "Approved" && !isEditing && (
         <section className="offer-letter-box offer-letter-box--actions">
           <div>
             <h2>Offer Letter</h2>

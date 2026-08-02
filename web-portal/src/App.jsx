@@ -18,6 +18,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OfferLetterEditor = lazy(() => import("./pages/OfferLetterEditor"));
 const OfferLetterPreview = lazy(() => import("./pages/OfferLetterPreview"));
+const Reports = lazy(() => import("./pages/Reports"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
 const StudentDetails = lazy(() => import("./pages/StudentDetails"));
 const StudentFullProfile = lazy(() => import("./pages/StudentFullProfile"));
@@ -71,6 +72,7 @@ function App() {
             <Route path="/admin" element={<Navigate replace to="/admin/login" />} />
             <Route path="/admin/login" element={<PublicAdminRoute><AdminLogin /></PublicAdminRoute>} />
             <Route path="/admin/dashboard" element={protectedPage(<AdminDashboard />)} />
+            <Route path="/admin/reports" element={protectedPage(<Reports />)} />
             <Route path="/admin-dashboard" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin/student-management" element={protectedPage(<AdminDashboard />)} />
             <Route path="/admin/student-management/new" element={protectedPage(<AdminDashboard />)} />

@@ -45,6 +45,9 @@ const StudentRow = memo(function StudentRow({
   onView,
   onStatusChange,
   certificateDownloaded = false,
+  offerLetterMode = false,
+  offerLetterSelected = false,
+  onOfferLetterSelect,
 }) {
   const [updating, setUpdating] = useState(false);
 
@@ -96,6 +99,7 @@ const StudentRow = memo(function StudentRow({
           />
         </td>
       )}
+      {offerLetterMode && <td><input checked={offerLetterSelected} type="checkbox" onChange={(event) => onOfferLetterSelect?.([student._id], event.target.checked)} aria-label={`Select ${student.name} for offer letter`} /></td>}
       <td>{serialNumber}</td>
       <td>{student.referenceId || "-"}</td>
       <td>{student.name}</td>

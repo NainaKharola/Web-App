@@ -11,17 +11,52 @@ const sections = [
 ];
 
 function ManagementSection({ config, initiallyOpen = true }) {
-  const [items, setItems] = useState([]), [name, setName] = useState(""), [search, setSearch] = useState(""), [editing, setEditing] = useState(null), [open, setOpen] = useState(initiallyOpen), [loading, setLoading] = useState(true), [saving, setSaving] = useState(false), [error, setError] = useState("");
+  const [items, setItems] = useState([]), [name, setName] = useState(""), [search, setSearch] = useState(""), [editing, setEditing] = useState(null), [editName, setEditName] = useState(""), [open, setOpen] = useState(initiallyOpen), [loading, setLoading] = useState(true), [saving, setSaving] = useState(false), [error, setError] = useState("");
   const load = async () => { setLoading(true); try { setItems(await config.list(config.key)); } catch (err) { setError(err.message); } finally { setLoading(false); } };
   useEffect(() => { Promise.resolve().then(load); }, []);
   const visible = useMemo(() => { const term = search.trim().toLowerCase(); return (term ? items.filter((item) => item.name.toLowerCase().includes(term)) : items).sort((a, b) => config.key === "durations" ? compareDurations(a.name, b.name) : a.name.localeCompare(b.name)); }, [config.key, items, search]);
   const durationName = (value) => `${String(value || "").replace(/\D/g, "")} Weeks`;
-  const submit = async (event) => { event.preventDefault(); if (!name.trim()) return setError(`${config.singular} name is required.`); const value = config.key === "durations" ? durationName(name) : name; if (config.key === "durations" && value === " Weeks") return setError("Enter a numeric duration."); setSaving(true); setError(""); try { editing ? await config.update(config.key, editing.id, value) : await config.add(config.key, value); setName(""); setEditing(null); await load(); } catch (err) { setError(err.message); } finally { setSaving(false); } };
+  const submit = async (event) => { event.preventDefault(); if (!name.trim()) return setError(`${config.singular} name is required.`); const value = config.key === "durations" ? durationName(name) : name; if (config.key === "durations" && value === " Weeks") return setError("Enter a numeric duration."); setSaving(true); setError(""); try { await config.add(config.key, value); setName(""); await load(); } catch (err) { setError(err.message); } finally { setSaving(false); } };
+  const saveEdit = async (item) => { if (!editName.trim()) return setError(`${config.singular} name is required.`); const value = config.key === "durations" ? durationName(editName) : editName; if (config.key === "durations" && value === " Weeks") return setError("Enter a numeric duration."); setSaving(true); setError(""); try { await config.update(config.key, item.id, value); setEditing(null); setEditName(""); await load(); } catch (err) { setError(err.message); } finally { setSaving(false); } };
   const remove = async (item) => { if (!window.confirm(`Delete "${item.name}"?`)) return; try { await config.remove(config.key, item.id); await load(); } catch (err) { setError(err.message); } };
   const listLabel = `${config.singular} List`;
+  const searchPlaceholder = `Search ${config.key.charAt(0).toUpperCase() + config.key.slice(1)}`;
+  const labelName = config.key === "durations" ? "Duration" : `${config.singular} Name`;
+
   return <section className="admin-panel">
     <div className="admin-panel__header"><button className="admin-secondary-btn" type="button" aria-expanded={open} onClick={() => setOpen((value) => !value)}>{open ? "▲" : "▼"} {listLabel}</button></div>
-    {open && <><div className="admin-panel__header"><h2>{editing ? `Edit ${config.singular}` : `Add ${config.singular}`}</h2></div><form className="admin-actions-row" onSubmit={submit}><input className="admin-search" value={name} inputMode={config.key === "durations" ? "numeric" : undefined} onChange={(event) => setName(config.key === "durations" ? event.target.value.replace(/\D/g, "") : event.target.value)} placeholder={config.key === "durations" ? "Number of weeks" : `${config.singular} name`} aria-label={`${config.singular} name`} />{config.key === "durations" && <span className="admin-muted">{name ? `${name} Weeks` : "Weeks"}</span>}<button className="admin-primary-btn" disabled={saving} type="submit">{saving ? "Saving..." : editing ? `Save ${config.singular}` : `Add ${config.singular}`}</button>{editing && <button className="admin-secondary-btn" type="button" onClick={() => { setEditing(null); setName(""); }}>Cancel</button>}</form>{error && <p className="admin-error">{error}</p>}<input className="admin-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${config.key}`} aria-label={`Search ${config.key}`} />{loading ? <div className="admin-loading">Loading {config.key}...</div> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Serial No.</th><th>{config.singular} Name</th><th>Actions</th></tr></thead><tbody>{visible.length ? visible.map((item, index) => <tr key={item.id}><td>{index + 1}</td><td>{item.name}</td><td><button className="admin-secondary-btn" type="button" onClick={() => { setEditing(item); setName(config.key === "durations" ? String(item.name).replace(/\D/g, "") : item.name); }}>Edit</button>{" "}<button className="admin-danger-btn" type="button" onClick={() => remove(item)}>Delete</button></td></tr>) : <tr><td colSpan="3">No {config.key} found.</td></tr>}</tbody></table></div>}</>}
+    {open && <>
+      {/* 1. Search Bar at the very top */}
+      <div style={{ marginBottom: "20px" }}>
+        <input className="admin-search" style={{ width: "100%" }} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} />
+      </div>
+
+      {/* 2. Add New Input + Add Button Section */}
+      <form style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }} onSubmit={submit}>
+        <div className="admin-field">
+          <span>{labelName}</span>
+          <input className="admin-search" style={{ width: "100%" }} value={name} inputMode={config.key === "durations" ? "numeric" : undefined} onChange={(event) => setName(config.key === "durations" ? event.target.value.replace(/\D/g, "") : event.target.value)} placeholder={config.key === "durations" ? "Number of weeks" : `${config.singular} name`} aria-label={`${config.singular} name`} />
+          {config.key === "durations" && <span className="admin-muted">{name ? `${name} Weeks` : "Weeks"}</span>}
+        </div>
+        <button className="admin-primary-btn" style={{ alignSelf: "flex-start" }} disabled={saving} type="submit">{saving ? "Adding..." : `Add ${config.singular}`}</button>
+      </form>
+
+      {error && <p className="admin-error" style={{ marginBottom: "16px" }}>{error}</p>}
+
+      {/* 3. Existing List Section */}
+      {loading ? <div className="admin-loading">Loading {config.key}...</div> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Serial No.</th><th>{config.singular} Name</th><th>Actions</th></tr></thead><tbody>{visible.length ? visible.map((item, index) => {
+        const isEditing = editing && editing.id === item.id;
+        return <tr key={item.id}>
+          <td>{index + 1}</td>
+          <td>
+            {isEditing ? <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><input className="admin-search" style={{ minHeight: "34px", padding: "4px 8px", width: "100%" }} value={editName} inputMode={config.key === "durations" ? "numeric" : undefined} onChange={(event) => setEditName(config.key === "durations" ? event.target.value.replace(/\D/g, "") : event.target.value)} aria-label={`Edit ${config.singular} Name`} />{config.key === "durations" && <span className="admin-muted">{editName ? `${editName} Weeks` : "Weeks"}</span>}</div> : item.name}
+          </td>
+          <td>
+            {isEditing ? <div style={{ display: "flex", gap: "8px" }}><button className="admin-primary-btn" style={{ minHeight: "34px", padding: "4px 10px", fontSize: "0.85rem" }} type="button" disabled={saving} onClick={() => saveEdit(item)}>{saving ? "Saving..." : "Save"}</button><button className="admin-secondary-btn" style={{ minHeight: "34px", padding: "4px 10px", fontSize: "0.85rem" }} type="button" onClick={() => { setEditing(null); setEditName(""); }}>Cancel</button></div> : <div style={{ display: "flex", gap: "8px" }}><button className="admin-secondary-btn" type="button" onClick={() => { setEditing(item); setEditName(config.key === "durations" ? String(item.name).replace(/\D/g, "") : item.name); }}>Edit</button><button className="admin-danger-btn" type="button" onClick={() => remove(item)}>Delete</button></div>}
+          </td>
+        </tr>;
+      }) : <tr><td colSpan="3">No {config.key} found.</td></tr>}</tbody></table></div>}
+    </>}
   </section>;
 }
 

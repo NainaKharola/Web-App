@@ -48,7 +48,7 @@ function Administration() {
     let active = true;
     const loadStudents = async () => {
       try {
-        const { students: records } = await fetchAdminStudents({ status: "Approved" });
+        const { students: records } = await fetchAdminStudents();
         if (active) { setStudents(records); setStudentsError(""); }
       } catch (requestError) {
         if (active) setStudentsError(requestError.message);
@@ -59,7 +59,8 @@ function Administration() {
     loadStudents();
     const refresh = window.setInterval(loadStudents, 30000);
     window.addEventListener("administration-updated", loadStudents);
-    return () => { active = false; window.clearInterval(refresh); window.removeEventListener("administration-updated", loadStudents); };
+    window.addEventListener("student-division-updated", loadStudents);
+    return () => { active = false; window.clearInterval(refresh); window.removeEventListener("administration-updated", loadStudents); window.removeEventListener("student-division-updated", loadStudents); };
   }, []);
 
   useEffect(() => {
