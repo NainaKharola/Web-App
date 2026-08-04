@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import GyapanViewer from "../components/GyapanViewer";
 import { generateGyapanPdf, getGyapan } from "../services/gyapanService";
 import { getUploadUrl } from "../utils/uploadUrl";
+import { fetchAdminStudent } from "../services/adminService";
 import "../styles/admin.css";
 function GyapanPreview({ gyapanId, bufferMode = false }) {
   const module = bufferMode ? "gyapan1" : "gyapan";
@@ -62,14 +63,42 @@ function GyapanPreview({ gyapanId, bufferMode = false }) {
     setBusy(true);
     setError("");
     try {
+      const firstStudentId = data.gyapan.selectedStudents?.[0];
+      let refId = "UNKNOWN";
+      let studentName = "Student";
+      if (firstStudentId) {
+        try {
+          const { student } = await fetchAdminStudent(firstStudentId);
+          if (student) {
+            refId = student.referenceId || "UNKNOWN";
+            studentName = student.name || "Student";
+          }
+        } catch (err) {
+          console.error("Failed to fetch student details for download naming", err);
+        }
+      }
+
       const response = await fetch(getUploadUrl(data.gyapan.pdfUrl));
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Gyapan-${data.gyapan.letterNumber || gyapanId}.pdf`;
+      const nameNoSpaces = studentName.replace(/\s+/g, "");
+      link.download = `ISM_${refId}_${nameNoSpaces}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
+
+      const studentIds = data.gyapan?.selectedStudents || [];
+      if (studentIds.length) {
+        try {
+          const key = "drdoIsmDownloadedStudentIds";
+          const current = JSON.parse(localStorage.getItem(key) || "[]");
+          const next = [...new Set([...current, ...studentIds])];
+          localStorage.setItem(key, JSON.stringify(next));
+        } catch (err) {
+          console.error("Failed to save downloaded ISM IDs to local storage", err);
+        }
+      }
     } catch (err) {
       setError(err.message || "Failed to download PDF.");
     } finally {

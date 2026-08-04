@@ -11,7 +11,24 @@ function StudentTable({
   offerLetterMode = false,
   offerLetterIds = [],
   onOfferLetterSelect,
+  sort,
+  onSortChange,
 }) {
+  const handleHeaderClick = (columnKey) => {
+    if (!onSortChange) return;
+    if (sort?.sortBy === columnKey) {
+      const nextOrder = sort.sortOrder === "asc" ? "desc" : "asc";
+      onSortChange({ sortBy: columnKey, sortOrder: nextOrder });
+    } else {
+      onSortChange({ sortBy: columnKey, sortOrder: "asc" });
+    }
+  };
+
+  const renderSortArrow = (columnKey) => {
+    if (!sort || sort.sortBy !== columnKey) return " ▲▼";
+    return sort.sortOrder === "asc" ? " ▲" : " ▼";
+  };
+
   return (
     <div className="admin-table-wrap">
       <table className="admin-table">
@@ -20,16 +37,37 @@ function StudentTable({
             {deleteMode && <th>Select</th>}
             {offerLetterMode && <th>Select</th>}
             <th>Serial No.</th>
-            <th>Reference ID</th>
-            <th>Student Name</th>
-            <th>College / University</th>
-            <th>Branch</th>
-            <th>Year</th>
-            <th>CGPA</th>
-            <th>Registration Date</th>
-            <th>Current Status</th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("referenceId")}>
+              Reference ID{renderSortArrow("referenceId")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("name")}>
+              Student Name{renderSortArrow("name")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("collegeName")}>
+              College / University{renderSortArrow("collegeName")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("branch")}>
+              Branch{renderSortArrow("branch")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("division")}>
+              Division{renderSortArrow("division")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("year")}>
+              Year{renderSortArrow("year")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("cgpa")}>
+              CGPA{renderSortArrow("cgpa")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("submittedAt")}>
+              Registration Date{renderSortArrow("submittedAt")}
+            </th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("status")}>
+              Current Status{renderSortArrow("status")}
+            </th>
             <th>Offer Letter Status</th>
-            <th>Approved Date</th>
+            <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick("approvedDate")}>
+              Approved Date{renderSortArrow("approvedDate")}
+            </th>
             <th>Action</th>
           </tr>
         </thead>

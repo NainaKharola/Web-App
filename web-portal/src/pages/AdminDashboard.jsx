@@ -10,6 +10,7 @@ import {
   downloadCertificates,
   fetchAdminStudents,
   updateStudentReview,
+  setupRecoveryInfo,
 } from "../services/adminService";
 import { createGyapanPreview, generateGyapanPdf } from "../services/gyapanService";
 import { downloadOfferLetterPdf } from "../services/offerLetterService";
@@ -25,8 +26,10 @@ const initialFilters = {
   year: "",
   status: "",
   registrationDate: "",
+  division: "",
 };
 const CERTIFICATE_DOWNLOADS_KEY = "drdoCertificateDownloadedStudentIds";
+const ISM_DOWNLOADS_KEY = "drdoIsmDownloadedStudentIds";
 const MANAGEMENT_COLUMNS = [
   ["serial", "S.No."], ["name", "Name"], ["referenceId", "Reference ID"], ["course", "Course"], ["branch", "Branch"], ["year", "Year"], ["collegeName", "College Name"], ["location", "College Location"], ["email", "Email"], ["phone", "Phone"], ["status", "Status"],
 ];
@@ -34,6 +37,15 @@ const MANAGEMENT_COLUMNS = [
 function savedCertificateDownloadIds() {
   try {
     const value = JSON.parse(localStorage.getItem(CERTIFICATE_DOWNLOADS_KEY) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function savedIsmDownloadIds() {
+  try {
+    const value = JSON.parse(localStorage.getItem(ISM_DOWNLOADS_KEY) || "[]");
     return Array.isArray(value) ? value : [];
   } catch {
     return [];
@@ -61,9 +73,9 @@ function getInitialView() {
 }
 
 function AdminDashboard() {
-  const { admin } = useAdminAuth();
+  const { admin, validateSession } = useAdminAuth();
   const isMainAdmin = admin?.role === "MAIN_ADMIN";
-  
+
   // Navigation & Workflow States
   const [currentView, setCurrentView] = useState(getInitialView);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
@@ -72,6 +84,12 @@ function AdminDashboard() {
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [saveTrigger, setSaveTrigger] = useState(0);
+
+  // Recovery Setup States
+  const [showRecoverySetup, setShowRecoverySetup] = useState(false);
+  const [recoveryForm, setRecoveryForm] = useState({ birthPlace: "", birthDate: "" });
+  const [recoveryError, setRecoveryError] = useState("");
+  const [recoveryBusy, setRecoveryBusy] = useState(false);
 
   // Original Table & Data States
   const [students, setStudents] = useState([]);
@@ -99,6 +117,7 @@ function AdminDashboard() {
   const [documentIndex, setDocumentIndex] = useState(0);
   const [certificatePreview, setCertificatePreview] = useState(null);
   const [certificateDownloadedIds, setCertificateDownloadedIds] = useState(savedCertificateDownloadIds);
+  const [ismDownloadedIds, setIsmDownloadedIds] = useState(savedIsmDownloadIds);
   const [offerLetterMode, setOfferLetterMode] = useState(false);
   const [offerLetterIds, setOfferLetterIds] = useState([]);
   const [offerLetterBusy, setOfferLetterBusy] = useState(false);
@@ -171,6 +190,105 @@ function AdminDashboard() {
   useEffect(() => {
     loadAll();
   }, []);
+
+  useEffect(() => {
+    if (admin && admin.recoverySetup === false) {
+      setShowRecoverySetup(true);
+    } else {
+      setShowRecoverySetup(false);
+    }
+  }, [admin]);
+
+  const handleRecoverySetupSubmit = async (e) => {
+    e.preventDefault();
+    setRecoveryError("");
+    if (!recoveryForm.birthPlace || !recoveryForm.birthDate) {
+      setRecoveryError("All fields are required.");
+      return;
+    }
+    setRecoveryBusy(true);
+    try {
+      await setupRecoveryInfo(recoveryForm);
+      await validateSession();
+      setShowRecoverySetup(false);
+    } catch (err) {
+      setRecoveryError(err.message || "Failed to save recovery info.");
+    } finally {
+      setRecoveryBusy(false);
+    }
+  };
+
+  const displayedStudents = useMemo(() => {
+    let result = students;
+
+    // Frontend division filter (since backend does not support filtering by division)
+    if (filters.division) {
+      result = result.filter(
+        (student) => student.trainingManagement?.division === filters.division
+      );
+    }
+
+    // Frontend sorting (since backend does not support sorting for all columns)
+    if (sort.sortBy) {
+      result = [...result].sort((a, b) => {
+        let left, right;
+        switch (sort.sortBy) {
+          case "referenceId":
+            left = a.referenceId || "";
+            right = b.referenceId || "";
+            break;
+          case "name":
+            left = a.name || "";
+            right = b.name || "";
+            break;
+          case "collegeName":
+            left = a.collegeName || "";
+            right = b.collegeName || "";
+            break;
+          case "branch":
+            left = a.branch || "";
+            right = b.branch || "";
+            break;
+          case "division":
+            left = a.trainingManagement?.division || "";
+            right = b.trainingManagement?.division || "";
+            break;
+          case "year":
+            left = a.year || "";
+            right = b.year || "";
+            break;
+          case "cgpa":
+            left = Number(a.cgpa) || 0;
+            right = Number(b.cgpa) || 0;
+            break;
+          case "submittedAt":
+            left = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+            right = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+            break;
+          case "approvedDate":
+            left = a.approvedDate ? new Date(a.approvedDate).getTime() : 0;
+            right = b.approvedDate ? new Date(b.approvedDate).getTime() : 0;
+            break;
+          case "status":
+            left = a.status || "";
+            right = b.status || "";
+            break;
+          default:
+            left = "";
+            right = "";
+        }
+
+        if (typeof left === "string") left = left.toLowerCase();
+        if (typeof right === "string") right = right.toLowerCase();
+
+        if (left < right) return sort.sortOrder === "asc" ? -1 : 1;
+        if (left > right) return sort.sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [students, filters.division, sort]);
 
   useEffect(() => {
     const handlePop = () => {
@@ -255,7 +373,7 @@ function AdminDashboard() {
       fetchAdminStudents(query).then((response) => {
         setStudents(response.students);
         setSummary(response.summary);
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }, [query]);
 
@@ -355,10 +473,23 @@ function AdminDashboard() {
     setDocumentError("");
   }, [certificatePreview]);
 
-  const documentStudents = useMemo(() => allStudents.filter((student) => student.status === "Approved").filter((student) => {
-    const term = documentSearch.trim().toLowerCase();
-    return !term || [student.name, student.referenceId, student.collegeName, student.branch, student.course].some((value) => String(value || "").toLowerCase().includes(term));
-  }), [allStudents, documentSearch]);
+  const documentStudents = useMemo(() => {
+    return allStudents
+      .filter((student) => student.status === "Approved")
+      .filter((student) => {
+        if (documentModal === "certificate") {
+          return student.trainingManagement?.completed === "Yes";
+        }
+        if (documentModal === "ism") {
+          return student.trainingManagement?.joined === "Yes";
+        }
+        return true;
+      })
+      .filter((student) => {
+        const term = documentSearch.trim().toLowerCase();
+        return !term || [student.name, student.referenceId, student.collegeName, student.branch, student.course].some((value) => String(value || "").toLowerCase().includes(term));
+      });
+  }, [allStudents, documentSearch, documentModal]);
 
   const toggleDocumentStudent = useCallback((id, checked) => setDocumentSelectedIds((current) => checked ? [...new Set([...current, id])] : current.filter((value) => value !== id)), []);
   const selectAllDocumentStudents = useCallback(() => setDocumentSelectedIds(documentStudents.map((student) => student._id)), [documentStudents]);
@@ -399,11 +530,15 @@ function AdminDashboard() {
 
   const downloadCertificate = useCallback(() => {
     if (!certificatePreview) return;
+    const student = documentQueue[documentIndex]?.student;
+    if (!student) return;
+    const refId = student.referenceId || "UNKNOWN";
+    const nameNoSpaces = (student.name || "Student").replace(/\s+/g, "");
     const link = document.createElement("a");
     link.href = certificatePreview.url;
-    link.download = certificatePreview.filename;
+    link.download = `Certificate_${refId}_${nameNoSpaces}.pdf`;
     link.click();
-    const studentId = documentQueue[documentIndex]?.student?._id;
+    const studentId = student._id;
     if (studentId) {
       setCertificateDownloadedIds((current) => {
         const next = [...new Set([...current, studentId])];
@@ -423,12 +558,25 @@ function AdminDashboard() {
       const blob = await response.blob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `Gyapan-${item.gyapan.letterNumber || item.gyapan._id}.pdf`;
+      const firstStudentId = item.gyapan.selectedStudents?.[0];
+      const student = allStudents.find((s) => s._id === firstStudentId) || {};
+      const refId = student.referenceId || "UNKNOWN";
+      const nameNoSpaces = (student.name || "Student").replace(/\s+/g, "");
+      link.download = `ISM_${refId}_${nameNoSpaces}.pdf`;
       link.click();
       URL.revokeObjectURL(link.href);
+
+      const studentIds = item.gyapan.selectedStudents || [];
+      if (studentIds.length) {
+        setIsmDownloadedIds((current) => {
+          const next = [...new Set([...current, ...studentIds])];
+          localStorage.setItem(ISM_DOWNLOADS_KEY, JSON.stringify(next));
+          return next;
+        });
+      }
     } catch (err) { setDocumentError(err.message || "Unable to download ISM."); }
     finally { setDocumentBusy(false); }
-  }, [documentIndex, documentQueue]);
+  }, [documentIndex, documentQueue, allStudents]);
   const openAdministration = useCallback(() => {
     window.history.pushState({}, "", "/admin/system-configuration");
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -558,7 +706,7 @@ function AdminDashboard() {
 
   // --- Inline Status Dropdown (Student Management only) ---
   const STATUS_COLORS = {
-    Pending:  { background: "#fef9c3", color: "#854d0e", border: "#fde68a" },
+    Pending: { background: "#fef9c3", color: "#854d0e", border: "#fde68a" },
     Approved: { background: "#dcfce7", color: "#14532d", border: "#86efac" },
     Rejected: { background: "#fee2e2", color: "#7f1d1d", border: "#fca5a5" },
   };
@@ -607,8 +755,10 @@ function AdminDashboard() {
           const popup = window.open(url, "_blank");
           if (popup) window.setTimeout(() => popup.print(), 800);
         } else {
+          const refId = (student?.referenceId || "UNKNOWN").replace(/[^a-zA-Z0-9_-]/g, "");
+          const nameNoSpaces = (student?.name || "Student").replace(/\s+/g, "").replace(/[^a-zA-Z0-9_-]/g, "");
           const link = document.createElement("a");
-          link.href = url; link.download = `DRDO-Offer-Letter-${student?.name || studentId}.pdf`; link.click();
+          link.href = url; link.download = `OfferLetter_${refId}_${nameNoSpaces}.pdf`; link.click();
         }
         window.setTimeout(() => URL.revokeObjectURL(url), offerLetterAction === "print" ? 60000 : 1000);
       }
@@ -724,7 +874,7 @@ function AdminDashboard() {
               <strong>{allStudents.filter(s => s.status === "Rejected").length}</strong>
             </div>
           </section>
-          
+
           {/* Local Search and Filters */}
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "16px" }}>
             <input
@@ -785,7 +935,6 @@ function AdminDashboard() {
                 {sortedStudents.map((student) => (
                   <tr
                     key={student._id}
-                    className={certificateDownloadedIds.includes(student._id) ? "certificate-downloaded-row" : ""}
                     style={{ cursor: "pointer" }}
                     onClick={() => handleSelectStudentWithCheck(student._id)}
                   >
@@ -810,7 +959,7 @@ function AdminDashboard() {
                     <td hidden={!managementFields.includes("email")}>{student.email || "-"}</td>
                     <td hidden={!managementFields.includes("phone")}>{student.phone || "-"}</td>
                     <td hidden={!managementFields.includes("status")} style={{ whiteSpace: "normal", wordBreak: "break-word", verticalAlign: "middle" }}
-                        onClick={e => e.stopPropagation()}>
+                      onClick={e => e.stopPropagation()}>
                       <select
                         value={student.status}
                         disabled={statusUpdating === student._id}
@@ -988,16 +1137,18 @@ function AdminDashboard() {
                 onSelect={toggleSelected}
                 onView={openStudent}
                 selectedIds={selectedIds}
-                students={students}
+                students={displayedStudents}
                 onStatusChange={handleStatusChange}
                 certificateDownloadedIds={certificateDownloadedIds}
                 offerLetterMode={offerLetterMode}
                 offerLetterIds={offerLetterIds}
                 onOfferLetterSelect={(ids, checked) => setOfferLetterIds((current) => checked ? [...new Set([...current, ...ids])] : current.filter((id) => !ids.includes(id)))}
+                sort={sort}
+                onSortChange={setSort}
               />
             )}
           </section>
-          
+
           {documentModal && (() => {
             const currentDocument = documentQueue[documentIndex];
             const selectionOpen = documentQueue.length === 0;
@@ -1017,7 +1168,18 @@ function AdminDashboard() {
                   <h2>Generate {documentModal === "ism" ? "ISM" : "Certificate"}</h2>
                   <p className="admin-muted">Select approved students, then generate {documentModal === "ism" ? "ISM documents grouped by division" : "one certificate for each student"}.</p>
                   <div className="admin-actions-row"><label className="admin-field"><span>Search Students</span><input type="search" placeholder="Student name or college name" value={documentSearch} onChange={(event) => setDocumentSearch(event.target.value)} /></label><button className="admin-secondary-btn" type="button" onClick={selectAllDocumentStudents}>Select All</button><button className="admin-secondary-btn" type="button" onClick={() => setDocumentSelectedIds([])}>Deselect All</button></div>
-                  <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th><input type="checkbox" checked={allDocumentStudentsSelected} onChange={(event) => event.target.checked ? selectAllDocumentStudents() : setDocumentSelectedIds([])} /></th><th>Student Name</th><th>Reference ID</th><th>Division</th><th>College Name</th><th>Branch</th><th>Course</th></tr></thead><tbody>{documentStudents.map((student) => <tr key={student._id}><td><input type="checkbox" checked={documentSelectedIds.includes(student._id)} onChange={(event) => toggleDocumentStudent(student._id, event.target.checked)} aria-label={`Select ${student.name}`} /></td><td>{student.name}</td><td>{student.referenceId || "-"}</td><td>{student.trainingManagement?.division || "-"}</td><td>{student.trainingManagement?.collegeName || student.collegeName || "-"}</td><td>{student.trainingManagement?.branch || student.branch || "-"}</td><td>{student.trainingManagement?.courseName || student.course || "-"}</td></tr>)}</tbody></table>{!documentStudents.length && <div className="admin-empty-state">No approved students found.</div>}</div>
+                  <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th><input type="checkbox" checked={allDocumentStudentsSelected} onChange={(event) => event.target.checked ? selectAllDocumentStudents() : setDocumentSelectedIds([])} /></th><th>Student Name</th><th>Reference ID</th><th>Division</th><th>College Name</th><th>Branch</th><th>Course</th></tr></thead><tbody>{documentStudents.map((student) => {
+                    const isCertificate = documentModal === "certificate";
+                    const isDownloaded = isCertificate
+                      ? (certificateDownloadedIds.includes(student._id) || student.certificateGenerated)
+                      : (ismDownloadedIds.includes(student._id) || student.gyapanGenerated);
+
+                    const rowStyle = isDownloaded
+                      ? { backgroundColor: isCertificate ? "#a7f3d0" : "#bae6fd", color: isCertificate ? "#064e3b" : "#0c4a6e", fontWeight: "600" }
+                      : {};
+
+                    return <tr key={student._id} style={rowStyle}><td><input type="checkbox" checked={documentSelectedIds.includes(student._id)} onChange={(event) => toggleDocumentStudent(student._id, event.target.checked)} aria-label={`Select ${student.name}`} /></td><td>{student.name}</td><td>{student.referenceId || "-"}</td><td>{student.trainingManagement?.division || "-"}</td><td>{student.trainingManagement?.collegeName || student.collegeName || "-"}</td><td>{student.trainingManagement?.branch || student.branch || "-"}</td><td>{student.trainingManagement?.courseName || student.course || "-"}</td></tr>;
+                  })}</tbody></table>{!documentStudents.length && <div className="admin-empty-state">No approved students found.</div>}</div>
                   {documentError && <p className="admin-error">{documentError}</p>}
                   <div className="admin-actions-row"><button className="admin-primary-btn" type="button" disabled={documentBusy || !documentSelectedIds.length} onClick={startDocumentGeneration}>{documentBusy ? "Generating..." : "Generate"}</button><button className="admin-secondary-btn" type="button" disabled={documentBusy} onClick={closeDocumentModal}>Cancel</button></div>
                 </> : <>
@@ -1147,6 +1309,64 @@ function AdminDashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {showRecoverySetup && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          backdropFilter: "blur(6px)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 99999,
+        }}>
+          <form onSubmit={handleRecoverySetupSubmit} style={{
+            backgroundColor: "#fff",
+            padding: "36px",
+            borderRadius: "16px",
+            width: "450px",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px"
+          }}>
+            <h2 style={{ margin: 0, fontSize: "1.6rem", color: "var(--primary)" }}>🔒 Security Setup</h2>
+            <p style={{ margin: 0, color: "#475569", fontSize: "0.95rem", lineHeight: "1.5" }}>
+              Please set up your password recovery information. This is a one-time configuration and will be used to recover your account if you forget your password.
+            </p>
+            {recoveryError && <p className="admin-error" style={{ margin: 0 }}>{recoveryError}</p>}
+
+            <label className="admin-field">
+              <span>Birth Place</span>
+              <input
+                type="text"
+                placeholder="e.g. Dehradun"
+                value={recoveryForm.birthPlace}
+                onChange={(e) => setRecoveryForm({ ...recoveryForm, birthPlace: e.target.value })}
+                required
+              />
+            </label>
+
+            <label className="admin-field">
+              <span>Birth Date</span>
+              <input
+                type="date"
+                value={recoveryForm.birthDate}
+                onChange={(e) => setRecoveryForm({ ...recoveryForm, birthDate: e.target.value })}
+                required
+              />
+            </label>
+
+            <button className="admin-primary-btn" type="submit" disabled={recoveryBusy} style={{ marginTop: "8px", height: "40px" }}>
+              {recoveryBusy ? "Saving..." : "Save Recovery Info"}
+            </button>
+          </form>
         </div>
       )}
     </main>

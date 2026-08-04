@@ -4,6 +4,8 @@ const {
   loginAdmin,
   registerAdmin,
   changeAdminPassword,
+  setupRecoveryInfo,
+  resetPasswordRecovery,
   createSubUser,
   listSubUsers,
   deleteSubUser,
@@ -40,6 +42,8 @@ router.post("/auth/login", loginAdmin);
 router.get("/auth/me", protectAdmin, getAdminProfile);
 router.get("/profile", protectAdmin, requireMainAdmin, getAdminProfile);
 router.put("/change-password", protectAdmin, requireMainAdmin, changeAdminPassword);
+router.post("/auth/setup-recovery", protectAdmin, setupRecoveryInfo);
+router.post("/auth/reset-password-recovery", resetPasswordRecovery);
 router.post("/users", protectAdmin, requireMainAdmin, createSubUser);
 router.get("/users", protectAdmin, requireMainAdmin, listSubUsers);
 router.delete("/users/:id", protectAdmin, requireMainAdmin, deleteSubUser);

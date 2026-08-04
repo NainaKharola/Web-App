@@ -88,7 +88,7 @@ const StudentRow = memo(function StudentRow({
   };
 
   return (
-    <tr className={certificateDownloaded ? "certificate-downloaded-row" : ""}>
+    <tr>
       {deleteMode && (
         <td>
           <input
@@ -105,6 +105,7 @@ const StudentRow = memo(function StudentRow({
       <td>{student.name}</td>
       <td>{student.collegeName}</td>
       <td>{student.branch}</td>
+      <td>{student.trainingManagement?.division || "-"}</td>
       <td>{student.year}</td>
       <td>{student.cgpa}</td>
       <td>{formatDate(student.submittedAt)}</td>

@@ -33,7 +33,20 @@ function Certificates({ bufferMode = false }) {
     catch (err) { setError(`Unable to generate certificate for ${currentStudent.name}.`); }
     finally { setBusy(false); }
   };
-  const download = () => { if (!preview) return; const link = document.createElement("a"); link.href = preview.url; link.download = preview.filename; link.click(); setDownloadedIds((current) => { const next = [...new Set([...current, currentStudent._id])]; localStorage.setItem(CERTIFICATE_DOWNLOADS_KEY, JSON.stringify(next)); return next; }); };
+  const download = () => {
+    if (!preview) return;
+    const link = document.createElement("a");
+    link.href = preview.url;
+    const refId = currentStudent.referenceId || "UNKNOWN";
+    const nameNoSpaces = (currentStudent.name || "Student").replace(/\s+/g, "");
+    link.download = `Certificate_${refId}_${nameNoSpaces}.pdf`;
+    link.click();
+    setDownloadedIds((current) => {
+      const next = [...new Set([...current, currentStudent._id])];
+      localStorage.setItem(CERTIFICATE_DOWNLOADS_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
   const print = () => { const frame = document.getElementById("certificate-preview-frame"); frame?.contentWindow?.print(); };
   const next = () => { if (!batch) return; if (preview?.url) URL.revokeObjectURL(preview.url); setPreview(null); if (batch.index + 1 >= batch.ids.length) { setBatch(null); setSelectedIds([]); } else setBatch((current) => ({ ...current, index: current.index + 1 })); };
 

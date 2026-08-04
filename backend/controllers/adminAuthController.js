@@ -22,6 +22,7 @@ function sanitizeAdmin(admin) {
     name: admin.name,
     email: admin.email,
     role: admin.email === "naina@gmail.com" || admin.email === "vaibhav@gmail.com" ? "MAIN_ADMIN" : (admin.role || "SUB_ADMIN"),
+    recoverySetup: !!admin.recoverySetup,
   };
 }
 
@@ -206,6 +207,87 @@ async function changeAdminPassword(req, res) {
     });
 
     return res.status(500).json({ success: false, message: error.message || "Failed to change password." });
+  }
+}
+
+async function setupRecoveryInfo(req, res) {
+  try {
+    const { birthPlace, birthDate } = req.body;
+    if (!birthPlace || !birthDate) {
+      return res.status(400).json({ success: false, message: "Birth place and birth date are required." });
+    }
+    const admin = await Admin.findById(req.admin._id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found." });
+    }
+
+    const bcrypt = require("bcryptjs");
+    admin.birthPlace = await bcrypt.hash(birthPlace.toLowerCase().trim(), 12);
+    admin.birthDate = await bcrypt.hash(birthDate.trim(), 12);
+    admin.recoverySetup = true;
+
+    await admin.save();
+
+    await logActivity({
+      req,
+      module: "Profile",
+      action: "Setup Recovery Info",
+      description: "Setup recovery information (birth place and birth date) successfully.",
+      status: "Success",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Recovery information saved successfully."
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to save recovery info." });
+  }
+}
+
+async function resetPasswordRecovery(req, res) {
+  try {
+    const { email, birthPlace, birthDate, newPassword, confirmPassword } = req.body;
+    if (!email || !birthPlace || !birthDate || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: "All fields are required." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "Passwords do not match." });
+    }
+
+    const admin = await Admin.findOne({ email }).select("+password +birthPlace +birthDate");
+    if (!admin || !admin.recoverySetup) {
+      return res.status(400).json({ success: false, message: "Invalid recovery information." });
+    }
+
+    const bcrypt = require("bcryptjs");
+    const isPlaceMatch = await bcrypt.compare(birthPlace.toLowerCase().trim(), admin.birthPlace);
+    const isDateMatch = await bcrypt.compare(birthDate.trim(), admin.birthDate);
+
+    if (!isPlaceMatch || !isDateMatch) {
+      return res.status(400).json({ success: false, message: "Invalid recovery information." });
+    }
+
+    admin.password = newPassword;
+    await admin.save();
+
+    await logActivity({
+      req: { ...req, admin },
+      module: "Profile",
+      action: "Reset Password via Recovery",
+      description: `Reset password via recovery info for email ${email}.`,
+      status: "Success",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully."
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to reset password." });
   }
 }
 
@@ -520,6 +602,8 @@ module.exports = {
   loginAdmin,
   getAdminProfile,
   changeAdminPassword,
+  setupRecoveryInfo,
+  resetPasswordRecovery,
   createSubUser,
   listSubUsers,
   deleteSubUser,

@@ -59,7 +59,9 @@ function OfferLetterPreview({ studentId }) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "DRDO-Internship-Offer-Letter.pdf";
+      const refId = (preview?.student?.referenceId || "UNKNOWN").replace(/[^a-zA-Z0-9_-]/g, "");
+      const nameNoSpaces = (preview?.student?.name || "Student").replace(/\s+/g, "").replace(/[^a-zA-Z0-9_-]/g, "");
+      link.download = `OfferLetter_${refId}_${nameNoSpaces}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -80,7 +82,9 @@ function OfferLetterPreview({ studentId }) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Offer-Letter-${preview.student?.name || studentId}.pdf`;
+      const refId = (preview?.student?.referenceId || "UNKNOWN").replace(/[^a-zA-Z0-9_-]/g, "");
+      const nameNoSpaces = (preview?.student?.name || "Student").replace(/\s+/g, "").replace(/[^a-zA-Z0-9_-]/g, "");
+      link.download = `OfferLetter_${refId}_${nameNoSpaces}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {

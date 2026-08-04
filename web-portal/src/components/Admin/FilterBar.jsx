@@ -3,6 +3,11 @@ function uniqueOptions(students, key) {
     .sort((a, b) => String(a).localeCompare(String(b)));
 }
 
+function uniqueDivisions(students) {
+  return [...new Set(students.map((student) => student.trainingManagement?.division).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b)));
+}
+
 function FilterBar({ filters, onChange, students }) {
   const updateFilter = (key, value) => {
     onChange({ ...filters, [key]: value });
@@ -77,6 +82,21 @@ function FilterBar({ filters, onChange, students }) {
             updateFilter("registrationDate", event.target.value)
           }
         />
+      </label>
+
+      <label className="admin-field">
+        <span>Division</span>
+        <select
+          value={filters.division || ""}
+          onChange={(event) => updateFilter("division", event.target.value)}
+        >
+          <option value="">All Divisions</option>
+          {uniqueDivisions(students).map((division) => (
+            <option key={division} value={division}>
+              {division}
+            </option>
+          ))}
+        </select>
       </label>
     </section>
   );

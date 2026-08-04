@@ -330,3 +330,26 @@ export async function updateStudentDetails(id, formData) {
 
   return parseResponse(response);
 }
+
+export async function setupRecoveryInfo(payload) {
+  const response = await fetch(`${API_URL}/auth/setup-recovery`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response);
+}
+
+export async function resetPasswordRecovery(payload) {
+  const response = await fetch(`${API_URL}/auth/reset-password-recovery`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response);
+}

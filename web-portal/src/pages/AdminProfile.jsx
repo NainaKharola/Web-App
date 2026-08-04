@@ -7,13 +7,14 @@ import {
   deleteSubUser,
   createSubUserPassword,
   fetchUserActivityLog,
-  downloadUserActivityExport
+  downloadUserActivityExport,
+  resetPasswordRecovery
 } from "../services/adminService";
 import "../styles/admin.css";
 
 export default function AdminProfile() {
   const { admin, checking } = useAdminAuth();
-  
+
   // Load User List
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -46,6 +47,13 @@ export default function AdminProfile() {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [changePassLoading, setChangePassLoading] = useState(false);
   const [changePassError, setChangePassError] = useState("");
+
+  // Forgot Password States
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
+  const [forgotForm, setForgotForm] = useState({ birthPlace: "", birthDate: "", newPassword: "", confirmPassword: "" });
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
+  const [forgotBusy, setForgotBusy] = useState(false);
 
   // Form States - Add User
   const [addUserForm, setAddUserForm] = useState({
@@ -128,15 +136,15 @@ export default function AdminProfile() {
 
   const filteredActivities = activities.filter((log) => {
     const { date } = formatLogTimestamp(log.timestamp);
-    const matchesSearch = 
+    const matchesSearch =
       (log.description || "").toLowerCase().includes(activitySearch.toLowerCase()) ||
       (log.action || "").toLowerCase().includes(activitySearch.toLowerCase()) ||
       (log.module || "").toLowerCase().includes(activitySearch.toLowerCase());
-      
+
     const matchesDate = !activityDateFilter || date === activityDateFilter.split("-").reverse().join("-");
     const matchesModule = !activityModuleFilter || log.module === activityModuleFilter;
     const matchesAction = !activityActionFilter || log.action === activityActionFilter;
-    
+
     return matchesSearch && matchesDate && matchesModule && matchesAction;
   });
 
@@ -232,6 +240,41 @@ export default function AdminProfile() {
       setChangePassError(err.message || "Failed to update password.");
     } finally {
       setChangePassLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+    if (!forgotForm.birthPlace || !forgotForm.birthDate || !forgotForm.newPassword || !forgotForm.confirmPassword) {
+      setForgotError("All fields are required.");
+      return;
+    }
+    if (forgotForm.newPassword.length < 8) {
+      setForgotError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (forgotForm.newPassword !== forgotForm.confirmPassword) {
+      setForgotError("Passwords do not match.");
+      return;
+    }
+    setForgotBusy(true);
+    try {
+      await resetPasswordRecovery({
+        email: admin.email,
+        ...forgotForm
+      });
+      setForgotSuccess("Password reset successfully.");
+      setForgotForm({ birthPlace: "", birthDate: "", newPassword: "", confirmPassword: "" });
+      setTimeout(() => {
+        setIsForgotOpen(false);
+        setForgotSuccess("");
+      }, 3000);
+    } catch (err) {
+      setForgotError(err.message || "Failed to reset password.");
+    } finally {
+      setForgotBusy(false);
     }
   };
 
@@ -351,7 +394,7 @@ export default function AdminProfile() {
       {errorMsg && <div className="administration-toast administration-toast--error" role="alert">{errorMsg}</div>}
 
       <div className="administration-grid" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-        
+
         {/* Profile Card */}
         <section className="administration-card">
           <div className="administration-card__heading">
@@ -371,9 +414,12 @@ export default function AdminProfile() {
               <input value={admin?.email || ""} disabled style={{ background: "#f5f8fb", cursor: "not-allowed" }} />
             </label>
           </div>
-          <div style={{ marginTop: "20px" }}>
+          <div style={{ marginTop: "20px", display: "flex", gap: "12px" }}>
             <button className="admin-primary-btn" type="button" onClick={() => setIsChangePassOpen(true)}>
               Change Password
+            </button>
+            <button className="admin-secondary-btn" type="button" onClick={() => setIsForgotOpen(true)}>
+              Forgot Password
             </button>
           </div>
         </section>
@@ -389,7 +435,7 @@ export default function AdminProfile() {
                   <p>Create and manage sub-users with administrative access.</p>
                 </div>
               </div>
-              
+
               <div className="recommendation-toolbar" style={{ marginTop: "20px" }}>
                 <p>Register additional sub-user admin accounts to delegate application reviews.</p>
                 <button className="admin-primary-btn" type="button" onClick={() => setIsAddUserOpen(true)}>
@@ -424,7 +470,7 @@ export default function AdminProfile() {
                             <td>{row.email}</td>
                             <td>{row.role === "MAIN_ADMIN" ? "Main Admin" : "Sub Admin"}</td>
                             <td>
-                              <span style={{ 
+                              <span style={{
                                 color: row.passwordStatus === "Password Created" ? "#17633f" : "#a86c00",
                                 background: row.passwordStatus === "Password Created" ? "#d7f0e1" : "#fdf3d7",
                                 padding: "2px 8px",
@@ -443,20 +489,20 @@ export default function AdminProfile() {
                                   </button>
                                 )}
                                 {row.role !== "MAIN_ADMIN" && (
-                                  <button 
-                                    className="admin-secondary-btn admin-icon-button" 
+                                  <button
+                                    className="admin-secondary-btn admin-icon-button"
                                     style={{ padding: "4px 8px", fontSize: "0.85rem" }}
-                                    type="button" 
+                                    type="button"
                                     onClick={() => handleOpenActivityLog(row)}
                                   >
                                     View Activity
                                   </button>
                                 )}
                                 {!isPermanent ? (
-                                  <button 
-                                    className="admin-danger-btn admin-icon-button" 
+                                  <button
+                                    className="admin-danger-btn admin-icon-button"
                                     style={{ padding: "4px 8px", fontSize: "0.85rem" }}
-                                    type="button" 
+                                    type="button"
                                     onClick={() => setUserToDelete(row)}
                                   >
                                     Delete
@@ -505,21 +551,21 @@ export default function AdminProfile() {
           <form className="administration-dialog" onSubmit={handleChangePassSubmit} style={{ maxWidth: "420px" }}>
             <h2>Change Password</h2>
             <p>Update your personal account credentials.</p>
-            
+
             {changePassError && <p className="admin-error" style={{ marginBottom: "12px" }}>{changePassError}</p>}
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <label className="admin-field" style={{ position: "relative" }}>
                 <span>Old Password</span>
-                <input 
-                  type={showOldPass ? "text" : "password"} 
-                  value={changePassForm.oldPassword} 
-                  onChange={(e) => setChangePassForm({ ...changePassForm, oldPassword: e.target.value })} 
-                  required 
+                <input
+                  type={showOldPass ? "text" : "password"}
+                  value={changePassForm.oldPassword}
+                  onChange={(e) => setChangePassForm({ ...changePassForm, oldPassword: e.target.value })}
+                  required
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowOldPass(!showOldPass)} 
+                <button
+                  type="button"
+                  onClick={() => setShowOldPass(!showOldPass)}
                   style={{ position: "absolute", right: "12px", bottom: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }}
                   aria-label={showOldPass ? "Hide password" : "Show password"}
                 >
@@ -529,15 +575,15 @@ export default function AdminProfile() {
 
               <label className="admin-field" style={{ position: "relative" }}>
                 <span>New Password</span>
-                <input 
-                  type={showNewPass ? "text" : "password"} 
-                  value={changePassForm.newPassword} 
-                  onChange={(e) => setChangePassForm({ ...changePassForm, newPassword: e.target.value })} 
-                  required 
+                <input
+                  type={showNewPass ? "text" : "password"}
+                  value={changePassForm.newPassword}
+                  onChange={(e) => setChangePassForm({ ...changePassForm, newPassword: e.target.value })}
+                  required
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowNewPass(!showNewPass)} 
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
                   style={{ position: "absolute", right: "12px", bottom: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }}
                   aria-label={showNewPass ? "Hide password" : "Show password"}
                 >
@@ -547,15 +593,15 @@ export default function AdminProfile() {
 
               <label className="admin-field" style={{ position: "relative" }}>
                 <span>Confirm New Password</span>
-                <input 
-                  type={showConfirmPass ? "text" : "password"} 
-                  value={changePassForm.confirmPassword} 
-                  onChange={(e) => setChangePassForm({ ...changePassForm, confirmPassword: e.target.value })} 
-                  required 
+                <input
+                  type={showConfirmPass ? "text" : "password"}
+                  value={changePassForm.confirmPassword}
+                  onChange={(e) => setChangePassForm({ ...changePassForm, confirmPassword: e.target.value })}
+                  required
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowConfirmPass(!showConfirmPass)} 
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPass(!showConfirmPass)}
                   style={{ position: "absolute", right: "12px", bottom: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }}
                   aria-label={showConfirmPass ? "Hide password" : "Show password"}
                 >
@@ -588,23 +634,23 @@ export default function AdminProfile() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <label className="admin-field">
                 <span>Full Name</span>
-                <input 
-                  type="text" 
-                  value={addUserForm.name} 
-                  onChange={(e) => setAddUserForm({ ...addUserForm, name: e.target.value })} 
+                <input
+                  type="text"
+                  value={addUserForm.name}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, name: e.target.value })}
                   placeholder="e.g. John Doe"
-                  required 
+                  required
                 />
               </label>
 
               <label className="admin-field">
                 <span>Email Address</span>
-                <input 
-                  type="email" 
-                  value={addUserForm.email} 
-                  onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })} 
+                <input
+                  type="email"
+                  value={addUserForm.email}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
                   placeholder="e.g. john@example.com"
-                  required 
+                  required
                 />
               </label>
             </div>
@@ -633,8 +679,8 @@ export default function AdminProfile() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <label className="admin-field">
                 <span>Select User</span>
-                <select 
-                  value={createPassForm.userId} 
+                <select
+                  value={createPassForm.userId}
                   onChange={(e) => setCreatePassForm({ ...createPassForm, userId: e.target.value })}
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #dbe7f4" }}
                   required
@@ -651,15 +697,15 @@ export default function AdminProfile() {
 
               <label className="admin-field" style={{ position: "relative" }}>
                 <span>Password</span>
-                <input 
-                  type={showCreateNewPass ? "text" : "password"} 
-                  value={createPassForm.newPassword} 
-                  onChange={(e) => setCreatePassForm({ ...createPassForm, newPassword: e.target.value })} 
-                  required 
+                <input
+                  type={showCreateNewPass ? "text" : "password"}
+                  value={createPassForm.newPassword}
+                  onChange={(e) => setCreatePassForm({ ...createPassForm, newPassword: e.target.value })}
+                  required
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowCreateNewPass(!showCreateNewPass)} 
+                <button
+                  type="button"
+                  onClick={() => setShowCreateNewPass(!showCreateNewPass)}
                   style={{ position: "absolute", right: "12px", bottom: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }}
                   aria-label={showCreateNewPass ? "Hide password" : "Show password"}
                 >
@@ -669,15 +715,15 @@ export default function AdminProfile() {
 
               <label className="admin-field" style={{ position: "relative" }}>
                 <span>Confirm Password</span>
-                <input 
-                  type={showCreateConfirmPass ? "text" : "password"} 
-                  value={createPassForm.confirmPassword} 
-                  onChange={(e) => setCreatePassForm({ ...createPassForm, confirmPassword: e.target.value })} 
-                  required 
+                <input
+                  type={showCreateConfirmPass ? "text" : "password"}
+                  value={createPassForm.confirmPassword}
+                  onChange={(e) => setCreatePassForm({ ...createPassForm, confirmPassword: e.target.value })}
+                  required
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowCreateConfirmPass(!showCreateConfirmPass)} 
+                <button
+                  type="button"
+                  onClick={() => setShowCreateConfirmPass(!showCreateConfirmPass)}
                   style={{ position: "absolute", right: "12px", bottom: "8px", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem" }}
                   aria-label={showCreateConfirmPass ? "Hide password" : "Show password"}
                 >
@@ -729,9 +775,9 @@ export default function AdminProfile() {
                   Viewing activity history for <strong>{selectedLogUser.name}</strong> ({selectedLogUser.email})
                 </p>
               </div>
-              <button 
-                className="admin-secondary-btn" 
-                type="button" 
+              <button
+                className="admin-secondary-btn"
+                type="button"
                 onClick={() => setSelectedLogUser(null)}
                 style={{ padding: "4px 12px" }}
               >
@@ -740,39 +786,39 @@ export default function AdminProfile() {
             </div>
 
             {/* Toolbar for Search & Filters & Export */}
-            <div style={{ 
-              display: "flex", 
-              flexWrap: "wrap", 
-              gap: "12px", 
-              alignItems: "flex-end", 
-              backgroundColor: "#f5f8fb", 
-              padding: "16px", 
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "12px",
+              alignItems: "flex-end",
+              backgroundColor: "#f5f8fb",
+              padding: "16px",
               borderRadius: "8px",
               marginBottom: "16px"
             }}>
               <label className="admin-field" style={{ flex: "1 1 200px" }}>
                 <span>Search Description/Action/Module</span>
-                <input 
-                  type="text" 
-                  value={activitySearch} 
-                  onChange={(e) => setActivitySearch(e.target.value)} 
-                  placeholder="Type to search..." 
+                <input
+                  type="text"
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  placeholder="Type to search..."
                 />
               </label>
 
               <label className="admin-field" style={{ width: "150px" }}>
                 <span>Filter by Date</span>
-                <input 
-                  type="date" 
-                  value={activityDateFilter} 
-                  onChange={(e) => setActivityDateFilter(e.target.value)} 
+                <input
+                  type="date"
+                  value={activityDateFilter}
+                  onChange={(e) => setActivityDateFilter(e.target.value)}
                 />
               </label>
 
               <label className="admin-field" style={{ width: "180px" }}>
                 <span>Filter by Module</span>
-                <select 
-                  value={activityModuleFilter} 
+                <select
+                  value={activityModuleFilter}
                   onChange={(e) => setActivityModuleFilter(e.target.value)}
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #dbe7f4" }}
                 >
@@ -785,8 +831,8 @@ export default function AdminProfile() {
 
               <label className="admin-field" style={{ width: "180px" }}>
                 <span>Filter by Action</span>
-                <select 
-                  value={activityActionFilter} 
+                <select
+                  value={activityActionFilter}
                   onChange={(e) => setActivityActionFilter(e.target.value)}
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #dbe7f4" }}
                 >
@@ -798,17 +844,17 @@ export default function AdminProfile() {
               </label>
 
               <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}>
-                <button 
-                  className="admin-primary-btn" 
-                  type="button" 
+                <button
+                  className="admin-primary-btn"
+                  type="button"
                   disabled={!!exportBusy || activities.length === 0}
                   onClick={() => handleExportActivity("pdf")}
                 >
                   {exportBusy === "pdf" ? "Exporting..." : "Export PDF"}
                 </button>
-                <button 
-                  className="admin-secondary-btn" 
-                  type="button" 
+                <button
+                  className="admin-secondary-btn"
+                  type="button"
                   disabled={!!exportBusy || activities.length === 0}
                   onClick={() => handleExportActivity("excel")}
                 >
@@ -846,7 +892,7 @@ export default function AdminProfile() {
                     <tbody>
                       {filteredActivities.map((log, index) => {
                         const { date, time } = formatLogTimestamp(log.timestamp);
-                        
+
                         // Status badge colors
                         let statusColor = "#17633f";
                         let statusBg = "#d7f0e1";
@@ -867,7 +913,7 @@ export default function AdminProfile() {
                             <td>{log.action}</td>
                             <td>{log.description}</td>
                             <td>
-                              <span style={{ 
+                              <span style={{
                                 color: statusColor,
                                 background: statusBg,
                                 padding: "2px 8px",
@@ -887,6 +933,69 @@ export default function AdminProfile() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {isForgotOpen && (
+        <div className="administration-dialog-backdrop" role="presentation">
+          <form className="administration-dialog" onSubmit={handleForgotSubmit} style={{ maxWidth: "420px" }}>
+            <h2>Forgot Password</h2>
+            <p>Answer your recovery questions to reset your password.</p>
+
+            {forgotError && <p className="admin-error" style={{ marginBottom: "12px" }}>{forgotError}</p>}
+            {forgotSuccess && <p style={{ color: "green", fontWeight: "600", marginBottom: "12px" }}>{forgotSuccess}</p>}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <label className="admin-field">
+                <span>Birth Place</span>
+                <input
+                  type="text"
+                  value={forgotForm.birthPlace}
+                  onChange={(e) => setForgotForm({ ...forgotForm, birthPlace: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label className="admin-field">
+                <span>Birth Date</span>
+                <input
+                  type="date"
+                  value={forgotForm.birthDate}
+                  onChange={(e) => setForgotForm({ ...forgotForm, birthDate: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label className="admin-field">
+                <span>New Password</span>
+                <input
+                  type="password"
+                  value={forgotForm.newPassword}
+                  onChange={(e) => setForgotForm({ ...forgotForm, newPassword: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label className="admin-field">
+                <span>Confirm Password</span>
+                <input
+                  type="password"
+                  value={forgotForm.confirmPassword}
+                  onChange={(e) => setForgotForm({ ...forgotForm, confirmPassword: e.target.value })}
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="administration-dialog__actions" style={{ marginTop: "20px" }}>
+              <button className="admin-secondary-btn" type="button" onClick={() => { setIsForgotOpen(false); setForgotError(""); setForgotSuccess(""); }}>
+                Cancel
+              </button>
+              <button className="admin-primary-btn" type="submit" disabled={forgotBusy}>
+                {forgotBusy ? "Resetting..." : "Reset Password"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </main>
