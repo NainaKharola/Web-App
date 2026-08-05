@@ -27,6 +27,7 @@ const initialFilters = {
   status: "",
   registrationDate: "",
   division: "",
+  internshipType: "",
 };
 const CERTIFICATE_DOWNLOADS_KEY = "drdoCertificateDownloadedStudentIds";
 const ISM_DOWNLOADS_KEY = "drdoIsmDownloadedStudentIds";
@@ -96,10 +97,11 @@ function AdminDashboard() {
   const [allStudents, setAllStudents] = useState([]);
   const [summary, setSummary] = useState({});
   const [search, setSearch] = useState("");
+  const [internshipTypeFilter, setInternshipTypeFilter] = useState("all");
   const [filters, setFilters] = useState(() => {
     const path = window.location.pathname;
     if (path.startsWith("/admin/approved-students")) {
-      return { ...initialFilters, status: "Approved" };
+      return { ...initialFilters, status: "Approved", internshipType: "Paid" };
     }
     return initialFilters;
   });
@@ -488,6 +490,25 @@ function AdminDashboard() {
       .filter((student) => {
         const term = documentSearch.trim().toLowerCase();
         return !term || [student.name, student.referenceId, student.collegeName, student.branch, student.course].some((value) => String(value || "").toLowerCase().includes(term));
+      })
+      .sort((a, b) => {
+        if (documentModal === "certificate") {
+          const dateA = a.trainingManagement?.completionDate ? new Date(a.trainingManagement.completionDate).getTime() : 0;
+          const dateB = b.trainingManagement?.completionDate ? new Date(b.trainingManagement.completionDate).getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA;
+          const timeA = a.trainingManagement?.updatedAt ? new Date(a.trainingManagement.updatedAt).getTime() : 0;
+          const timeB = b.trainingManagement?.updatedAt ? new Date(b.trainingManagement.updatedAt).getTime() : 0;
+          return timeB - timeA;
+        }
+        if (documentModal === "ism") {
+          const dateA = a.trainingManagement?.joinedDate ? new Date(a.trainingManagement.joinedDate).getTime() : 0;
+          const dateB = b.trainingManagement?.joinedDate ? new Date(b.trainingManagement.joinedDate).getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA;
+          const timeA = a.trainingManagement?.updatedAt ? new Date(a.trainingManagement.updatedAt).getTime() : 0;
+          const timeB = b.trainingManagement?.updatedAt ? new Date(b.trainingManagement.updatedAt).getTime() : 0;
+          return timeB - timeA;
+        }
+        return 0;
       });
   }, [allStudents, documentSearch, documentModal]);
 
@@ -664,8 +685,16 @@ function AdminDashboard() {
     return [...new Set(allStudents.map(s => s.year).filter(Boolean))].sort();
   }, [allStudents]);
 
+  const internshipStudents = useMemo(() => {
+    if (internshipTypeFilter === "all") return allStudents;
+    if (internshipTypeFilter === "paid") {
+      return allStudents.filter(s => s.internshipType === "Paid");
+    }
+    return allStudents.filter(s => s.internshipType === "Unpaid" || !s.internshipType);
+  }, [allStudents, internshipTypeFilter]);
+
   const filteredStudents = useMemo(() => {
-    return allStudents.filter((student) => {
+    return internshipStudents.filter((student) => {
       if (search.trim()) {
         const term = search.toLowerCase();
         const matchesSearch =
@@ -678,7 +707,7 @@ function AdminDashboard() {
       }
       return true;
     });
-  }, [allStudents, search]);
+  }, [internshipStudents, search]);
 
   const sortedStudents = useMemo(() => {
     const list = [...filteredStudents];
@@ -859,19 +888,19 @@ function AdminDashboard() {
           <section className="admin-summary-grid" style={{ marginBottom: "20px" }}>
             <div className="admin-summary-card">
               <span>Total Students</span>
-              <strong>{allStudents.length}</strong>
+              <strong>{internshipStudents.length}</strong>
             </div>
             <div className="admin-summary-card">
               <span>Approved Students</span>
-              <strong>{allStudents.filter(s => s.status === "Approved").length}</strong>
+              <strong>{internshipStudents.filter(s => s.status === "Approved").length}</strong>
             </div>
             <div className="admin-summary-card">
               <span>Pending Students</span>
-              <strong>{allStudents.filter(s => s.status === "Pending" || !s.status).length}</strong>
+              <strong>{internshipStudents.filter(s => s.status === "Pending" || !s.status).length}</strong>
             </div>
             <div className="admin-summary-card">
               <span>Rejected Students</span>
-              <strong>{allStudents.filter(s => s.status === "Rejected").length}</strong>
+              <strong>{internshipStudents.filter(s => s.status === "Rejected").length}</strong>
             </div>
           </section>
 
@@ -884,6 +913,15 @@ function AdminDashboard() {
               onChange={(e) => setSearch(e.target.value)}
               style={{ flex: "1 1 100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)" }}
             />
+            <select
+              value={internshipTypeFilter}
+              onChange={(e) => setInternshipTypeFilter(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)", background: "#fff", fontWeight: "600" }}
+            >
+              <option value="all">All Students</option>
+              <option value="paid">Paid Internship</option>
+              <option value="unpaid">Unpaid Internship</option>
+            </select>
             <button className="admin-secondary-btn" type="button" onClick={() => setManagementFieldsOpen(true)}>Select Fields</button>
             <button className="admin-danger-btn" type="button" onClick={toggleDeleteMode}>{deleteMode ? "Cancel Delete" : "Delete Entry"}</button>
             {deleteMode && (
@@ -895,7 +933,7 @@ function AdminDashboard() {
 
           {/* Counts */}
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", fontSize: "0.9rem", color: "var(--text-muted)" }}>
-            <span>Total Students : <strong>{allStudents.length}</strong></span>
+            <span>Total Students : <strong>{internshipStudents.length}</strong></span>
             <span>Showing : <strong>{sortedStudents.length}</strong></span>
           </div>
 
@@ -1057,7 +1095,7 @@ function AdminDashboard() {
       {/* VIEW 3: Approved Students View (Original application table) */}
       {currentView === "approved-students" && (
         <>
-          <DashboardCards summary={summary} />
+          <DashboardCards summary={{ approvedStudents: students.length }} />
 
           <section className="admin-panel" style={{ marginTop: "24px" }}>
             <div className="admin-panel__header">
@@ -1094,9 +1132,16 @@ function AdminDashboard() {
                 </>
               ) : (
                 <>
-                  <button className="admin-secondary-btn" type="button" onClick={toggleApprovedStudents}>
-                    {filters.status === "Approved" ? "All Students" : "Approved Students"}
-                  </button>
+                  <select
+                    value={filters.internshipType || "Paid"}
+                    onChange={(e) => {
+                      setFilters((prev) => ({ ...prev, internshipType: e.target.value }));
+                    }}
+                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)", background: "#fff", fontWeight: "600" }}
+                  >
+                    <option value="Paid">Paid Internship</option>
+                    <option value="Unpaid">Unpaid Internship</option>
+                  </select>
                   <button className="admin-secondary-btn" type="button" onClick={() => openDocumentModal("certificate")}>
                     Generate Certificate
                   </button>
@@ -1175,7 +1220,7 @@ function AdminDashboard() {
                       : (ismDownloadedIds.includes(student._id) || student.gyapanGenerated);
 
                     const rowStyle = isDownloaded
-                      ? { backgroundColor: isCertificate ? "#a7f3d0" : "#bae6fd", color: isCertificate ? "#064e3b" : "#0c4a6e", fontWeight: "600" }
+                      ? { backgroundColor: "#a7f3d0", color: "#064e3b", fontWeight: "600" }
                       : {};
 
                     return <tr key={student._id} style={rowStyle}><td><input type="checkbox" checked={documentSelectedIds.includes(student._id)} onChange={(event) => toggleDocumentStudent(student._id, event.target.checked)} aria-label={`Select ${student.name}`} /></td><td>{student.name}</td><td>{student.referenceId || "-"}</td><td>{student.trainingManagement?.division || "-"}</td><td>{student.trainingManagement?.collegeName || student.collegeName || "-"}</td><td>{student.trainingManagement?.branch || student.branch || "-"}</td><td>{student.trainingManagement?.courseName || student.course || "-"}</td></tr>;

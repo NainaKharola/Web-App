@@ -40,7 +40,7 @@ function Reports() {
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filters, setFilters] = useState({ fromDate: "", toDate: "", status: "", division: "" });
+  const [filters, setFilters] = useState({ fromDate: "", toDate: "", status: "", division: "", internshipType: "Paid" });
   const [selectedFields, setSelectedFields] = useState([]);
   const [fieldsOpen, setFieldsOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(null);
@@ -65,6 +65,10 @@ function Reports() {
       const training = student.trainingManagement || {};
       const statusMatch = filters.status === "Approved" ? student.status === "Approved" : filters.status === "Joined" ? training.joined === "Yes" : training.completed === "Yes";
       if (!statusMatch || (filters.division && training.division !== filters.division)) return false;
+      if (filters.internshipType) {
+        const type = student.internshipType === "Paid" ? "Paid" : "Unpaid";
+        if (type !== filters.internshipType) return false;
+      }
       const relevantDate = filters.status === "Approved" ? student.approvedDate : filters.status === "Joined" ? training.joinedDate : training.completionDate;
       const normalizedDate = dateValue(relevantDate);
       return (!filters.fromDate || (normalizedDate && normalizedDate >= filters.fromDate)) && (!filters.toDate || (normalizedDate && normalizedDate <= filters.toDate));
@@ -491,7 +495,17 @@ function Reports() {
         <label className="admin-field"><span>Division</span><select value={filters.division} onChange={(event) => updateFilter("division", event.target.value)}><option value="">All Divisions</option>{divisions.map((division) => <option key={division} value={division}>{division}</option>)}</select></label>
         <label className="admin-field"><span>Number of Students</span><input readOnly value={sortedRows.length} aria-label="Number of Students" /></label>
       </div>
-      <div className="admin-actions-row"><button className="admin-secondary-btn" type="button" onClick={() => setFieldsOpen(true)}>Select Fields</button></div>
+      <div className="admin-actions-row" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <select
+          value={filters.internshipType || "Paid"}
+          onChange={(event) => updateFilter("internshipType", event.target.value)}
+          style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)", background: "#fff", fontWeight: "600" }}
+        >
+          <option value="Paid">Paid Internship</option>
+          <option value="Unpaid">Unpaid Internship</option>
+        </select>
+        <button className="admin-secondary-btn" type="button" onClick={() => setFieldsOpen(true)}>Select Fields</button>
+      </div>
       {error && <p className="admin-error">{error}</p>}
       {loading ? <div className="admin-loading">Loading report data...</div> : <div className="admin-table-wrap"><table className="admin-table reports-table"><thead><tr>{visibleColumns.map(([key, label]) => <th key={key} style={{ cursor: "pointer", userSelect: "none" }} onClick={() => handleHeaderClick(key)}>{label}{renderSortArrow(key)}</th>)}</tr></thead><tbody>{sortedRows.map((student, index) => <tr key={student._id}>{visibleColumns.map(([key]) => <td key={key}>{reportValue(student, key, index)}</td>)}</tr>)}</tbody></table>{!sortedRows.length && <div className="admin-empty-state">{filters.status ? "No students match the selected report filters." : "Select a status to view the report."}</div>}</div>}
       <div className="reports-export-actions"><button className="admin-primary-btn" type="button" disabled={!sortedRows.length} onClick={() => setExportOpen("download")}>Download</button><button className="admin-secondary-btn" type="button" disabled={!sortedRows.length} onClick={() => setExportOpen("print")}>Print</button></div>

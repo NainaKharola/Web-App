@@ -36,7 +36,7 @@ export default function DivisionBranchAnalytics({ administration, students, load
       {mode === "division" && <p className="analytics-caption">Chart: current student distribution by branch for {activeDivision || "the selected division"}.</p>}
     </>}
     <div className="analytics-actions" style={{ marginTop: "24px", display: "flex", justifyContent: "flex-end" }}>
-      <StudentDivisionRecommendation />
+      <StudentDivisionRecommendation students={students} administration={administration} />
     </div>
   </section>;
 }

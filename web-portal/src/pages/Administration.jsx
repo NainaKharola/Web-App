@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
   addDivision,
   fetchAdministration,
@@ -27,6 +27,22 @@ function Administration() {
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [studentsError, setStudentsError] = useState("");
   const [analyticsMode, setAnalyticsMode] = useState("branch");
+  const [studentTypeFilter, setStudentTypeFilter] = useState("all");
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((student) => {
+      const type = (student.internshipType || "Unpaid").toLowerCase();
+      if (studentTypeFilter === "paid") return type === "paid";
+      if (studentTypeFilter === "unpaid") return type === "unpaid";
+      return true;
+    });
+  }, [students, studentTypeFilter]);
+
+  const totalStudents = useMemo(() => filteredStudents.length, [filteredStudents]);
+  const paidStudents = useMemo(() => filteredStudents.filter(s => (s.internshipType || "").toLowerCase() === "paid").length, [filteredStudents]);
+  const unpaidStudents = useMemo(() => filteredStudents.filter(s => (s.internshipType || "Unpaid").toLowerCase() === "unpaid").length, [filteredStudents]);
+  const totalBranches = useMemo(() => new Set(filteredStudents.map(s => s.branch).filter(Boolean)).size, [filteredStudents]);
+  const totalDivisions = useMemo(() => administration?.divisions?.length || 0, [administration]);
 
   const applyAdministration = useCallback((next, successMessage = "") => {
     setAdministration(next);
@@ -35,6 +51,7 @@ function Administration() {
     setMessage(successMessage);
     window.dispatchEvent(new CustomEvent("administration-updated", { detail: next }));
   }, []);
+
 
   useEffect(() => {
     let active = true;
@@ -195,12 +212,62 @@ function Administration() {
               <button className="admin-primary-btn" disabled={saving} type="submit">Update</button>
             </form>
             <div className="future-ready-note"><span aria-hidden="true">✦</span><div><strong>Future-ready configuration</strong><p>Individual division seat limits can be added here without changing the saved configuration structure.</p></div></div>
+            <div style={{ marginTop: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", borderTop: "1px solid #e2e8f0", paddingTop: "20px" }}>
+              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+                <span style={{ display: "block", fontSize: "0.85rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Paid Students</span>
+                <strong style={{ display: "block", fontSize: "1.75rem", color: "var(--primary)", marginTop: "4px" }}>
+                  {students.filter(s => s.internshipType === "Paid").length}
+                </strong>
+              </div>
+              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+                <span style={{ display: "block", fontSize: "0.85rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Unpaid Students</span>
+                <strong style={{ display: "block", fontSize: "1.75rem", color: "var(--primary)", marginTop: "4px" }}>
+                  {students.filter(s => s.internshipType === "Unpaid" || !s.internshipType).length}
+                </strong>
+              </div>
+            </div>
           </section>
           </div>
 
           <DivisionBranchVacancyConfiguration key={JSON.stringify(administration.divisionConfigurations)} administration={administration} onSaved={saveDivisionConfiguration} onError={(requestError) => { setMessage(""); setError(requestError); }} />
-          <DivisionBranchAnalytics administration={administration} students={students} loading={studentsLoading} error={studentsError} onModeChange={setAnalyticsMode} />
-          <DivisionStudentDistribution administration={administration} students={students} loading={studentsLoading} error={studentsError} />
+
+          {/* Student Type Filter & Summary Cards */}
+          <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "20px", marginTop: "24px", width: "100%" }}>
+            <div className="admin-field" style={{ maxWidth: "260px" }}>
+              <span>Student Type</span>
+              <select value={studentTypeFilter} onChange={(e) => setStudentTypeFilter(e.target.value)}>
+                <option value="all">All Students</option>
+                <option value="paid">Paid Internship</option>
+                <option value="unpaid">Unpaid Internship</option>
+              </select>
+            </div>
+            
+            <div className="admin-summary-grid" style={{ width: "100%", margin: "0" }}>
+              <div className="admin-summary-card">
+                <span>Total Students</span>
+                <strong>{totalStudents}</strong>
+              </div>
+              <div className="admin-summary-card">
+                <span>Paid Students</span>
+                <strong>{paidStudents}</strong>
+              </div>
+              <div className="admin-summary-card">
+                <span>Unpaid Students</span>
+                <strong>{unpaidStudents}</strong>
+              </div>
+              <div className="admin-summary-card">
+                <span>Total Branches</span>
+                <strong>{totalBranches}</strong>
+              </div>
+              <div className="admin-summary-card">
+                <span>Total Divisions</span>
+                <strong>{totalDivisions}</strong>
+              </div>
+            </div>
+          </div>
+
+          <DivisionBranchAnalytics administration={administration} students={filteredStudents} loading={studentsLoading} error={studentsError} onModeChange={setAnalyticsMode} />
+          <DivisionStudentDistribution administration={administration} students={filteredStudents} loading={studentsLoading} error={studentsError} />
         </div>
       )}
 

@@ -25,12 +25,10 @@ function formatDate(value) {
 }
 
 function certificateFileName(student) {
-  const safeName = String(student.name || "Student")
-    .trim()
-    .replace(/[^a-z0-9]+/gi, "-")
-    .replace(/^-|-$/g, "");
+  const refId = student.referenceId || "UNKNOWN";
+  const nameNoSpaces = (student.name || "Student").replace(/\s+/g, "");
 
-  return `${safeName || "Student"}_Certificate.pdf`;
+  return `Certificate_${refId}_${nameNoSpaces}.pdf`;
 }
 
 function generateCertificateHtml(student) {

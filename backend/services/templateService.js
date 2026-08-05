@@ -11,6 +11,7 @@ const templatePath = path.join(
 
 const logoPath = path.join(__dirname, "..", "templates", "drdo_logo.png");
 const bannerPath = path.join(__dirname, "..", "templates", "ssa_banner.png");
+const swachhPath = path.join(__dirname, "..", "templates", "swachh_logo.png");
 
 // Convert images to Base64 so Puppeteer always renders them
 const logoBase64 = fs.existsSync(logoPath)
@@ -19,6 +20,10 @@ const logoBase64 = fs.existsSync(logoPath)
 
 const bannerBase64 = fs.existsSync(bannerPath)
   ? `data:image/png;base64,${fs.readFileSync(bannerPath).toString("base64")}`
+  : "";
+
+const swachhBase64 = fs.existsSync(swachhPath)
+  ? `data:image/png;base64,${fs.readFileSync(swachhPath).toString("base64")}`
   : "";
 
 function escapeHtml(value) {
@@ -62,6 +67,7 @@ function buildTemplateData(student, overrides = {}) {
   return {
     logoUrl: overrides.logoUrl || logoBase64,
     bannerUrl: bannerBase64,
+    swachhUrl: overrides.swachhUrl || swachhBase64,
 
     studentName: overrides.studentName || student.name || "",
 
@@ -118,7 +124,7 @@ async function generateOfferLetterHtml(student, overrides = {}) {
 
   return template.replace(/{{(\w+)}}/g, (match, key) => {
     // Don't escape Base64 image URLs
-    if (key === "logoUrl" || key === "bannerUrl") {
+    if (key === "logoUrl" || key === "bannerUrl" || key === "swachhUrl") {
       return data[key];
     }
 

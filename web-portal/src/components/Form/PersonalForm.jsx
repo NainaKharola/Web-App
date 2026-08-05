@@ -32,6 +32,30 @@ function PersonalForm({ form, errors, onChange }) {
           error={errors.aadhaarNumber}
           required
         />
+        {window.location.pathname.startsWith("/admin") && (
+          <div className="text-input" style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>Internship Type <span style={{ color: "red" }}>*</span></span>
+              <select
+                name="internshipType"
+                value={form.internshipType || "Unpaid"}
+                onChange={onChange}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  backgroundColor: "#fff",
+                  fontWeight: "600",
+                  height: "38px"
+                }}
+              >
+                <option value="Unpaid">Unpaid Internship</option>
+                <option value="Paid">Paid Internship</option>
+              </select>
+            </label>
+          </div>
+        )}
       </div>
     </section>
   );

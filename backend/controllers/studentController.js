@@ -245,6 +245,7 @@ async function createStudent(req, res) {
     const student = new Student({
       referenceId,
       serialNumber,
+      internshipType: req.body.internshipType || "Unpaid",
       name: req.body.name,
       course: req.body.course,
       branch: req.body.branch,

@@ -64,8 +64,11 @@ function App() {
         <Suspense fallback={<div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontFamily: "sans-serif" }}>Loading page...</div>}>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/paid-internship" element={<Landing isPaid={true} />} />
             <Route path="/student" element={<Home />} />
+            <Route path="/paid-internship/register" element={<Home />} />
             <Route path="/student/login" element={<StudentLogin />} />
+            <Route path="/paid-internship/login" element={<StudentLogin />} />
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/student/success" element={<RegistrationSuccessRoute />} />
 

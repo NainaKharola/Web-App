@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const Admin = require("../models/Admin");
 const { logActivity } = require("../utils/activityLogger");
 const ActivityLog = require("../models/ActivityLog");
@@ -597,6 +598,157 @@ async function exportUserActivityLog(req, res) {
   }
 }
 
+async function getSecurityQuestions(req, res) {
+  try {
+    const admin = await Admin.findById(req.admin._id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found." });
+    }
+    const questions = (admin.securityQuestions || []).map(q => ({
+      id: q.id,
+      question: q.question,
+      answer: "••••••••"
+    }));
+    return res.status(200).json({ success: true, questions });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+async function saveSecurityQuestion(req, res) {
+  try {
+    const { id, question, answer } = req.body;
+    if (!question) {
+      return res.status(400).json({ success: false, message: "Question is required." });
+    }
+    const admin = await Admin.findById(req.admin._id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found." });
+    }
+    
+    admin.securityQuestions ||= [];
+    
+    const bcrypt = require("bcryptjs");
+    let hashedAnswer = "";
+    if (answer && answer !== "••••••••") {
+      hashedAnswer = await bcrypt.hash(answer.toLowerCase().trim(), 12);
+    }
+    
+    if (id) {
+      const existing = admin.securityQuestions.find(q => q.id === id);
+      if (!existing) {
+        return res.status(404).json({ success: false, message: "Question not found." });
+      }
+      existing.question = question;
+      if (hashedAnswer) {
+        existing.answer = hashedAnswer;
+      }
+    } else {
+      if (!answer) {
+        return res.status(400).json({ success: false, message: "Answer is required." });
+      }
+      admin.securityQuestions.push({
+        id: crypto.randomBytes(8).toString("hex"),
+        question,
+        answer: hashedAnswer
+      });
+    }
+    
+    await admin.save();
+    return res.status(200).json({ success: true, message: "Security question saved successfully." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+async function deleteSecurityQuestion(req, res) {
+  try {
+    const { id } = req.params;
+    const admin = await Admin.findById(req.admin._id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found." });
+    }
+    admin.securityQuestions = (admin.securityQuestions || []).filter(q => q.id !== id);
+    await admin.save();
+    return res.status(200).json({ success: true, message: "Security question deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+async function getForgotPasswordQuestions(req, res) {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found." });
+    }
+    const questions = admin.securityQuestions || [];
+    if (questions.length < 2) {
+      return res.status(400).json({ success: false, message: "Admin does not have enough security questions set up." });
+    }
+    
+    const shuffled = [...questions].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 2).map(q => ({ id: q.id, question: q.question }));
+    
+    return res.status(200).json({ success: true, questions: selected });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+async function resetPasswordQuestions(req, res) {
+  try {
+    const { email, answers, newPassword, confirmPassword } = req.body;
+    if (!email || !answers || answers.length !== 2 || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: "All fields are required." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: "Password must be at least 8 characters long." });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: "Passwords do not match." });
+    }
+    
+    const admin = await Admin.findOne({ email }).select("+password");
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found." });
+    }
+    
+    const questions = admin.securityQuestions || [];
+    const bcrypt = require("bcryptjs");
+    
+    for (const ans of answers) {
+      const stored = questions.find(q => q.id === ans.id);
+      if (!stored) {
+        return res.status(400).json({ success: false, message: "Invalid question ID." });
+      }
+      const match = await bcrypt.compare(ans.answer.toLowerCase().trim(), stored.answer);
+      if (!match) {
+        return res.status(400).json({ success: false, message: "Verification failed. Incorrect answers." });
+      }
+    }
+    
+    admin.password = newPassword;
+    await admin.save();
+    
+    await logActivity({
+      req: { ...req, admin },
+      module: "Profile",
+      action: "Reset Password via Custom Security Questions",
+      description: `Reset password via custom security questions for email ${email}.`,
+      status: "Success",
+    });
+    
+    return res.status(200).json({ success: true, message: "Password reset successfully." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
   registerAdmin,
   loginAdmin,
@@ -609,5 +761,10 @@ module.exports = {
   deleteSubUser,
   createSubUserPassword,
   getUserActivityLog,
-  exportUserActivityLog
+  exportUserActivityLog,
+  getSecurityQuestions,
+  saveSecurityQuestion,
+  deleteSecurityQuestion,
+  getForgotPasswordQuestions,
+  resetPasswordQuestions
 };

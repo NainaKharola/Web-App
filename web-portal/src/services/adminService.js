@@ -353,3 +353,41 @@ export async function resetPasswordRecovery(payload) {
   });
   return parseResponse(response);
 }
+
+export async function getSecurityQuestions() {
+  const response = await fetch(`${API_URL}/auth/security-questions`, {
+    headers: authHeaders(),
+  });
+  return parseResponse(response);
+}
+
+export async function saveSecurityQuestion(payload) {
+  const response = await fetch(`${API_URL}/auth/security-questions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response);
+}
+
+export async function deleteSecurityQuestion(id) {
+  const response = await fetch(`${API_URL}/auth/security-questions/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  return parseResponse(response);
+}
+
+export async function getForgotPasswordQuestions(email) {
+  const response = await fetch(`${API_URL}/auth/forgot-password-questions?email=${encodeURIComponent(email)}`);
+  return parseResponse(response);
+}
+
+export async function resetPasswordQuestions(payload) {
+  const response = await fetch(`${API_URL}/auth/reset-password-questions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response);
+}

@@ -2,10 +2,19 @@ import { useState } from "react";
 import { fetchAdministration, fetchAdminStudents } from "../../services/adminService";
 import { formatUtilization, getBranchDivisionRecommendations, getGeneralDivisionRecommendations } from "../../utils/administrationAnalytics";
 
-export default function StudentDivisionRecommendation({ student }) {
+export default function StudentDivisionRecommendation({ student, students: propStudents, administration: propAdministration }) {
   const [open, setOpen] = useState(false), [loading, setLoading] = useState(false), [error, setError] = useState(""), [recommendations, setRecommendations] = useState([]);
   const showRecommendations = async () => {
-    setOpen(true); setLoading(true); setError("");
+    setOpen(true);
+    if (propStudents && propAdministration) {
+      if (student) {
+        setRecommendations(getBranchDivisionRecommendations(propAdministration.divisions, propAdministration.divisionConfigurations, propStudents, student.branch));
+      } else {
+        setRecommendations(getGeneralDivisionRecommendations(propAdministration.divisions, propAdministration.divisionConfigurations, propStudents));
+      }
+      return;
+    }
+    setLoading(true); setError("");
     try {
       const [{ administration }, { students }] = await Promise.all([fetchAdministration(), fetchAdminStudents({ sortBy: "submittedAt", sortOrder: "desc" })]);
       if (student) {

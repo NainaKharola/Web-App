@@ -9,5 +9,6 @@ module.exports = createLocalModel("students.json", {
   gyapanBufferRemoved: false,
   aadhaarCard: null,
   collegeAddress: "",
+  internshipType: "Unpaid",
 });
 

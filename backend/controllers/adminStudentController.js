@@ -58,6 +58,19 @@ function buildStudentFilter(query) {
   const filter = {};
   const conditions = [];
 
+  if (query.internshipType) {
+    if (query.internshipType === "Unpaid") {
+      conditions.push({
+        $or: [
+          { internshipType: "Unpaid" },
+          { internshipType: { $exists: false } }
+        ]
+      });
+    } else {
+      filter.internshipType = query.internshipType;
+    }
+  }
+
   if (query.search) {
     const expression = { $regex: query.search, $options: "i" };
     conditions.push({
@@ -163,7 +176,7 @@ async function getStudents(req, res) {
     const filter = buildStudentFilter(req.query);
     const sort = buildSort(req.query.sortBy, req.query.sortOrder);
     const projection =
-      "_id referenceId name course collegeName location email phone branch year cgpa submittedAt status recommendedBy trainingManagement offerLetterStatus approvedDate certificateGenerated gyapanGenerated";
+      "_id referenceId name course collegeName location email phone branch year cgpa submittedAt status recommendedBy trainingManagement offerLetterStatus approvedDate certificateGenerated gyapanGenerated internshipType";
 
     const [
       students,

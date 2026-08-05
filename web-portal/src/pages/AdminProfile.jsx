@@ -8,7 +8,9 @@ import {
   createSubUserPassword,
   fetchUserActivityLog,
   downloadUserActivityExport,
-  resetPasswordRecovery
+  getSecurityQuestions,
+  saveSecurityQuestion,
+  deleteSecurityQuestion,
 } from "../services/adminService";
 import "../styles/admin.css";
 
@@ -48,12 +50,12 @@ export default function AdminProfile() {
   const [changePassLoading, setChangePassLoading] = useState(false);
   const [changePassError, setChangePassError] = useState("");
 
-  // Forgot Password States
-  const [isForgotOpen, setIsForgotOpen] = useState(false);
-  const [forgotForm, setForgotForm] = useState({ birthPlace: "", birthDate: "", newPassword: "", confirmPassword: "" });
-  const [forgotError, setForgotError] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState("");
-  const [forgotBusy, setForgotBusy] = useState(false);
+  // Custom Security Questions States
+  const [securityQuestions, setSecurityQuestions] = useState([]);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [questionForm, setQuestionForm] = useState({ id: "", question: "", answer: "" });
+  const [questionError, setQuestionError] = useState("");
 
   // Form States - Add User
   const [addUserForm, setAddUserForm] = useState({
@@ -243,38 +245,52 @@ export default function AdminProfile() {
     }
   };
 
-  const handleForgotSubmit = async (e) => {
-    e.preventDefault();
-    setForgotError("");
-    setForgotSuccess("");
-    if (!forgotForm.birthPlace || !forgotForm.birthDate || !forgotForm.newPassword || !forgotForm.confirmPassword) {
-      setForgotError("All fields are required.");
-      return;
-    }
-    if (forgotForm.newPassword.length < 8) {
-      setForgotError("Password must be at least 8 characters long.");
-      return;
-    }
-    if (forgotForm.newPassword !== forgotForm.confirmPassword) {
-      setForgotError("Passwords do not match.");
-      return;
-    }
-    setForgotBusy(true);
+  const loadSecurityQuestions = async () => {
+    setQuestionsLoading(true);
     try {
-      await resetPasswordRecovery({
-        email: admin.email,
-        ...forgotForm
-      });
-      setForgotSuccess("Password reset successfully.");
-      setForgotForm({ birthPlace: "", birthDate: "", newPassword: "", confirmPassword: "" });
-      setTimeout(() => {
-        setIsForgotOpen(false);
-        setForgotSuccess("");
-      }, 3000);
+      const res = await getSecurityQuestions();
+      setSecurityQuestions(res.questions || []);
     } catch (err) {
-      setForgotError(err.message || "Failed to reset password.");
+      setErrorMsg(err.message || "Failed to load security questions.");
     } finally {
-      setForgotBusy(false);
+      setQuestionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSecurityQuestions();
+  }, []);
+
+  const handleSaveQuestion = async (e) => {
+    e.preventDefault();
+    setQuestionError("");
+    if (!questionForm.question.trim()) {
+      setQuestionError("Question is required.");
+      return;
+    }
+    if (!questionForm.id && !questionForm.answer.trim()) {
+      setQuestionError("Answer is required.");
+      return;
+    }
+    try {
+      await saveSecurityQuestion(questionForm);
+      setSuccessMsg("Security question saved successfully.");
+      setIsQuestionModalOpen(false);
+      setQuestionForm({ id: "", question: "", answer: "" });
+      loadSecurityQuestions();
+    } catch (err) {
+      setQuestionError(err.message || "Failed to save security question.");
+    }
+  };
+
+  const handleDeleteQuestion = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this security question?")) return;
+    try {
+      await deleteSecurityQuestion(id);
+      setSuccessMsg("Security question deleted successfully.");
+      loadSecurityQuestions();
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to delete security question.");
     }
   };
 
@@ -418,10 +434,74 @@ export default function AdminProfile() {
             <button className="admin-primary-btn" type="button" onClick={() => setIsChangePassOpen(true)}>
               Change Password
             </button>
-            <button className="admin-secondary-btn" type="button" onClick={() => setIsForgotOpen(true)}>
-              Forgot Password
+          </div>
+        </section>
+
+        {/* Security Questions Card */}
+        <section className="administration-card">
+          <div className="administration-card__heading">
+            <span className="administration-icon" aria-hidden="true">🔒</span>
+            <div>
+              <h2>Security Questions</h2>
+              <p>Configure custom questions to recover your password offline.</p>
+            </div>
+          </div>
+          <div style={{ marginTop: "20px" }}>
+            <button className="admin-primary-btn" type="button" onClick={() => { setQuestionForm({ id: "", question: "", answer: "" }); setQuestionError(""); setIsQuestionModalOpen(true); }}>
+              + Add Question
             </button>
           </div>
+
+          {questionsLoading ? (
+            <div className="administration-loading" style={{ marginTop: "16px" }}><span className="administration-spinner" /> Loading questions...</div>
+          ) : (
+            <div className="recommendation-table-wrap" style={{ marginTop: "16px" }}>
+              <table className="recommendation-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ width: "10%" }}>S.No.</th>
+                    <th style={{ width: "50%" }}>Question</th>
+                    <th style={{ width: "20%" }}>Answer</th>
+                    <th style={{ width: "20%" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {securityQuestions.map((q, index) => (
+                    <tr key={q.id || index}>
+                      <td>{index + 1}</td>
+                      <td><strong>{q.question}</strong></td>
+                      <td><code style={{ fontSize: "1.1rem", letterSpacing: "2px" }}>{q.answer}</code></td>
+                      <td>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            className="admin-secondary-btn"
+                            style={{ padding: "4px 8px", fontSize: "0.85rem" }}
+                            type="button"
+                            onClick={() => { setQuestionForm({ id: q.id, question: q.question, answer: "••••••••" }); setQuestionError(""); setIsQuestionModalOpen(true); }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="admin-danger-btn"
+                            style={{ padding: "4px 8px", fontSize: "0.85rem" }}
+                            type="button"
+                            onClick={() => handleDeleteQuestion(q.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {securityQuestions.length === 0 && (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: "center", padding: "16px", color: "var(--text-muted)" }}>No security questions configured. Add at least two.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {isMainAdmin && (
@@ -936,63 +1016,44 @@ export default function AdminProfile() {
         </div>
       )}
 
-      {isForgotOpen && (
+      {isQuestionModalOpen && (
         <div className="administration-dialog-backdrop" role="presentation">
-          <form className="administration-dialog" onSubmit={handleForgotSubmit} style={{ maxWidth: "420px" }}>
-            <h2>Forgot Password</h2>
-            <p>Answer your recovery questions to reset your password.</p>
+          <form className="administration-dialog" onSubmit={handleSaveQuestion} style={{ maxWidth: "450px" }}>
+            <h2>{questionForm.id ? "Edit Security Question" : "Add Security Question"}</h2>
+            <p>Define a custom security question and answer.</p>
 
-            {forgotError && <p className="admin-error" style={{ marginBottom: "12px" }}>{forgotError}</p>}
-            {forgotSuccess && <p style={{ color: "green", fontWeight: "600", marginBottom: "12px" }}>{forgotSuccess}</p>}
+            {questionError && <p className="admin-error" style={{ marginBottom: "12px" }}>{questionError}</p>}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <label className="admin-field">
-                <span>Birth Place</span>
+                <span>Question</span>
                 <input
                   type="text"
-                  value={forgotForm.birthPlace}
-                  onChange={(e) => setForgotForm({ ...forgotForm, birthPlace: e.target.value })}
+                  placeholder="e.g. What was the name of your first pet?"
+                  value={questionForm.question}
+                  onChange={(e) => setQuestionForm({ ...questionForm, question: e.target.value })}
                   required
                 />
               </label>
 
               <label className="admin-field">
-                <span>Birth Date</span>
+                <span>Answer</span>
                 <input
-                  type="date"
-                  value={forgotForm.birthDate}
-                  onChange={(e) => setForgotForm({ ...forgotForm, birthDate: e.target.value })}
-                  required
-                />
-              </label>
-
-              <label className="admin-field">
-                <span>New Password</span>
-                <input
-                  type="password"
-                  value={forgotForm.newPassword}
-                  onChange={(e) => setForgotForm({ ...forgotForm, newPassword: e.target.value })}
-                  required
-                />
-              </label>
-
-              <label className="admin-field">
-                <span>Confirm Password</span>
-                <input
-                  type="password"
-                  value={forgotForm.confirmPassword}
-                  onChange={(e) => setForgotForm({ ...forgotForm, confirmPassword: e.target.value })}
-                  required
+                  type="text"
+                  placeholder={questionForm.id ? "Leave blank to keep existing answer" : "Enter answer"}
+                  value={questionForm.answer === "••••••••" ? "" : questionForm.answer}
+                  onChange={(e) => setQuestionForm({ ...questionForm, answer: e.target.value })}
+                  required={!questionForm.id}
                 />
               </label>
             </div>
 
-            <div className="administration-dialog__actions" style={{ marginTop: "20px" }}>
-              <button className="admin-secondary-btn" type="button" onClick={() => { setIsForgotOpen(false); setForgotError(""); setForgotSuccess(""); }}>
+            <div className="administration-dialog__actions" style={{ marginTop: "24px" }}>
+              <button className="admin-secondary-btn" type="button" onClick={() => { setIsQuestionModalOpen(false); setQuestionError(""); }}>
                 Cancel
               </button>
-              <button className="admin-primary-btn" type="submit" disabled={forgotBusy}>
-                {forgotBusy ? "Resetting..." : "Reset Password"}
+              <button className="admin-primary-btn" type="submit">
+                Save
               </button>
             </div>
           </form>

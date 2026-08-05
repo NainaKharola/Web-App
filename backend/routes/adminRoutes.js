@@ -11,7 +11,12 @@ const {
   deleteSubUser,
   createSubUserPassword,
   getUserActivityLog,
-  exportUserActivityLog
+  exportUserActivityLog,
+  getSecurityQuestions,
+  saveSecurityQuestion,
+  deleteSecurityQuestion,
+  getForgotPasswordQuestions,
+  resetPasswordQuestions,
 } = require("../controllers/adminAuthController");
 const {
   deleteStudents,
@@ -44,6 +49,11 @@ router.get("/profile", protectAdmin, requireMainAdmin, getAdminProfile);
 router.put("/change-password", protectAdmin, requireMainAdmin, changeAdminPassword);
 router.post("/auth/setup-recovery", protectAdmin, setupRecoveryInfo);
 router.post("/auth/reset-password-recovery", resetPasswordRecovery);
+router.get("/auth/security-questions", protectAdmin, getSecurityQuestions);
+router.post("/auth/security-questions", protectAdmin, saveSecurityQuestion);
+router.delete("/auth/security-questions/:id", protectAdmin, deleteSecurityQuestion);
+router.get("/auth/forgot-password-questions", getForgotPasswordQuestions);
+router.post("/auth/reset-password-questions", resetPasswordQuestions);
 router.post("/users", protectAdmin, requireMainAdmin, createSubUser);
 router.get("/users", protectAdmin, requireMainAdmin, listSubUsers);
 router.delete("/users/:id", protectAdmin, requireMainAdmin, deleteSubUser);

@@ -39,6 +39,7 @@ const initialForm = {
   permissionLetterDate: "",
   permissionLetter: null,
   aadhaarCard: null,
+  internshipType: window.location.pathname.includes("paid-internship") ? "Paid" : "Unpaid",
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -157,8 +158,8 @@ function validateStepTwo(form) {
         field === "photo"
           ? "Photo size should not exceed 1 MB."
           : field === "aadhaarCard"
-          ? "Maximum allowed file size is 10 MB."
-          : `${displayNames[field] || field} size should not exceed 10 MB.`;
+            ? "Maximum allowed file size is 10 MB."
+            : `${displayNames[field] || field} size should not exceed 10 MB.`;
     }
   });
 
@@ -208,7 +209,13 @@ function StudentForm({ embedded = false, onClose }) {
     if (Object.keys(nextErrors).length > 0) return;
 
     const payload = new FormData();
-    Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+    Object.entries(form).forEach(([key, value]) => {
+      if (key !== "internshipType") {
+        payload.append(key, value);
+      }
+    });
+    const typeValue = form.internshipType || (window.location.pathname.includes("paid-internship") ? "Paid" : "Unpaid");
+    payload.append("internshipType", typeValue);
 
     try {
       setIsSubmitting(true);

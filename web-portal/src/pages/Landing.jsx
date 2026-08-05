@@ -1,34 +1,36 @@
 import "../styles/landing.css";
 
-const portalCards = [
-  {
-    title: "Student Registration",
-    description: [
-      "Register for Internship",
-      "Fill the Application Form",
-      "Upload Required Documents",
-    ],
-    buttonText: "Student Registration",
-    path: "/student",
-  },
-  {
-    title: "Student Login",
-    description: [
-      "Use Registered Email",
-      "Enter Reference ID",
-      "View Status and Documents",
-    ],
-    buttonText: "Student Login",
-    path: "/student/login",
-  },
-];
+
 
 function navigateTo(path) {
   window.history.pushState({}, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
-function Landing() {
+function Landing({ isPaid = false }) {
+  const portalCards = [
+    {
+      title: "Student Registration",
+      description: [
+        "Register for Internship",
+        "Fill the Application Form",
+        "Upload Required Documents",
+      ],
+      buttonText: "Student Registration",
+      path: isPaid ? "/paid-internship/register" : "/student",
+    },
+    {
+      title: "Student Login",
+      description: [
+        "Use Registered Email",
+        "Enter Reference ID",
+        "View Status and Documents",
+      ],
+      buttonText: "Student Login",
+      path: isPaid ? "/paid-internship/login" : "/student/login",
+    },
+  ];
+
   return (
     <main className="landing-shell">
       <section className="landing-hero">
@@ -37,9 +39,13 @@ function Landing() {
           <div>
             <p className="landing-eyebrow">Government of India</p>
             <h1>
-              Defence Research and Development Organisation (DRDO) Internship
-              Management Portal
+              Defence Research and Development Organisation (DRDO) Internship Management Portal
             </h1>
+            {isPaid && (
+              <p style={{ fontSize: "28px", fontWeight: "700", color: "var(--primary)", marginTop: "12px", textAlign: "left" }}>
+                (Under Paid Internship Program)
+              </p>
+            )}
           </div>
         </div>
 

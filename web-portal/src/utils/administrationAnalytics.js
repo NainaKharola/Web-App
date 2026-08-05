@@ -1,6 +1,6 @@
 export function getAllocatedStudents(students, divisions) {
   const divisionSet = new Set(divisions);
-  return students.filter((student) => student.status === "Approved" && divisionSet.has(student.trainingManagement?.division) && student.trainingManagement?.completed !== "Yes");
+  return students.filter((student) => student.status === "Approved" && divisionSet.has(student.trainingManagement?.division));
 }
 
 const nonNegativeNumber = (value) => Math.max(0, Number(value) || 0);
