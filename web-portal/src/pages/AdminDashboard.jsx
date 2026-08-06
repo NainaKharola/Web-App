@@ -96,16 +96,53 @@ function AdminDashboard() {
   const [students, setStudents] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [summary, setSummary] = useState({});
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/admin/approved-students")) {
+      return sessionStorage.getItem("approved_search") || "";
+    }
+    return "";
+  });
   const [internshipTypeFilter, setInternshipTypeFilter] = useState("all");
   const [filters, setFilters] = useState(() => {
     const path = window.location.pathname;
     if (path.startsWith("/admin/approved-students")) {
+      try {
+        const saved = sessionStorage.getItem("approved_filters");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
       return { ...initialFilters, status: "Approved", internshipType: "" };
     }
     return initialFilters;
   });
-  const [sort, setSort] = useState({ sortBy: "submittedAt", sortOrder: "desc" });
+  const [sort, setSort] = useState(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/admin/approved-students")) {
+      try {
+        const saved = sessionStorage.getItem("approved_sort");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return { sortBy: "submittedAt", sortOrder: "desc" };
+  });
+
+  useEffect(() => {
+    if (window.location.pathname.startsWith("/admin/approved-students")) {
+      sessionStorage.setItem("approved_search", search);
+    }
+  }, [search]);
+
+  useEffect(() => {
+    if (window.location.pathname.startsWith("/admin/approved-students")) {
+      sessionStorage.setItem("approved_filters", JSON.stringify(filters));
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    if (window.location.pathname.startsWith("/admin/approved-students")) {
+      sessionStorage.setItem("approved_sort", JSON.stringify(sort));
+    }
+  }, [sort]);
   const [loading, setLoading] = useState(true);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -478,6 +515,15 @@ function AdminDashboard() {
   const documentStudents = useMemo(() => {
     return allStudents
       .filter((student) => student.status === "Approved")
+      .filter((student) => {
+        if (filters.internshipType === "Paid") {
+          return student.internshipType === "Paid";
+        }
+        if (filters.internshipType === "Unpaid") {
+          return student.internshipType === "Unpaid" || !student.internshipType;
+        }
+        return true;
+      })
       .filter((student) => {
         if (documentModal === "certificate") {
           return student.trainingManagement?.completed === "Yes";

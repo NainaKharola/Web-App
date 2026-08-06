@@ -39,45 +39,28 @@ function certificateFileName(student) {
 function generateCertificateHtml(student) {
   const training = student.trainingManagement || {};
   
-  // Format dates
   const fromDate = formatDate(training.fromDate);
   const toDate = formatDate(training.toDate);
   const completionDate = formatDate(training.completionDate || student.completedDate || new Date());
   
-  // Sizing Class Name
-  const studentNameClass = `${student.name || ""} (${student.course || ""} ${student.branch || ""})`;
+  const studentNameClass = `${(student.name || "").toUpperCase()} (${(student.course || "").toUpperCase()} ${(student.year || "").toUpperCase()}, ${(student.branch || "").toUpperCase()})`;
+  const collegeNameAddress = `${(student.collegeName || "").toUpperCase()}${student.collegeAddress ? `, ${(student.collegeAddress || "").toUpperCase()}` : ""}`;
   
-  // Performance Checkboxes coordinates
-  const perf = (training.leaveAvailed || training.performance || "Outstanding").trim().toLowerCase();
+  const perf = (training.leaveAvailed || training.performance || "").trim().toLowerCase();
   
-  let checkLeft = "81mm";
-  if (perf.includes("very good") || perf.includes("verygood")) {
-    checkLeft = "121.5mm";
+  let checkLeft = "";
+  if (perf.includes("outstanding")) {
+    checkLeft = "72.8mm";
+  } else if (perf.includes("very good") || perf.includes("verygood")) {
+    checkLeft = "119.5mm";
   } else if (perf.includes("good") && !perf.includes("very")) {
-    checkLeft = "153.5mm";
+    checkLeft = "154.5mm";
   } else if (perf.includes("average")) {
-    checkLeft = "187mm";
+    checkLeft = "189.5mm";
   }
 
-  // Format details block
-  const projectTitle = training.projectTitle || "";
-  const projectGuide = training.projectGuide || "";
-  const designation = training.designation || "";
-  const division = training.division || "";
-  
-  let detailsHtml = "";
-  if (projectTitle) {
-    detailsHtml += `<strong>Project Title:</strong> ${escapeHtml(projectTitle)}<br/>`;
-  }
-  if (projectGuide) {
-    detailsHtml += `<strong>Project Guide:</strong> ${escapeHtml(projectGuide)} ${designation ? `(${escapeHtml(designation)})` : ""}<br/>`;
-  }
-  if (division) {
-    detailsHtml += `<strong>Division:</strong> ${escapeHtml(division)}<br/>`;
-  }
-  if (!detailsHtml) {
-    detailsHtml = `Completed short-term practical training/project work successfully at IRDE, Dehradun.`;
-  }
+  const projectTitle = (training.projectTitle || "").trim();
+  const detailsHtml = projectTitle ? `"${escapeHtml(projectTitle.toUpperCase())}"` : "";
 
   return `<!doctype html>
 <html>
@@ -101,68 +84,66 @@ function generateCertificateHtml(student) {
     background-size: 100% 100%;
     background-position: center;
     background-repeat: no-repeat;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #0f172a;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: black;
     -webkit-print-color-adjust: exact;
   }
   .field {
     position: absolute;
-    font-size: 14.5px;
-    font-weight: bold;
-    color: #1e3a8a;
+    font-size: 16px;
+    font-weight: normal;
+    color: black;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    line-height: 1;
   }
   .details-box {
     position: absolute;
-    top: 166mm;
+    top: 168mm;
     left: 24mm;
     width: 162mm;
     height: 44mm;
-    font-size: 13px;
+    font-size: 16px;
     line-height: 1.6;
-    color: #1e3a8a;
+    color: black;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: bold;
+    text-align: center;
     padding: 8px 12px;
     overflow: hidden;
   }
 </style>
 </head>
 <body>
-  <!-- Certificate Number -->
-  <div class="field" style="top: 36mm; right: 24mm; font-size: 12px;">
-    Ref No: ${escapeHtml(student.referenceId)}
-  </div>
-
   <!-- 1. Name of Student & Class -->
-  <div class="field" style="top: 86.8mm; left: 74mm;">
+  <div class="field" style="top: 86.8mm; left: 84mm; max-width: 102mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
     ${escapeHtml(studentNameClass)}
   </div>
 
   <!-- 2. Name of Institute -->
-  <div class="field" style="top: 104.5mm; left: 74mm; max-width: 112mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-    ${escapeHtml(student.collegeName)}${student.collegeAddress ? `, ${escapeHtml(student.collegeAddress)}` : ""}
+  <div class="field" style="top: 104.6mm; left: 84mm; max-width: 102mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+    ${escapeHtml(collegeNameAddress)}
   </div>
 
   <!-- 3. Date of Commencement of Training -->
-  <div class="field" style="top: 122.2mm; left: 102mm;">
+  <div class="field" style="top: 122.3mm; left: 108mm;">
     ${escapeHtml(fromDate)}
   </div>
 
   <!-- 4. Date of Completion of Training -->
-  <div class="field" style="top: 140mm; left: 102mm;">
+  <div class="field" style="top: 140.2mm; left: 108mm;">
     ${escapeHtml(toDate)}
   </div>
 
-  <!-- 5. Brief Details of Training Box -->
+  <!-- 5. Brief Details of Training Box (Project Title Only, Uppercase, Center aligned) -->
   <div class="details-box">
     ${detailsHtml}
   </div>
 
   <!-- 6. Overall Performance Checkmark -->
-  <div class="field" style="top: 231.8mm; left: ${checkLeft}; font-size: 20px; color: #1e3a8a; font-family: 'Arial', sans-serif;">
-    ✔
-  </div>
+  ${checkLeft ? `<div class="field" style="top: 231.2mm; left: ${checkLeft}; font-size: 20px; color: black; font-family: Georgia, 'Times New Roman', Times, serif;">✔</div>` : ""}
 
   <!-- Dated -->
-  <div class="field" style="top: 263.2mm; left: 58mm;">
+  <div class="field" style="top: 263.2mm; left: 60mm;">
     ${escapeHtml(completionDate)}
   </div>
 </body>

@@ -102,18 +102,14 @@ export default function DivisionBranchAnalytics({ administration, students, load
             <thead>
               <tr>
                 <th>{mode === "branch" ? "Division" : "Branch"}</th>
-                <th style={{ textAlign: "right" }}>Paid</th>
-                <th style={{ textAlign: "right" }}>Unpaid</th>
-                <th style={{ textAlign: "right" }}>Total</th>
+                <th>Allocated Students</th>
               </tr>
             </thead>
             <tbody>
               {sortedRows.map((row) => (
                 <tr key={row.label}>
                   <td>{row.label}</td>
-                  <td style={{ textAlign: "right" }}>{row.paid}</td>
-                  <td style={{ textAlign: "right" }}>{row.unpaid}</td>
-                  <td style={{ textAlign: "right", fontWeight: "bold" }}>{row.value}</td>
+                  <td>{row.value}</td>
                 </tr>
               ))}
             </tbody>
