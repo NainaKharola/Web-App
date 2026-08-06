@@ -6,9 +6,9 @@ const logoUrl = fs.existsSync(logoPath)
   ? `data:image/png;base64,${fs.readFileSync(logoPath).toString("base64")}`
   : "";
 
-const bgPath = path.join(__dirname, "..", "templates", "drdo_certificate_template.jpg");
+const bgPath = path.join(__dirname, "..", "templates", "drdo_certificate_template.png");
 const bgUrl = fs.existsSync(bgPath)
-  ? `data:image/jpeg;base64,${fs.readFileSync(bgPath).toString("base64")}`
+  ? `data:image/png;base64,${fs.readFileSync(bgPath).toString("base64")}`
   : "";
 
 function escapeHtml(value) {
@@ -36,7 +36,7 @@ function certificateFileName(student) {
   return `Certificate_${refId}_${nameNoSpaces}.pdf`;
 }
 
-function generateCertificateHtml(student) {
+function generateCertificateHtml(student, renderMode = "full") {
   const training = student.trainingManagement || {};
   
   const fromDate = formatDate(training.fromDate);
@@ -44,19 +44,21 @@ function generateCertificateHtml(student) {
   const completionDate = formatDate(training.completionDate || student.completedDate || new Date());
   
   const studentNameClass = `${(student.name || "").toUpperCase()} (${(student.course || "").toUpperCase()} ${(student.year || "").toUpperCase()}, ${(student.branch || "").toUpperCase()})`;
-  const collegeNameAddress = `${(student.collegeName || "").toUpperCase()}${student.collegeAddress ? `, ${(student.collegeAddress || "").toUpperCase()}` : ""}`;
+  const instituteName = training.collegeName || student.collegeName || "";
+  const instituteLocation = training.collegeLocation || student.location || student.collegeAddress || "";
+  const collegeNameAddress = `${instituteName.toUpperCase()}${instituteLocation ? `, ${instituteLocation.toUpperCase()}` : ""}`;
   
   const perf = (training.leaveAvailed || training.performance || "").trim().toLowerCase();
   
-  let checkLeft = "";
+  let performanceClass = "";
   if (perf.includes("outstanding")) {
-    checkLeft = "72.8mm";
+    performanceClass = "outstanding";
   } else if (perf.includes("very good") || perf.includes("verygood")) {
-    checkLeft = "119.5mm";
+    performanceClass = "very-good";
   } else if (perf.includes("good") && !perf.includes("very")) {
-    checkLeft = "154.5mm";
+    performanceClass = "good";
   } else if (perf.includes("average")) {
-    checkLeft = "189.5mm";
+    performanceClass = "average";
   }
 
   const projectTitle = (training.projectTitle || "").trim();
@@ -80,70 +82,106 @@ function generateCertificateHtml(student) {
     width: 210mm;
     height: 297mm;
     position: relative;
-    background-image: url('${bgUrl}');
+    background-image: ${renderMode === "template" ? "none" : `url('${bgUrl}')`};
     background-size: 100% 100%;
     background-position: center;
     background-repeat: no-repeat;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    color: black;
+    font-family: 'Times New Roman', Times, serif;
+    color: #000000;
     -webkit-print-color-adjust: exact;
   }
   .field {
     position: absolute;
+    width: 102mm;
     font-size: 16px;
     font-weight: normal;
-    color: black;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    line-height: 1;
+    color: #000000;
+    font-family: 'Times New Roman', Times, serif;
+    line-height: 1.2;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
-  .details-box {
+  /* Each value is an independently positioned text box on the printed form. */
+  /* A consistent 2 mm gap after each pre-printed colon. */
+  .student-class-field { top: 84.8mm; left: 102mm; width: 84mm; }
+  .institute-field { top: 102.6mm; left: 102mm; width: 84mm; }
+  .commencement-date-field { top: 118.2mm; left: 102mm; width: 48mm; }
+  .completion-date-field { top: 136.1mm; left: 102mm; width: 48mm; }
+  .details-field {
     position: absolute;
     top: 168mm;
     left: 24mm;
     width: 162mm;
     height: 44mm;
+    padding: 6mm 8mm;
     font-size: 16px;
-    line-height: 1.6;
-    color: black;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+    line-height: 1.2;
+    color: #000000;
+    font-family: 'Times New Roman', Times, serif;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+    display: grid;
+    align-content: start;
+  }
+  .details-field__title {
+    display: block;
+    width: 100%;
     font-weight: bold;
     text-align: center;
-    padding: 8px 12px;
-    overflow: hidden;
   }
+  .dated-field {
+    /* Align the date baseline with the printed "Dated" label. */
+    top: 261mm;
+    left: 47mm;
+    width: 42mm;
+    line-height: 1.2;
+  }
+  .performance-mark {
+    top: 231.2mm;
+    width: 8mm;
+    font-size: 20px;
+    color: #000000;
+    font-family: 'Times New Roman', Times, serif;
+  }
+  .performance-mark--outstanding { left: 72.8mm; }
+  .performance-mark--very-good { left: 119.5mm; }
+  .performance-mark--good { left: 154.5mm; }
+  .performance-mark--average { left: 189.5mm; }
 </style>
 </head>
 <body>
   <!-- 1. Name of Student & Class -->
-  <div class="field" style="top: 86.8mm; left: 84mm; max-width: 102mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+  <div class="field student-class-field">
     ${escapeHtml(studentNameClass)}
   </div>
 
   <!-- 2. Name of Institute -->
-  <div class="field" style="top: 104.6mm; left: 84mm; max-width: 102mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+  <div class="field institute-field">
     ${escapeHtml(collegeNameAddress)}
   </div>
 
   <!-- 3. Date of Commencement of Training -->
-  <div class="field" style="top: 122.3mm; left: 108mm;">
+  <div class="field commencement-date-field">
     ${escapeHtml(fromDate)}
   </div>
 
   <!-- 4. Date of Completion of Training -->
-  <div class="field" style="top: 140.2mm; left: 108mm;">
+  <div class="field completion-date-field">
     ${escapeHtml(toDate)}
   </div>
 
   <!-- 5. Brief Details of Training Box (Project Title Only, Uppercase, Center aligned) -->
-  <div class="details-box">
-    ${detailsHtml}
+  <div class="details-field">
+    <div class="details-field__title">${detailsHtml}</div>
   </div>
 
   <!-- 6. Overall Performance Checkmark -->
-  ${checkLeft ? `<div class="field" style="top: 231.2mm; left: ${checkLeft}; font-size: 20px; color: black; font-family: Georgia, 'Times New Roman', Times, serif;">✔</div>` : ""}
+  ${performanceClass ? `<div class="field performance-mark performance-mark--${performanceClass}">✔</div>` : ""}
 
   <!-- Dated -->
-  <div class="field" style="top: 263.2mm; left: 60mm;">
+  <div class="field dated-field">
     ${escapeHtml(completionDate)}
   </div>
 </body>

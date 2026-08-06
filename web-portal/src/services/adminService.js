@@ -128,14 +128,14 @@ export async function fetchCertificateStudents(date = "", endpoint = "certificat
   return parseResponse(response);
 }
 
-export async function downloadCertificates(ids, endpoint = "certificates") {
+export async function downloadCertificates(ids, endpoint = "certificates", renderMode = "full") {
   const response = await fetch(`${API_URL}/${endpoint}/download`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(),
     },
-    body: JSON.stringify({ ids }),
+    body: JSON.stringify(renderMode === "template" ? { ids, renderMode } : { ids }),
   });
 
   if (!response.ok) {

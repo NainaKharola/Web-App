@@ -154,6 +154,8 @@ function AdminDashboard() {
   const [documentSearch, setDocumentSearch] = useState("");
   const [documentQueue, setDocumentQueue] = useState([]);
   const [documentIndex, setDocumentIndex] = useState(0);
+  const [documentOutputChoice, setDocumentOutputChoice] = useState(false);
+  const [documentRenderMode, setDocumentRenderMode] = useState("full");
   const [certificatePreview, setCertificatePreview] = useState(null);
   const [certificateDownloadedIds, setCertificateDownloadedIds] = useState(savedCertificateDownloadIds);
   const [ismDownloadedIds, setIsmDownloadedIds] = useState(savedIsmDownloadIds);
@@ -500,6 +502,8 @@ function AdminDashboard() {
     setDocumentError("");
     setDocumentQueue([]);
     setDocumentIndex(0);
+    setDocumentOutputChoice(false);
+    setDocumentRenderMode("full");
     if (certificatePreview?.url) URL.revokeObjectURL(certificatePreview.url);
     setCertificatePreview(null);
   }, [certificatePreview]);
@@ -508,6 +512,7 @@ function AdminDashboard() {
     if (certificatePreview?.url) URL.revokeObjectURL(certificatePreview.url);
     setDocumentModal(null);
     setDocumentQueue([]);
+    setDocumentOutputChoice(false);
     setCertificatePreview(null);
     setDocumentError("");
   }, [certificatePreview]);
@@ -561,8 +566,14 @@ function AdminDashboard() {
   const toggleDocumentStudent = useCallback((id, checked) => setDocumentSelectedIds((current) => checked ? [...new Set([...current, id])] : current.filter((value) => value !== id)), []);
   const selectAllDocumentStudents = useCallback(() => setDocumentSelectedIds(documentStudents.map((student) => student._id)), [documentStudents]);
 
-  const startDocumentGeneration = useCallback(async () => {
+  const startDocumentGeneration = useCallback(async (renderMode = null) => {
     if (!documentSelectedIds.length) return setDocumentError("Select at least one student.");
+    if (documentModal === "certificate" && !renderMode) {
+      setDocumentOutputChoice(true);
+      return;
+    }
+    setDocumentOutputChoice(false);
+    setDocumentRenderMode(renderMode || "full");
     setDocumentBusy(true); setDocumentError("");
     try {
       if (documentModal === "ism") {
@@ -589,11 +600,11 @@ function AdminDashboard() {
     if (!student) return;
     setDocumentBusy(true); setDocumentError("");
     try {
-      const { blob, filename } = await downloadCertificates([student._id]);
+      const { blob, filename } = await downloadCertificates([student._id], "certificates", documentRenderMode);
       setCertificatePreview({ url: URL.createObjectURL(blob), filename });
     } catch (err) { setDocumentError(`Unable to generate certificate for ${student.name}.`); }
     finally { setDocumentBusy(false); }
-  }, [documentIndex, documentQueue]);
+  }, [documentIndex, documentQueue, documentRenderMode]);
 
   const downloadCertificate = useCallback(() => {
     if (!certificatePreview) return;
@@ -1259,7 +1270,11 @@ function AdminDashboard() {
               : document.getElementById("dashboard-ism-preview")?.contentWindow?.print();
             return <div className="certificate-modal-backdrop" role="dialog" aria-modal="true" aria-label={`Generate ${documentModal === "ism" ? "ISM" : "Certificate"}`}>
               <section className="certificate-modal certificate-modal--wide">
-                {selectionOpen ? <>
+                {selectionOpen ? (documentOutputChoice ? <>
+                  <h2>Choose Certificate Output</h2>
+                  <p className="admin-muted">Select how the certificate should be generated.</p>
+                  <div className="admin-actions-row"><button className="admin-primary-btn" type="button" onClick={() => startDocumentGeneration("full")}>Generate Certificate</button><button className="admin-secondary-btn" type="button" onClick={() => startDocumentGeneration("template")}>Print on Template</button></div>
+                </> : <>
                   <h2>Generate {documentModal === "ism" ? "ISM" : "Certificate"}</h2>
                   <p className="admin-muted">Select approved students, then generate {documentModal === "ism" ? "ISM documents grouped by division" : "one certificate for each student"}.</p>
                   <div className="admin-actions-row"><label className="admin-field"><span>Search Students</span><input type="search" placeholder="Student name or college name" value={documentSearch} onChange={(event) => setDocumentSearch(event.target.value)} /></label><button className="admin-secondary-btn" type="button" onClick={selectAllDocumentStudents}>Select All</button><button className="admin-secondary-btn" type="button" onClick={() => setDocumentSelectedIds([])}>Deselect All</button></div>
@@ -1277,7 +1292,7 @@ function AdminDashboard() {
                   })}</tbody></table>{!documentStudents.length && <div className="admin-empty-state">No approved students found.</div>}</div>
                   {documentError && <p className="admin-error">{documentError}</p>}
                   <div className="admin-actions-row"><button className="admin-primary-btn" type="button" disabled={documentBusy || !documentSelectedIds.length} onClick={startDocumentGeneration}>{documentBusy ? "Generating..." : "Generate"}</button><button className="admin-secondary-btn" type="button" disabled={documentBusy} onClick={closeDocumentModal}>Cancel</button></div>
-                </> : <>
+                </>) : <>
                   <h2>{documentModal === "ism" ? `ISM ${documentIndex + 1} of ${documentQueue.length}` : `Certificate ${documentIndex + 1} of ${documentQueue.length}`}</h2>
                   <p>{documentModal === "ism" ? `Division: ${currentDocument.gyapan.studentRows?.[0]?.division || "-"}` : <>Student: <strong>{currentDocument.student?.name}</strong></>}</p>
                   {documentModal === "ism" ? <iframe id="dashboard-ism-preview" title="ISM preview" className="certificate-preview-frame" srcDoc={currentDocument.html || "<p>Preview unavailable.</p>"} /> : certificatePreview ? <iframe id="dashboard-certificate-preview" title="Certificate preview" className="certificate-preview-frame" src={certificatePreview.url} /> : <p className="admin-muted">Prepare this certificate to preview, print, or download it.</p>}

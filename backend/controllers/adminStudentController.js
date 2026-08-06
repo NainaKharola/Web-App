@@ -267,6 +267,7 @@ async function removeCertificateBufferStudents(req, res) {
 async function downloadCertificates(req, res) {
   try {
     const deleteAfterDownload = req.bufferMode !== true;
+    const renderMode = req.body.renderMode === "template" ? "template" : "full";
     const ids = [
       ...new Set(
         Array.isArray(req.body.ids)
@@ -303,7 +304,7 @@ async function downloadCertificates(req, res) {
 
     const student = students[0];
     const [pdf] = await generatePdfsFromHtml([
-      generateCertificateHtml(student),
+      generateCertificateHtml(student, renderMode),
     ]);
     if (deleteAfterDownload) {
       await Student.findByIdAndUpdate(student._id, {
