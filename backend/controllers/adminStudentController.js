@@ -525,6 +525,26 @@ async function saveTrainingManagement(req, res) {
       if (capacityError) return res.status(400).json({ success: false, message: capacityError });
     }
 
+    if (req.body.completed === "Yes") {
+      const required = [
+        "joined",
+        "fromDate",
+        "toDate",
+        "trainingDuration",
+        "projectTitle",
+        "projectGuide",
+        "designation",
+        "leaveAvailed"
+      ];
+      const missing = required.some(key => !String(req.body[key] || "").trim());
+      if (missing) {
+        return res.status(400).json({
+          success: false,
+          message: "Please complete all Student Joining Details before marking Completion Status as Yes.",
+        });
+      }
+    }
+
     const training = {
       studentName: req.body.studentName || student.name,
       courseName: req.body.courseName || student.course,

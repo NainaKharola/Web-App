@@ -31,6 +31,7 @@ function Administration() {
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
+      if (student.status !== "Approved") return false;
       const type = (student.internshipType || "Unpaid").toLowerCase();
       if (studentTypeFilter === "paid") return type === "paid";
       if (studentTypeFilter === "unpaid") return type === "unpaid";
@@ -216,13 +217,13 @@ function Administration() {
               <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "center" }}>
                 <span style={{ display: "block", fontSize: "0.85rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Paid Students</span>
                 <strong style={{ display: "block", fontSize: "1.75rem", color: "var(--primary)", marginTop: "4px" }}>
-                  {students.filter(s => s.internshipType === "Paid").length}
+                  {students.filter(s => s.status === "Approved" && s.internshipType === "Paid").length}
                 </strong>
               </div>
               <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "center" }}>
                 <span style={{ display: "block", fontSize: "0.85rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Unpaid Students</span>
                 <strong style={{ display: "block", fontSize: "1.75rem", color: "var(--primary)", marginTop: "4px" }}>
-                  {students.filter(s => s.internshipType === "Unpaid" || !s.internshipType).length}
+                  {students.filter(s => s.status === "Approved" && (s.internshipType === "Unpaid" || !s.internshipType)).length}
                 </strong>
               </div>
             </div>

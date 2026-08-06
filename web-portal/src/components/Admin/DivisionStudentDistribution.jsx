@@ -31,7 +31,7 @@ function PieChart({ rows, total }) {
 
   let cursor = -Math.PI / 2;
   const slices = rows.map((row, idx) => {
-    const angle = (row.count / total) * 2 * Math.PI;
+    const angle = (row.total / total) * 2 * Math.PI;
     const x1 = CX + R * Math.cos(cursor);
     const y1 = CY + R * Math.sin(cursor);
     cursor += angle;
@@ -47,7 +47,7 @@ function PieChart({ rows, total }) {
       ...row,
       d,
       color: PALETTE[idx % PALETTE.length],
-      pct: ((row.count / total) * 100).toFixed(1),
+      pct: ((row.total / total) * 100).toFixed(1),
       midAngle,
     };
   });
@@ -113,7 +113,8 @@ function PieChart({ rows, total }) {
             <div style={{ fontWeight: "700", color: slices[hovered].color, marginBottom: "2px" }}>
               {slices[hovered].division}
             </div>
-            <div>{slices[hovered].count} Student{slices[hovered].count !== 1 ? "s" : ""}</div>
+            <div>Paid: {slices[hovered].paid} &nbsp;|&nbsp; Unpaid: {slices[hovered].unpaid}</div>
+            <div>Total: {slices[hovered].total} Student{slices[hovered].total !== 1 ? "s" : ""}</div>
             <div style={{ color: "#94a3b8" }}>{slices[hovered].pct}%</div>
           </div>
         )}
@@ -138,19 +139,27 @@ export default function DivisionStudentDistribution({ administration, students, 
   const rows = useMemo(() => {
     if (!administration?.divisions?.length || !students) return [];
     const counts = {};
-    administration.divisions.forEach((div) => { counts[div] = 0; });
+    administration.divisions.forEach((div) => { counts[div] = { paid: 0, unpaid: 0, total: 0 }; });
     getAllocatedStudents(students, administration.divisions).forEach((student) => {
       const div = student.trainingManagement?.division;
       if (Object.prototype.hasOwnProperty.call(counts, div)) {
-        counts[div]++;
+        const type = (student.internshipType || "Unpaid").toLowerCase();
+        if (type === "paid") {
+          counts[div].paid++;
+        } else {
+          counts[div].unpaid++;
+        }
+        counts[div].total++;
       }
     });
     return Object.entries(counts)
-      .map(([division, count]) => ({ division, count }))
-      .sort((a, b) => b.count - a.count);
+      .map(([division, details]) => ({ division, ...details }))
+      .sort((a, b) => b.total - a.total);
   }, [administration, students]);
 
-  const total = useMemo(() => rows.reduce((s, r) => s + r.count, 0), [rows]);
+  const total = useMemo(() => rows.reduce((s, r) => s + r.total, 0), [rows]);
+  const totalPaid = useMemo(() => rows.reduce((s, r) => s + r.paid, 0), [rows]);
+  const totalUnpaid = useMemo(() => rows.reduce((s, r) => s + r.unpaid, 0), [rows]);
 
   return (
     <section
@@ -194,13 +203,15 @@ export default function DivisionStudentDistribution({ administration, students, 
               <thead>
                 <tr style={{ borderBottom: "2px solid var(--border-color, #e2e8f0)" }}>
                   <th style={{ textAlign: "left", padding: "6px 8px", fontWeight: 600, color: "var(--text-muted, #64748b)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Division</th>
-                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 600, color: "var(--text-muted, #64748b)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Students</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 600, color: "var(--text-muted, #64748b)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Paid</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 600, color: "var(--text-muted, #64748b)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Unpaid</th>
+                  <th style={{ textAlign: "right", padding: "6px 8px", fontWeight: 600, color: "var(--text-muted, #64748b)", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={2} style={{ padding: "24px 8px", textAlign: "center", color: "var(--text-muted, #94a3b8)", fontStyle: "italic" }}>
+                    <td colSpan={4} style={{ padding: "24px 8px", textAlign: "center", color: "var(--text-muted, #94a3b8)", fontStyle: "italic" }}>
                       No division allocation data available.
                     </td>
                   </tr>
@@ -212,8 +223,14 @@ export default function DivisionStudentDistribution({ administration, students, 
                         <span style={{ fontWeight: 500, color: "var(--text, #1e293b)" }}>{row.division}</span>
                       </div>
                     </td>
+                    <td style={{ padding: "9px 8px", textAlign: "right", color: "var(--text, #334155)", fontVariantNumeric: "tabular-nums" }}>
+                      {row.paid}
+                    </td>
+                    <td style={{ padding: "9px 8px", textAlign: "right", color: "var(--text, #334155)", fontVariantNumeric: "tabular-nums" }}>
+                      {row.unpaid}
+                    </td>
                     <td style={{ padding: "9px 8px", textAlign: "right", fontWeight: 600, color: "var(--text, #334155)", fontVariantNumeric: "tabular-nums" }}>
-                      {row.count}
+                      {row.total}
                     </td>
                   </tr>
                 ))}
@@ -222,6 +239,14 @@ export default function DivisionStudentDistribution({ administration, students, 
 
             {rows.length > 0 && (
               <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--border-color, #e2e8f0)", fontSize: "0.85rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", color: "var(--text-muted, #64748b)" }}>
+                  <span>Total Paid</span>
+                  <strong style={{ color: "var(--text, #1e293b)" }}>{totalPaid}</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", color: "var(--text-muted, #64748b)" }}>
+                  <span>Total Unpaid</span>
+                  <strong style={{ color: "var(--text, #1e293b)" }}>{totalUnpaid}</strong>
+                </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", color: "var(--text-muted, #64748b)" }}>
                   <span>Total Students</span>
                   <strong style={{ color: "var(--text, #1e293b)" }}>{total}</strong>

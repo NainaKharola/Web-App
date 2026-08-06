@@ -2638,5 +2638,126 @@
     "status": "Success",
     "timestamp": "2026-08-05T20:42:45.944Z",
     "_id": "a83564e64fa99a31ac1e6837"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Completion Status",
+    "description": "Updated completion status for Rishi to 'No'.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:55:49.198Z",
+    "_id": "116a3d29d7a770ba795b98ff"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for Rishi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:55:49.636Z",
+    "_id": "eeafcf5f006feebc3e4fd7c1"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for Aarvi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:09.704Z",
+    "_id": "4c298a1b9c80b64f7d391bab"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Completion Status",
+    "description": "Updated completion status for Aarvi to 'No'.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:21.948Z",
+    "_id": "2804bc0dd436d1cc825dcc2f"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for Aarvi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:28.302Z",
+    "_id": "1fbe7dfa27d802aec80a4cbf"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Completion Status",
+    "description": "Updated completion status for Rishi to 'No'.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:39.684Z",
+    "_id": "420b5ea393b067da3ba398ca"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for Rishi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:40.275Z",
+    "_id": "7fe65855b679bc1e37d193a9"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Failed to update training details. Error: EPERM: operation not permitted, rename 'C:\\Users\\DELL\\Downloads\\Web-Portal\\backend\\data\\students.json.5852.tmp' -> 'C:\\Users\\DELL\\Downloads\\Web-Portal\\backend\\data\\students.json'",
+    "status": "Failed",
+    "timestamp": "2026-08-06T18:57:51.024Z",
+    "_id": "49627eefa4cfefde2b42dc3c"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Completion Status",
+    "description": "Updated completion status for Ravi to 'No'.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:51.188Z",
+    "_id": "10e5b820b814a7afd6785bb9"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for Ravi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:58.206Z",
+    "_id": "d6198210eec71bbbfdcb2b90"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Training Management",
+    "action": "Updated Training Details",
+    "description": "Updated training details for Ravi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T18:57:59.802Z",
+    "_id": "4d4dc56ce94ad7c4f11a6c69"
   }
 ]

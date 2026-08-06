@@ -62,6 +62,7 @@ function AdminReviewForm({ student, onUpdated }) {
     try {
       const response = await updateStudentReview(student._id, form);
       onUpdated(response.student);
+      window.dispatchEvent(new Event("student-division-updated"));
       setMessage(response.message);
     } catch (err) {
       setError(err.message);

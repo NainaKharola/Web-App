@@ -101,7 +101,7 @@ function AdminDashboard() {
   const [filters, setFilters] = useState(() => {
     const path = window.location.pathname;
     if (path.startsWith("/admin/approved-students")) {
-      return { ...initialFilters, status: "Approved", internshipType: "Paid" };
+      return { ...initialFilters, status: "Approved", internshipType: "" };
     }
     return initialFilters;
   });
@@ -639,6 +639,7 @@ function AdminDashboard() {
       setAllStudents(response.students);
       setSelectedIds([]);
       setDeleteMode(false);
+      window.dispatchEvent(new Event("student-division-updated"));
     } catch (err) {
       setError(err.message);
     }
@@ -666,6 +667,7 @@ function AdminDashboard() {
     setStudents((current) =>
       current.map((s) => (s._id === id ? { ...s, ...updatedStudent } : s))
     );
+    window.dispatchEvent(new Event("student-division-updated"));
   }, []);
 
   // Student Management Client-side Filter Options
@@ -758,6 +760,7 @@ function AdminDashboard() {
       setAllStudents(prev =>
         prev.map(s => s._id === studentId ? { ...s, status: newStatus } : s)
       );
+      window.dispatchEvent(new Event("student-division-updated"));
     } catch (err) {
       alert("Failed to update status: " + (err.message || "Unknown error"));
     } finally {
@@ -1133,12 +1136,13 @@ function AdminDashboard() {
               ) : (
                 <>
                   <select
-                    value={filters.internshipType || "Paid"}
+                    value={filters.internshipType || ""}
                     onChange={(e) => {
                       setFilters((prev) => ({ ...prev, internshipType: e.target.value }));
                     }}
                     style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color, #cbd5e1)", background: "#fff", fontWeight: "600" }}
                   >
+                    <option value="">All Students</option>
                     <option value="Paid">Paid Internship</option>
                     <option value="Unpaid">Unpaid Internship</option>
                   </select>

@@ -163,6 +163,26 @@ function TrainingManagementForm({ student, divisions, onUpdated, alwaysOpen = fa
   };
 
   const save = async (payload = form) => {
+    if (payload.completed === "Yes") {
+      const required = [
+        { key: "joined", label: "Joined Status" },
+        { key: "fromDate", label: "Joined Date" },
+        { key: "toDate", label: "Completion Date" },
+        { key: "trainingDuration", label: "Duration" },
+        { key: "projectTitle", label: "Project Title" },
+        { key: "projectGuide", label: "Project Guide" },
+        { key: "designation", label: "Guide Designation" },
+        { key: "leaveAvailed", label: "Performance" }
+      ];
+      const missing = required.filter(r => !String(payload[r.key] || "").trim());
+      if (missing.length > 0) {
+        setForm(current => ({ ...current, completed: existing.completed || "" }));
+        setDirty(false);
+        setMessage("🔴 Please complete all Student Joining Details before marking Completion Status as Yes.");
+        return;
+      }
+    }
+
     setSaving(true);
     setMessage("");
 
@@ -402,7 +422,7 @@ function TrainingManagementForm({ student, divisions, onUpdated, alwaysOpen = fa
             </label>
           ))}
 
-          <p className={message.startsWith("Unable") || message.startsWith("No ") || message.startsWith("Select ") ? "admin-error" : "admin-muted"} role="status">{saving ? "Saving..." : message || (dirty ? "Changes pending..." : "Saved")}</p>
+          <p className={message.startsWith("Unable") || message.startsWith("No ") || message.startsWith("Select ") || message.startsWith("🔴") || message.startsWith("Please") ? "admin-error" : "admin-muted"} role="status" style={message.startsWith("🔴") || message.startsWith("Please") ? { color: "red", fontWeight: "bold" } : {}}>{saving ? "Saving..." : message || (dirty ? "Changes pending..." : "Saved")}</p>
         </form>
       )}
     </section>
@@ -469,6 +489,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
         const response = await updateStudentReview(student._id, payload);
         setStudent(response.student);
         if (onSaveSuccess) onSaveSuccess(response.student);
+        window.dispatchEvent(new Event("student-division-updated"));
       } catch (err) {
         alert(err.message);
       }
@@ -487,6 +508,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
         const response = await updateStudentReview(student._id, payload);
         setStudent(response.student);
         if (onSaveSuccess) onSaveSuccess(response.student);
+        window.dispatchEvent(new Event("student-division-updated"));
       } catch (err) {
         alert(err.message);
       }
@@ -498,6 +520,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
       try {
         await deleteAdminStudents([student._id]);
         if (onDeleteSuccess) onDeleteSuccess(student._id);
+        window.dispatchEvent(new Event("student-division-updated"));
       } catch (err) {
         alert(err.message);
       }
@@ -567,6 +590,7 @@ function StudentDetails({ id, onClose, onDirtyChange, saveTrigger, onSaveSuccess
       setIsEditing(false);
       setNewFiles({});
       if (onSaveSuccess) onSaveSuccess(response.student);
+      window.dispatchEvent(new Event("student-division-updated"));
     } catch (err) {
       setEditError(err.message);
       if (onSaveFailure) onSaveFailure(err.message);
