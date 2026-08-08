@@ -90,6 +90,23 @@ function generateCertificateHtml(student, renderMode = "full") {
     color: #000000;
     -webkit-print-color-adjust: exact;
   }
+  @media print {
+    html,
+    body {
+      width: 210mm;
+      height: 297mm;
+      min-height: 297mm;
+      max-height: 297mm;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    /* body is the existing, positioned certificate page container. */
+    body {
+      box-sizing: border-box;
+      overflow: hidden;
+      page-break-after: always;
+    }
+  }
   .field {
     position: absolute;
     width: 102mm;

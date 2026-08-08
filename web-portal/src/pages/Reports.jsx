@@ -3,7 +3,7 @@ import { fetchAdministration, fetchAdminStudents } from "../services/adminServic
 import "../styles/admin.css";
 
 const REPORT_COLUMNS = [
-  ["serial", "S.No."], ["name", "Name"], ["course", "Course"], ["branch", "Branch"], ["division", "Division"], ["year", "Year"],
+  ["serial", "S.No."], ["name", "Name"], ["course", "Course"], ["branch", "Branch"], ["division", "Division"], ["year", "Year"], ["cgpa", "CGPA"],
   ["college", "College"], ["location", "College Location"], ["joinedDate", "Joined Date"], ["endDate", "End Date"],
   ["duration", "Duration"], ["projectTitle", "Project Title"], ["projectGuide", "Project Guide"], ["designation", "Designation"],
 ];
@@ -26,7 +26,7 @@ function reportValue(student, key, index) {
   const training = student.trainingManagement || {};
   const values = {
     serial: index + 1, name: student.name, course: training.courseName || student.course,
-    branch: training.branch || student.branch, division: training.division || student.division || "-", year: training.courseYear || student.year,
+    branch: training.branch || student.branch, division: training.division || student.division || "-", year: training.courseYear || student.year, cgpa: student.cgpa,
     college: training.collegeName || student.collegeName, location: training.collegeLocation || student.location,
     joinedDate: formatDate(training.joinedDate), endDate: formatDate(training.toDate),
     duration: training.trainingDuration || student.internshipDuration, projectTitle: training.projectTitle,
@@ -63,13 +63,19 @@ function Reports() {
     if (!filters.status) return [];
     return students.filter((student) => {
       const training = student.trainingManagement || {};
-      const statusMatch = filters.status === "Approved" ? student.status === "Approved" : filters.status === "Joined" ? training.joined === "Yes" : training.completed === "Yes";
+      const statusMatch = filters.status === "Pending"
+        ? student.status === "Pending" || !student.status
+        : filters.status === "Approved"
+          ? student.status === "Approved"
+          : filters.status === "Joined"
+            ? training.joined === "Yes"
+            : training.completed === "Yes";
       if (!statusMatch || (filters.division && training.division !== filters.division)) return false;
       if (filters.internshipType) {
         const type = student.internshipType === "Paid" ? "Paid" : "Unpaid";
         if (type !== filters.internshipType) return false;
       }
-      const relevantDate = filters.status === "Approved" ? student.approvedDate : filters.status === "Joined" ? training.joinedDate : training.completionDate;
+      const relevantDate = filters.status === "Pending" ? student.submittedAt : filters.status === "Approved" ? student.approvedDate : filters.status === "Joined" ? training.joinedDate : training.completionDate;
       const normalizedDate = dateValue(relevantDate);
       return (!filters.fromDate || (normalizedDate && normalizedDate >= filters.fromDate)) && (!filters.toDate || (normalizedDate && normalizedDate <= filters.toDate));
     });
@@ -108,6 +114,10 @@ function Reports() {
         case "year":
           valA = tA.courseYear || a.year;
           valB = tB.courseYear || b.year;
+          break;
+        case "cgpa":
+          valA = Number(a.cgpa);
+          valB = Number(b.cgpa);
           break;
         case "college":
           valA = tA.collegeName || a.collegeName;
@@ -249,7 +259,7 @@ function Reports() {
     };
 
     const relativeWidths = {
-      serial: 30, name: 75, course: 50, branch: 65, division: 55, year: 35,
+      serial: 30, name: 75, course: 50, branch: 65, division: 55, year: 35, cgpa: 35,
       college: 100, location: 70, joinedDate: 55, endDate: 55,
       duration: 50, projectTitle: 90, projectGuide: 80, designation: 60
     };
@@ -491,7 +501,7 @@ function Reports() {
       <div className="reports-filter-row">
         <label className="admin-field"><span>From Date</span><input type="date" value={filters.fromDate} onChange={(event) => updateFilter("fromDate", event.target.value)} /></label>
         <label className="admin-field"><span>To Date</span><input type="date" value={filters.toDate} onChange={(event) => updateFilter("toDate", event.target.value)} /></label>
-        <label className="admin-field"><span>Status</span><select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}><option value="">Select Status</option><option>Approved</option><option>Joined</option><option>Completed</option></select></label>
+        <label className="admin-field"><span>Status</span><select value={filters.status} onChange={(event) => updateFilter("status", event.target.value)}><option value="">Select Status</option><option>Pending</option><option>Approved</option><option>Joined</option><option>Completed</option></select></label>
         <label className="admin-field"><span>Division</span><select value={filters.division} onChange={(event) => updateFilter("division", event.target.value)}><option value="">All Divisions</option>{divisions.map((division) => <option key={division} value={division}>{division}</option>)}</select></label>
         <label className="admin-field"><span>Number of Students</span><input readOnly value={sortedRows.length} aria-label="Number of Students" /></label>
       </div>

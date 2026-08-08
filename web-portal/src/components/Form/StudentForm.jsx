@@ -174,8 +174,11 @@ function validateStepTwo(form) {
   return errors;
 }
 
-function StudentForm({ embedded = false, onClose }) {
-  const [form, setForm] = useState(initialForm);
+function StudentForm({ embedded = false, onClose, defaultInternshipType }) {
+  const [form, setForm] = useState(() => ({
+    ...initialForm,
+    internshipType: defaultInternshipType || (window.location.pathname.includes("paid-internship") ? "Paid" : "Unpaid")
+  }));
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

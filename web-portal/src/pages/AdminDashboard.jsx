@@ -85,6 +85,8 @@ function AdminDashboard() {
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [saveTrigger, setSaveTrigger] = useState(0);
+  const [showTypeModal, setShowTypeModal] = useState(false);
+  const [newStudentType, setNewStudentType] = useState("");
 
   // Recovery Setup States
   const [showRecoverySetup, setShowRecoverySetup] = useState(false);
@@ -935,8 +937,7 @@ function AdminDashboard() {
               className="admin-primary-btn"
               type="button"
               onClick={() => {
-                window.history.pushState({}, "", "/admin/student-management/new");
-                window.dispatchEvent(new PopStateEvent("popstate"));
+                setShowTypeModal(true);
               }}
               style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "36px", padding: "0 16px" }}
             >
@@ -1128,6 +1129,7 @@ function AdminDashboard() {
           <StudentForm
             embedded={true}
             onClose={handleCloseRegistrationForm}
+            defaultInternshipType={newStudentType}
           />
         </div>
       )}
@@ -1477,6 +1479,71 @@ function AdminDashboard() {
               {recoveryBusy ? "Saving..." : "Save Recovery Info"}
             </button>
           </form>
+        </div>
+      )}
+      {showTypeModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+          backdropFilter: "blur(4px)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+        }}>
+          <div style={{
+            backgroundColor: "#fff",
+            padding: "32px",
+            borderRadius: "12px",
+            width: "420px",
+            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px"
+          }}>
+            <h2 style={{ margin: 0, fontSize: "1.5rem", color: "var(--primary)" }}>Add New Student</h2>
+            <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.95rem" }}>Select Internship Type</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
+              <button
+                className="admin-primary-btn"
+                style={{ width: "100%", height: "40px", justifyContent: "center" }}
+                onClick={() => {
+                  setNewStudentType("Unpaid");
+                  setShowTypeModal(false);
+                  window.history.pushState({}, "", "/admin/student-management/new");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+              >
+                Add Unpaid Student
+              </button>
+              <button
+                className="admin-primary-btn"
+                style={{ width: "100%", height: "40px", justifyContent: "center", backgroundColor: "var(--primary)" }}
+                onClick={() => {
+                  setNewStudentType("Paid");
+                  setShowTypeModal(false);
+                  window.history.pushState({}, "", "/admin/student-management/new");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+              >
+                Add Paid Student
+              </button>
+              <button
+                className="admin-secondary-btn"
+                style={{ width: "100%", height: "40px", justifyContent: "center" }}
+                onClick={() => {
+                  setShowTypeModal(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>

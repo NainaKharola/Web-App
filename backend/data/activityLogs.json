@@ -3276,5 +3276,49 @@
     "status": "Success",
     "timestamp": "2026-08-06T21:59:23.148Z",
     "_id": "fdcd8f9a748b5e1203e844d0"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Offer Letter",
+    "action": "Printed Offer Letter",
+    "description": "Printed offer letter for Aarvi.",
+    "status": "Success",
+    "timestamp": "2026-08-06T22:00:28.627Z",
+    "_id": "1965a9e030d3f70ccaf84d9c"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Offer Letter",
+    "action": "Printed Offer Letter",
+    "description": "Printed offer letter for Rishi.",
+    "status": "Success",
+    "timestamp": "2026-08-08T17:48:30.102Z",
+    "_id": "093004e091866175856f52e0"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Certificate",
+    "action": "Printed Certificate",
+    "description": "Printed certificate for Aarvi.",
+    "status": "Success",
+    "timestamp": "2026-08-08T17:48:59.698Z",
+    "_id": "d5298eb78bda11189e481f9d"
+  },
+  {
+    "userId": "f1960fe83138e6e8b2ed99f0",
+    "userName": "Naina",
+    "role": "MAIN_ADMIN",
+    "module": "Certificate",
+    "action": "Printed Certificate",
+    "description": "Printed certificate for Aarvi.",
+    "status": "Success",
+    "timestamp": "2026-08-08T17:59:34.050Z",
+    "_id": "8af642b41fd8e64c4b6a465c"
   }
 ]
